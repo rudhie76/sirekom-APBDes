@@ -699,9 +699,9 @@ function renderLivePreviewAddReguler() {
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
-          <div class="w-20">Dasar</div><div class="w-3">:</div>
+          <div class="w-20 flex-shrink-0">Dasar</div><div class="w-3 flex-shrink-0">:</div>
           <div class="flex-1">
-            <ol class="list-decimal pl-4 space-y-1">
+            <ol class="list-decimal pl-5 space-y-1">
               <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;</li>
               <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;</li>
               <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
@@ -724,12 +724,17 @@ function renderLivePreviewAddReguler() {
     <!-- HALAMAN 2 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-snug">
-        <ol start="12" class="list-decimal pl-6 space-y-1">
-          <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
-          <li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdesRkp)} Tahun 2025 tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
-          <li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
-          <li class="pl-1">Peraturan Kepala Desa Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
-        </ol>
+        <div class="flex items-start">
+          <div class="w-20 flex-shrink-0"></div><div class="w-3 flex-shrink-0"></div>
+          <div class="flex-1">
+            <ol start="12" class="list-decimal pl-5 space-y-1">
+              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
+              <li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdesRkp)} Tahun 2025 tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
+              <li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
+              <li class="pl-1">Peraturan Kepala Desa Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
+            </ol>
+          </div>
+        </div>
 
         <p class="indent-10 mt-3 leading-normal">
           Memperhatikan dasar diatas dan setelah dilakukan verifikasi tentang Dokumen Persyaratan Rekomendasi Penyaluran Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} (${escapeHtml(persen)} %) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
@@ -752,7 +757,7 @@ function renderLivePreviewAddReguler() {
         </p>
 
         <div class="my-2 pl-4">
-          <ol class="list-decimal pl-4 space-y-0.5">
+          <ol class="list-decimal pl-5 space-y-0.5">
             ${AppState.berkasAddReguler.slice(0, 11).map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
@@ -764,9 +769,11 @@ function renderLivePreviewAddReguler() {
     <!-- HALAMAN 3 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman3">
       <div class="text-[11pt] text-justify leading-snug">
-        <ol start="12" class="list-decimal pl-6 space-y-0.5">
-          ${AppState.berkasAddReguler.slice(11).map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
-        </ol>
+        <div class="my-2 pl-4">
+          <ol start="12" class="list-decimal pl-5 space-y-0.5">
+            ${AppState.berkasAddReguler.slice(11).map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+          </ol>
+        </div>
 
         <p class="indent-10 mt-4 leading-normal">
           Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
