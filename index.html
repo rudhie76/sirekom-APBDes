@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIP-REKOM APBDes | Generator Surat Rekomendasi Pencairan Kecamatan Waru</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Google Serif & Sans untuk Tata Naskah Dinas Pemerintahan -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['"Tinos"', '"Times New Roman"', 'serif'],
+            cinzel: ['Cinzel', 'serif']
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+            dinas: {
+              navy: '#1e3a8a',
+              gold: '#d97706',
+              dark: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Styling Dasar Preview Kertas Fisik */
+    .surat-sheet {
+      box-sizing: border-box;
+      background-color: #ffffff;
+      color: #000000;
+      transition: all 0.2s ease-in-out;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Print CSS Media Query Khusus Dokumen Pemerintahan */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Tinos', 'Times New Roman', serif !important;
+      }
+      
+      /* Sembunyikan seluruh UI web */
+      header, 
+      #panelFormKiri, 
+      #previewToolbar, 
+      #toastContainer, 
+      #modalGasSettings, 
+      #drawerHistory,
+      .no-print {
+        display: none !important;
+      }
+
+      /* Tampilkan hanya area preview surat */
+      #panelPreviewKanan {
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+      }
+
+      #previewViewport {
+        padding: 0 !important;
+        overflow: visible !important;
+        background: transparent !important;
+      }
+
+      #previewDocumentContainer {
+        transform: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+      }
+
+      .surat-sheet {
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+        min-height: auto !important;
+        padding: 0 !important;
+        page-break-after: always;
+      }
+
+      .page-break {
+        page-break-before: always;
+        break-before: page;
+        height: 0;
+        margin: 0;
+      }
+
+      @page {
+        size: auto;
+        margin: 15mm 20mm 15mm 22mm;
+      }
+    }
+
+    /* Scrollbar halus untuk form */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
+
+  <!-- ================================================================================= -->
+  <!-- HEADER & APP NAVBAR -->
+  <!-- ================================================================================= -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 shadow-md flex-shrink-0 z-30">
+    <div class="px-4 py-2.5 flex items-center justify-between gap-4">
+      
+      <!-- Brand & Identitas Daerah -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-slate-800 p-1 flex items-center justify-center border border-slate-700 shadow-inner">
+          <!-- Logo PPU mini -->
+          <svg viewBox="0 0 100 125" class="w-7 h-8" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 10,10 L 90,10 L 90,70 C 90,100 50,120 50,120 C 50,120 10,100 10,70 Z" fill="#FACC15" />
+            <path d="M 16,16 L 84,16 L 84,68 C 84,94 50,112 50,112 C 50,112 16,94 16,68 Z" fill="#059669" />
+            <path d="M 22,50 L 78,50 L 78,65 C 78,85 50,104 50,104 C 50,104 22,85 22,65 Z" fill="#DC2626" />
+            <text x="50" y="44" font-family="serif" font-weight="900" font-size="8" fill="#FFFFFF" text-anchor="middle">BENUO TAKA</text>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-sm tracking-wide text-white uppercase">SIP-REKOM APBDes</h1>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-medium">KECAMATAN WARU</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Pemerintah Kabupaten Penajam Paser Utara | ADD, DD, DBH & Bantuan Keuangan</p>
+        </div>
+      </div>
+
+      <!-- Center: Status Badge & View Mode Toggle -->
+      <div class="hidden md:flex items-center gap-3">
+        <!-- Badge Status Sync Google Sheets -->
+        <div id="badgeSyncStatus" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span>Mode Database Lokal</span>
+        </div>
+
+        <!-- View Mode Switcher -->
+        <div class="bg-slate-800 p-0.5 rounded-lg border border-slate-700 flex text-xs font-medium text-slate-300">
+          <button id="btnViewSplit" class="px-2.5 py-1 rounded-md bg-slate-700 text-white transition flex items-center gap-1.5" title="Tampilan Berdampingan">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
+            <span>Split View</span>
+          </button>
+          <button id="btnViewForm" class="px-2.5 py-1 rounded-md hover:text-white transition flex items-center gap-1.5" title="Fokus Formulir">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            <span>Form</span>
+          </button>
+          <button id="btnViewPreview" class="px-2.5 py-1 rounded-md hover:text-white transition flex items-center gap-1.5" title="Fokus Preview Surat">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            <span>Preview</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons Right -->
+      <div class="flex items-center gap-2">
+        <!-- Tombol Riwayat / Arsip -->
+        <button id="btnOpenHistory" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="hidden sm:inline">Riwayat Arsip</span>
+          <span id="badgeHistoryCount" class="bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+        </button>
+
+        <!-- Tombol Pengaturan Google Sheets -->
+        <button id="btnOpenSettings" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5" title="Konfigurasi Database Google Sheets">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span class="hidden md:inline">Google Sheets</span>
+        </button>
+
+        <!-- Tombol Simpan ke Database -->
+        <button id="btnSaveToDb" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+          <span>Simpan Data</span>
+        </button>
+
+        <!-- Tombol Cetak / PDF -->
+        <button id="btnPrintDoc" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          <span>Cetak / PDF</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================================================================================= -->
+  <!-- MAIN WORKSPACE: SPLIT VIEW LAYOUT -->
+  <!-- ================================================================================= -->
+  <main class="flex-1 flex overflow-hidden">
+    
+    <!-- =============================================================================== -->
+    <!-- PANEL KIRI: FORMULIR INPUT INTERAKTIF -->
+    <!-- =============================================================================== -->
+    <aside id="panelFormKiri" class="w-full lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200">
+      
+      <!-- Sub-header Form -->
+      <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Form Parameter Surat</h2>
+          <p class="text-[11px] text-slate-500">Isi data untuk memperbarui surat secara real-time</p>
+        </div>
+        <button id="btnGenNomorSurat" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <span>Auto No. Surat</span>
+        </button>
+      </div>
+
+      <!-- Scrollable Form Inputs -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+
+        <!-- KARTU 1: PILIHAN DESA & PENERIMA RKD (AUTO-FILL) -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <div class="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">1</div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Data Desa & Rekening Kas Desa (RKD)</h3>
+          </div>
+
+          <!-- Pilihan Desa -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">
+              Pilih Nama Desa (Kecamatan Waru) <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <select id="selectNamaDesa" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                <!-- Diisi dinamis oleh script: Desa Waru, Sesulu, Api-Api, Bangun Mulya -->
+              </select>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5">Memilih desa akan otomatis mengisi data Kades, Bendahara, Bank, dan No Rekening RKD.</p>
+          </div>
+
+          <!-- Grid Kades & Kaur Keuangan -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Kepala Desa</label>
+              <input type="text" id="inputKepalaDesa" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Kaur Keuangan / Bendahara</label>
+              <input type="text" id="inputKaurKeuangan" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            </div>
+          </div>
+
+          <!-- Bank & Nomor Rekening Kas Desa -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Bank Penyalur</label>
+              <input type="text" id="inputBankPenyalur" value="PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Nomor Rekening RKD</label>
+              <input type="text" id="inputNomorRekening" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            </div>
+          </div>
+
+          <!-- Rujukan Surat Pengantar Desa -->
+          <div class="pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">No. Surat Pengantar Desa</label>
+              <input type="text" id="inputNomorPengantarDesa" placeholder="140/012/D-SSL/X/2026" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Tgl. Surat Pengantar Desa</label>
+              <input type="date" id="inputTanggalPengantarDesa" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            </div>
+          </div>
+        </div>
+
+        <!-- KARTU 2: PARAMETER DANA & NOMINAL PENCAIRAN -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <div class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">2</div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Parameter Jenis Dana & Nominal</h3>
+          </div>
+
+          <!-- Pilihan Jenis Dana, Tahap, dan Tahun Anggaran -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Jenis Dana</label>
+              <select id="selectJenisDana" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white">
+                <option value="ADD" selected>ADD (Alokasi Dana Desa)</option>
+                <option value="DD">DD (Dana Desa)</option>
+                <option value="DBH">DBH (Bagi Hasil Pajak & Retribusi)</option>
+                <option value="Bankeu">Bankeu (Bantuan Keuangan Khusus)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap Penyaluran</label>
+              <select id="selectTahap" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white">
+                <option value="Tahap I" selected>Tahap I</option>
+                <option value="Tahap II">Tahap II</option>
+                <option value="Tahap III">Tahap III</option>
+                <option value="Salur Sekaligus">Salur Sekaligus (100%)</option>
+                <option value="Siltap Triwulan I">Siltap Triwulan I</option>
+                <option value="Siltap Triwulan II">Siltap Triwulan II</option>
+                <option value="Siltap Triwulan III">Siltap Triwulan III</option>
+                <option value="Siltap Triwulan IV">Siltap Triwulan IV</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahun Anggaran</label>
+              <input type="number" id="inputTahunAnggaran" value="2026" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+            </div>
+          </div>
+
+          <!-- Nominal Angka (IDR) & Auto Terbilang -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">
+              Nominal Pencairan Direkomendasikan (Rp) <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-xs text-slate-500">Rp</span>
+              <input type="text" id="inputNominalAngka" placeholder="250.000.000" value="250.000.000"
+                     class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-bold font-mono text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+            </div>
+          </div>
+
+          <!-- Terbilang Otomatis Box -->
+          <div class="bg-amber-50/70 border border-amber-200/80 rounded-lg p-2.5 text-xs">
+            <span class="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Terbilang Otomatis (Bahasa Indonesia):</span>
+            <p id="outputTerbilang" class="italic font-serif text-slate-900 leading-relaxed font-semibold">
+              Dua Ratus Lima Puluh Juta Rupiah
+            </p>
+          </div>
+        </div>
+
+        <!-- KARTU 3: REGISTRASI & METADATA SURAT REKOMENDASI -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <div class="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">3</div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Nomor & Administrasi Surat Kecamatan</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Nomor Surat Rekomendasi</label>
+              <input type="text" id="inputNomorSurat" value="100.3.3.7 / 082 / Ekbang / X / 2026" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:bg-white" />
+              <span class="text-[9.5px] text-slate-400">Klasifikasi 100.3.3.7 (Keuangan Desa)</span>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tanggal Surat Rekomendasi</label>
+              <input type="date" id="inputTanggalSurat" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-purple-500 focus:bg-white" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Sifat Surat</label>
+              <select id="selectSifatSurat" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:bg-white">
+                <option value="Penting" selected>Penting</option>
+                <option value="Biasa">Biasa</option>
+                <option value="Segera">Segera</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Lampiran</label>
+              <input type="text" id="inputLampiranSurat" value="1 (satu) Berkas" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:bg-white" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-600 mb-1">Perihal Surat</label>
+            <textarea id="inputPerihalSurat" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:bg-white leading-normal"></textarea>
+          </div>
+
+          <!-- Berita Acara Verifikasi Kecamatan -->
+          <div class="pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">No. BA Verifikasi Tim Kecamatan</label>
+              <input type="text" id="inputNomorBAVerifikasi" value="900 / 082 / BA-VERIF / Ekbang / X / 2026" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-purple-500 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Tgl. BA Verifikasi</label>
+              <input type="date" id="inputTanggalBAVerifikasi" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:bg-white" />
+            </div>
+          </div>
+
+          <!-- Tujuan Surat -->
+          <div class="pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Tujuan Instansi</label>
+              <input type="text" id="inputTujuanBKAD" value="Kepala Badan Keuangan dan Aset Daerah (BKAD) Kab. Penajam Paser Utara" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600 mb-1">Kota Tujuan</label>
+              <input type="text" id="inputTujuanKota" value="PENAJAM" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs uppercase font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:bg-white" />
+            </div>
+          </div>
+        </div>
+
+        <!-- KARTU 4: CHECKLIST KELENGKAPAN BERKAS VERIFIKASI -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">4</div>
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Kelengkapan Berkas Persyaratan</h3>
+            </div>
+            <label class="flex items-center gap-1.5 text-[11px] text-teal-800 font-semibold cursor-pointer">
+              <input type="checkbox" id="checkTampilkanLampiran" checked class="rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
+              <span>Sertakan Lampiran (Hal 2)</span>
+            </label>
+          </div>
+
+          <!-- List Checkbox Berkas -->
+          <div id="containerBerkasChecklist" class="space-y-2">
+            <!-- Di-generate otomatis oleh script -->
+          </div>
+        </div>
+
+        <!-- KARTU 5: PEJABAT PENANDATANGAN & METODE VALIDASI (TTE BSRE) -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <div class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">5</div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Penandatangan & Pengesahan (Camat)</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Nama Camat Waru</label>
+              <input type="text" id="inputNamaCamat" value="FIRMANSYAH, S.STP, M.Si" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Pangkat / Golongan</label>
+              <input type="text" id="inputPangkatCamat" value="Pembina (IV/a)" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">NIP Camat</label>
+              <input type="text" id="inputNipCamat" value="19800512 200212 1 003" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Metode Tanda Tangan</label>
+              <select id="selectMetodeTte" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white">
+                <option value="tte" selected>TTE Elektronik (QR Code BSrE - BSSN)</option>
+                <option value="manual">Tanda Tangan Basah & Stempel Dinas</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-600 mb-1">Catatan Khusus / Klausul Tambahan (Opsional)</label>
+            <input type="text" id="inputKlausulKhusus" placeholder="Contoh: Pencairan diprioritaskan untuk pemenuhan Siltap dan operasional RT." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+          </div>
+        </div>
+
+      </div>
+
+    </aside>
+
+    <!-- =============================================================================== -->
+    <!-- PANEL KANAN: LIVE PREVIEW DOKUMEN RESMI (F4/FOLIO & A4) -->
+    <!-- =============================================================================== -->
+    <section id="panelPreviewKanan" class="w-full lg:w-[55%] xl:w-[58%] bg-slate-200/90 flex flex-col h-full overflow-hidden transition-all duration-200">
+      
+      <!-- Toolbar Atas Preview (Zoom, Paper Size, Lampiran, Quick Print) -->
+      <div id="previewToolbar" class="bg-white px-4 py-2 border-b border-slate-300 flex items-center justify-between gap-3 flex-shrink-0 shadow-xs z-10">
+        
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Live Document Preview
+          </span>
+          <span class="text-slate-300">|</span>
+          <!-- Paper Selector -->
+          <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span>Ukuran Kertas:</span>
+            <select id="selectPaperSize" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500">
+              <option value="folio" selected>Folio / F4 (215 x 330 mm)</option>
+              <option value="a4">A4 (210 x 297 mm)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Zoom Controls -->
+        <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+          <button id="btnZoomOut" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom Out">−</button>
+          <span id="labelZoomPercent" class="font-mono font-bold text-slate-800 px-1 text-[11px]">100%</span>
+          <button id="btnZoomIn" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom In">+</button>
+          <button id="btnZoomReset" class="px-1.5 py-0.5 text-[10px] rounded hover:bg-white text-slate-600 transition" title="Reset Zoom">Fit</button>
+        </div>
+
+      </div>
+
+      <!-- Preview Viewport Container -->
+      <div id="previewViewport" class="flex-1 overflow-auto custom-scrollbar p-6 flex justify-center bg-slate-300/60">
+        <div id="previewDocumentContainer" class="origin-top transition-transform duration-100">
+          <!-- Document Generated Here Dynamically by app.js -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================================================================================= -->
+  <!-- MODAL: KONFIGURASI GOOGLE SHEETS & GOOGLE APPS SCRIPT -->
+  <!-- ================================================================================= -->
+  <div id="modalGasSettings" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-bold">
+            📊
+          </div>
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wide">Pengaturan Integrasi Google Sheets</h3>
+            <p class="text-[11px] text-slate-400">Database Master Desa & Riwayat Pengajuan Rekomendasi</p>
+          </div>
+        </div>
+        <button id="btnCloseSettings" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs text-slate-700">
+        
+        <!-- Info Banner -->
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-900 space-y-1">
+          <div class="font-bold flex items-center gap-1.5">
+            <span>💡</span> Panduan Cepat Sinkronisasi Google Sheets
+          </div>
+          <p class="text-[11px] leading-relaxed">
+            Aplikasi ini terhubung langsung ke Google Sheets melalui Google Apps Script Web App. Data master desa, nomor rekening, dan riwayat penerbitan surat tersimpan otomatis di Google Drive Anda.
+          </p>
+        </div>
+
+        <!-- Input URL Web App Apps Script -->
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">
+            Google Apps Script Web App URL <span class="text-rose-500">*</span>
+          </label>
+          <input type="url" id="inputGasUrl" placeholder="https://script.google.com/macros/s/AKfycbx.../exec"
+                 class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+          <p class="text-[10.5px] text-slate-500 mt-1">
+            Tempelkan URL Web App yang didapat setelah melakukan "Deploy as Web App" di Google Apps Script.
+          </p>
+        </div>
+
+        <!-- Tes Koneksi & Status -->
+        <div class="flex items-center gap-2">
+          <button id="btnTestGasConnection" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition">
+            🔍 Tes Koneksi Spreadsheet
+          </button>
+          <div id="statusGasTest" class="text-[11px] font-medium"></div>
+        </div>
+
+        <!-- Langkah Deployment Apps Script -->
+        <div class="border-t border-slate-200 pt-3 space-y-2">
+          <div class="font-bold text-slate-900 text-xs">Langkah Pemasangan Google Apps Script (Hanya 2 Menit):</div>
+          <ol class="list-decimal pl-5 space-y-1 text-[11px] text-slate-600 leading-relaxed">
+            <li>Buat Google Spreadsheet baru di <a href="https://sheets.new" target="_blank" class="text-blue-600 underline font-semibold">sheets.new</a></li>
+            <li>Klik menu <strong>Extensions (Ekstensi) &gt; Apps Script</strong></li>
+            <li>Salin seluruh kode dari file <code class="bg-slate-100 px-1 py-0.5 rounded text-blue-800 font-mono font-bold">google_apps_script.gs</code> (klik tombol di bawah)</li>
+            <li>Hapus kode bawaan di Apps Script, lalu tempelkan kode tersebut dan Simpan (Ctrl+S)</li>
+            <li>Klik <strong>Deploy &gt; New deployment &gt; Pilih jenis Web app</strong></li>
+            <li>Atur: <em>Execute as: <strong>Me</strong></em> dan <em>Who has access: <strong>Anyone</strong></em> (Penting agar web dapat mengakses tanpa login)</li>
+            <li>Salin URL Web App dan tempelkan ke kolom input di atas. Selesai!</li>
+          </ol>
+        </div>
+
+        <!-- Tombol Aksi Tambahan -->
+        <div class="flex items-center gap-3 pt-2">
+          <button id="btnCopyGasScript" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-semibold transition flex items-center gap-1.5">
+            📋 Salin Kode Apps Script
+          </button>
+          <button id="btnSyncGasData" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold transition flex items-center gap-1.5">
+            🔄 Tarik Master & Riwayat dari Google Sheets
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button onclick="document.getElementById('modalGasSettings').classList.add('hidden')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-200 text-xs font-semibold transition">
+          Batal
+        </button>
+        <button id="btnSaveGasSettings" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition">
+          Simpan Konfigurasi
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================================================================================= -->
+  <!-- DRAWER: RIWAYAT & ARSIP SURAT REKOMENDASI -->
+  <!-- ================================================================================= -->
+  <div id="drawerHistory" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex justify-end hidden">
+    <div class="bg-white w-full max-w-4xl h-full shadow-2xl flex flex-col border-l border-slate-200 animate-slide-left">
+      
+      <!-- Drawer Header -->
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-wide">Riwayat Arsip Rekomendasi APBDes</h3>
+          <p class="text-[11px] text-slate-400">Daftar rekomendasi pencairan yang telah diterbitkan di Kecamatan Waru</p>
+        </div>
+        <button id="btnCloseHistory" class="text-slate-400 hover:text-white text-xl">✕</button>
+      </div>
+
+      <!-- Drawer Controls (Search & Export) -->
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+        <div class="relative flex-1 min-w-[200px]">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs">🔍</span>
+          <input type="text" id="inputSearchHistory" placeholder="Cari berdasarkan Desa, No Surat, Jenis Dana..."
+                 class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnExportCsv" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1.5">
+            📊 Unduh CSV / Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Drawer Table Body -->
+      <div class="flex-1 overflow-auto custom-scrollbar p-4">
+        <table class="w-full border-collapse text-left">
+          <thead>
+            <tr class="bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+              <th class="py-2.5 px-3 text-center w-10">No</th>
+              <th class="py-2.5 px-3">No. Surat & Tanggal</th>
+              <th class="py-2.5 px-3">Desa</th>
+              <th class="py-2.5 px-3">Jenis Dana & Tahap</th>
+              <th class="py-2.5 px-3 text-right">Nominal (Rp)</th>
+              <th class="py-2.5 px-3 text-center">Status</th>
+              <th class="py-2.5 px-3 text-center w-28">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyRiwayat">
+            <!-- Diisi dinamis oleh script -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 text-right text-xs text-slate-500 flex-shrink-0">
+        Data tersimpan otomatis di browser (LocalStorage) & Google Sheets (jika terhubung).
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================================================================================= -->
+  <!-- FLOATING TOAST NOTIFICATION CONTAINER -->
+  <!-- ================================================================================= -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- Load JavaScript Utama -->
+  <script src="app.js"></script>
+</body>
+</html>
