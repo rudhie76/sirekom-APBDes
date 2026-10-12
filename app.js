@@ -239,14 +239,47 @@ function formatTanggalIndo(dateStr) {
 // =========================================================================================
 document.addEventListener('DOMContentLoaded', () => {
   populateDesaSelect();
-  renderBerkasChecklist();
   setupEventListeners();
   loadSavedSettings();
   triggerAutoFillDesa();
-  updateLivePreview();
+  pilihTipeRekomendasi(AppState.tipeRekomendasi);
   renderHistoryTable();
   updateSyncStatusBadge();
 });
+
+window.pilihTipeRekomendasi = function(tipe) {
+  AppState.tipeRekomendasi = tipe;
+  
+  // Update Radio input
+  const radio = document.querySelector(`input[name="tipeRekom"][value="${tipe}"]`);
+  if (radio) radio.checked = true;
+
+  // Highlight card aktif
+  document.querySelectorAll('.card-tipe-rekom').forEach(card => {
+    card.classList.remove('bg-emerald-600', 'border-emerald-400', 'ring-2', 'ring-emerald-400');
+    card.classList.add('bg-white/10', 'border-white/20');
+  });
+  const activeCard = document.getElementById(`cardTipe_${tipe}`);
+  if (activeCard) {
+    activeCard.classList.remove('bg-white/10', 'border-white/20');
+    activeCard.classList.add('bg-emerald-600', 'border-emerald-400', 'ring-2', 'ring-emerald-400');
+  }
+
+  handleTipeChange();
+  autoUpdatePerihal();
+  renderBerkasChecklist();
+  autoGenerateNomorSurat();
+  updateLivePreview();
+  showToast(`Format diubah ke: ${getNamaTipe(tipe)}`, 'info');
+};
+
+function getNamaTipe(tipe) {
+  if (tipe === 'siltap') return 'ADD (Siltap & Tunjangan)';
+  if (tipe === 'add_reguler') return 'ADD Reguler (Tahapan)';
+  if (tipe === 'dbh') return 'PBH / DBH (Pajak & Retribusi)';
+  if (tipe === 'dd') return 'DD (Dana Desa APBN)';
+  return tipe;
+}
 
 function populateDesaSelect() {
   const select = document.getElementById('selectNamaDesa');
@@ -399,20 +432,26 @@ function triggerAutoFillDesa() {
   const data = AppState.masterDesa.find(d => d.nama === desaName);
   
   if (data) {
-    document.getElementById('inputKepalaDesa').value = data.kades;
-    document.getElementById('inputKaurKeuangan').value = data.kaurKeuangan;
-    document.getElementById('inputJabatanKaur').value = data.jabatanKaur;
-    document.getElementById('inputNomorRekening').value = data.rekening;
-    document.getElementById('inputNomorPerdes').value = data.nomorPerdes;
-    document.getElementById('inputTahunPerdes').value = data.tahunPerdes;
-    document.getElementById('inputNomorPerkades').value = data.nomorPerkades;
-    document.getElementById('inputTahunPerkades').value = data.tahunPerkades;
-    if (document.getElementById('inputNomorPerdesKewenangan')) {
-      document.getElementById('inputNomorPerdesKewenangan').value = data.nomorPerdesKewenangan;
-    }
-    if (document.getElementById('inputNomorPerdesRkp')) {
-      document.getElementById('inputNomorPerdesRkp').value = data.nomorPerdesRkp;
-    }
+    const elKades = document.getElementById('inputKepalaDesa');
+    if (elKades) elKades.value = data.kades;
+    const elKaur = document.getElementById('inputKaurKeuangan');
+    if (elKaur) elKaur.value = data.kaurKeuangan;
+    const elJabatan = document.getElementById('inputJabatanKaur');
+    if (elJabatan) elJabatan.value = data.jabatanKaur;
+    const elRek = document.getElementById('inputNomorRekening');
+    if (elRek) elRek.value = data.rekening;
+    const elPerdes = document.getElementById('inputNomorPerdes');
+    if (elPerdes) elPerdes.value = data.nomorPerdes;
+    const elThnPerdes = document.getElementById('inputTahunPerdes');
+    if (elThnPerdes) elThnPerdes.value = data.tahunPerdes;
+    const elPerkades = document.getElementById('inputNomorPerkades');
+    if (elPerkades) elPerkades.value = data.nomorPerkades;
+    const elThnPerkades = document.getElementById('inputTahunPerkades');
+    if (elThnPerkades) elThnPerkades.value = data.tahunPerkades;
+    const elKewenangan = document.getElementById('inputNomorPerdesKewenangan');
+    if (elKewenangan) elKewenangan.value = data.nomorPerdesKewenangan;
+    const elRkp = document.getElementById('inputNomorPerdesRkp');
+    if (elRkp) elRkp.value = data.nomorPerdesRkp;
   }
 
   autoUpdatePerihal();

@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>SIP-REKOM APBDes | Generator Surat Rekomendasi Kecamatan Waru</title>
   
   <!-- Tailwind CSS via CDN -->
@@ -221,37 +224,37 @@
           <div class="text-[11px] uppercase tracking-wider font-bold text-blue-200">Jenis Surat Rekomendasi Pencairan:</div>
           <div class="grid grid-cols-2 gap-2 text-xs">
             <!-- 1. ADD Siltap -->
-            <label class="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
-              <input type="radio" name="tipeRekom" value="siltap" checked class="text-emerald-500 focus:ring-emerald-400" />
+            <div id="cardTipe_siltap" onclick="pilihTipeRekomendasi('siltap')" class="card-tipe-rekom flex items-center gap-2 p-2 bg-emerald-600 rounded-lg cursor-pointer transition border border-emerald-400 ring-2 ring-emerald-400">
+              <input type="radio" name="tipeRekom" value="siltap" checked class="text-emerald-500 focus:ring-emerald-400 pointer-events-none" />
               <div class="leading-tight">
                 <span class="font-bold text-white block text-[11px]">ADD (Siltap & Tunjangan)</span>
-                <span class="text-[9.5px] text-blue-200">Kades, BPD, RT & Staf (2 Hal)</span>
+                <span class="text-[9.5px] text-emerald-100">Kades, BPD, RT & Staf (2 Hal)</span>
               </div>
-            </label>
+            </div>
             <!-- 2. ADD Reguler -->
-            <label class="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
-              <input type="radio" name="tipeRekom" value="add_reguler" class="text-emerald-500 focus:ring-emerald-400" />
+            <div id="cardTipe_add_reguler" onclick="pilihTipeRekomendasi('add_reguler')" class="card-tipe-rekom flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
+              <input type="radio" name="tipeRekom" value="add_reguler" class="text-emerald-500 focus:ring-emerald-400 pointer-events-none" />
               <div class="leading-tight">
                 <span class="font-bold text-white block text-[11px]">ADD Reguler (Tahap)</span>
                 <span class="text-[9.5px] text-blue-200">Penyaluran Tahapan (3 Hal)</span>
               </div>
-            </label>
+            </div>
             <!-- 3. PBH / DBH -->
-            <label class="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
-              <input type="radio" name="tipeRekom" value="dbh" class="text-emerald-500 focus:ring-emerald-400" />
+            <div id="cardTipe_dbh" onclick="pilihTipeRekomendasi('dbh')" class="card-tipe-rekom flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
+              <input type="radio" name="tipeRekom" value="dbh" class="text-emerald-500 focus:ring-emerald-400 pointer-events-none" />
               <div class="leading-tight">
                 <span class="font-bold text-white block text-[11px]">PBH / DBH (Pajak & Retribusi)</span>
                 <span class="text-[9.5px] text-blue-200">Bagi Hasil 50% (2 Hal)</span>
               </div>
-            </label>
+            </div>
             <!-- 4. Dana Desa (DD) -->
-            <label class="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
-              <input type="radio" name="tipeRekom" value="dd" class="text-emerald-500 focus:ring-emerald-400" />
+            <div id="cardTipe_dd" onclick="pilihTipeRekomendasi('dd')" class="card-tipe-rekom flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
+              <input type="radio" name="tipeRekom" value="dd" class="text-emerald-500 focus:ring-emerald-400 pointer-events-none" />
               <div class="leading-tight">
                 <span class="font-bold text-white block text-[11px]">DD (Dana Desa APBN)</span>
                 <span class="text-[9.5px] text-blue-200">Penyaluran APBN</span>
               </div>
-            </label>
+            </div>
           </div>
         </div>
 
@@ -617,7 +620,7 @@
 
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
-  <!-- Load JavaScript Utama -->
-  <script src="app.js"></script>
+  <!-- Load JavaScript Utama dengan Cache Buster -->
+  <script src="app.js?v=20261012_v5"></script>
 </body>
 </html>
