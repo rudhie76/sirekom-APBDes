@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIP-REKOM APBDes | Generator Surat Rekomendasi Gaji & APBDes Kecamatan Waru</title>
+  <title>SIP-REKOM APBDes | Generator Surat Rekomendasi Kecamatan Waru</title>
   
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Font Google untuk Tampilan Dokumen Kedinasan -->
+  <!-- Font Google untuk Dokumen Kedinasan -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -84,7 +84,6 @@
         box-shadow: none !important;
         margin: 0 !important;
         width: 100% !important;
-        height: 100% !important;
         min-height: 297mm !important;
         padding: 15mm 20mm 15mm 20mm !important;
         page-break-after: always;
@@ -128,7 +127,7 @@
   <header class="bg-slate-900 text-white border-b border-slate-800 shadow-md flex-shrink-0 z-30">
     <div class="px-4 py-2.5 flex items-center justify-between gap-4">
       
-      <!-- Identitas & Logo Daerah -->
+      <!-- Brand Daerah -->
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-slate-800 p-1 flex items-center justify-center border border-slate-700 shadow-inner">
           <svg viewBox="0 0 100 125" class="w-7 h-8" xmlns="http://www.w3.org/2000/svg">
@@ -143,19 +142,17 @@
             <h1 class="font-bold text-sm tracking-wide text-white uppercase">SIP-REKOM APBDes</h1>
             <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-medium">KECAMATAN WARU</span>
           </div>
-          <p class="text-[11px] text-slate-400">Pemerintah Kabupaten Penajam Paser Utara | Rekomendasi Gaji / Siltap & APBDes</p>
+          <p class="text-[11px] text-slate-400">Pemerintah Kabupaten Penajam Paser Utara | ADD Siltap, ADD Reguler, PBH/DBH & Dana Desa</p>
         </div>
       </div>
 
-      <!-- Center: Status Badge & View Mode Toggle -->
+      <!-- Center: Status & View Mode -->
       <div class="hidden md:flex items-center gap-3">
-        <!-- Status Database Google Sheets -->
         <div id="badgeSyncStatus" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300">
           <span class="w-2 h-2 rounded-full bg-amber-500"></span>
           <span>Mode Database Lokal</span>
         </div>
 
-        <!-- View Switcher -->
         <div class="bg-slate-800 p-0.5 rounded-lg border border-slate-700 flex text-xs font-medium text-slate-300">
           <button id="btnViewSplit" class="px-2.5 py-1 rounded-md bg-slate-700 text-white transition flex items-center gap-1.5">
             <span>Split View</span>
@@ -169,7 +166,7 @@
         </div>
       </div>
 
-      <!-- Action Buttons Right -->
+      <!-- Actions -->
       <div class="flex items-center gap-2">
         <button id="btnOpenHistory" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5">
           <span class="text-amber-400">⏱</span>
@@ -195,20 +192,20 @@
   </header>
 
   <!-- ================================================================================= -->
-  <!-- MAIN WORKSPACE: SPLIT VIEW LAYOUT -->
+  <!-- MAIN WORKSPACE -->
   <!-- ================================================================================= -->
   <main class="flex-1 flex overflow-hidden">
     
     <!-- =============================================================================== -->
-    <!-- PANEL KIRI: FORMULIR INPUT INTERAKTIF -->
+    <!-- PANEL KIRI: FORMULIR INPUT DINAMIS -->
     <!-- =============================================================================== -->
     <aside id="panelFormKiri" class="w-full lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200">
       
-      <!-- Sub-header Form & Tombol Auto Nomor -->
+      <!-- Sub-header Form -->
       <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
         <div>
-          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Form Parameter Surat</h2>
-          <p class="text-[11px] text-slate-500">Pilih template dan sesuaikan isian surat secara langsung</p>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Form Parameter Rekomendasi</h2>
+          <p class="text-[11px] text-slate-500">Pilih jenis dana dan sesuaikan data rekomendasi</p>
         </div>
         <button id="btnGenNomorSurat" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1">
           <span class="text-blue-600 font-bold">#</span>
@@ -216,31 +213,49 @@
         </button>
       </div>
 
-      <!-- Scrollable Form Inputs -->
+      <!-- Scrollable Inputs -->
       <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
 
-        <!-- KARTU 0: PILIHAN TEMPLATE SURAT (GAJI / SILTAP VS APBDES REGULER) -->
-        <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-xl p-3.5 shadow-sm space-y-2">
-          <div class="text-[11px] uppercase tracking-wider font-bold text-blue-200">Tipe Rekomendasi Pencairan:</div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+        <!-- KARTU 0: PILIHAN 4 TEMPLATE SURAT RESMI KECAMATAN WARU -->
+        <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-xl p-3.5 shadow-sm space-y-2">
+          <div class="text-[11px] uppercase tracking-wider font-bold text-blue-200">Jenis Surat Rekomendasi Pencairan:</div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <!-- 1. ADD Siltap -->
             <label class="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
-              <input type="radio" name="tipeRekom" id="radioTipeSiltap" value="siltap" checked class="text-emerald-500 focus:ring-emerald-400" />
+              <input type="radio" name="tipeRekom" value="siltap" checked class="text-emerald-500 focus:ring-emerald-400" />
               <div class="leading-tight">
-                <span class="font-bold text-white block">Rekomendasi Gaji / Siltap</span>
-                <span class="text-[10px] text-blue-200">Kades, BPD, RT & Staf Desa</span>
+                <span class="font-bold text-white block text-[11px]">ADD (Siltap & Tunjangan)</span>
+                <span class="text-[9.5px] text-blue-200">Kades, BPD, RT & Staf (2 Hal)</span>
               </div>
             </label>
+            <!-- 2. ADD Reguler -->
             <label class="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
-              <input type="radio" name="tipeRekom" id="radioTipeReguler" value="reguler" class="text-emerald-500 focus:ring-emerald-400" />
+              <input type="radio" name="tipeRekom" value="add_reguler" class="text-emerald-500 focus:ring-emerald-400" />
               <div class="leading-tight">
-                <span class="font-bold text-white block">Penyaluran APBDes Reguler</span>
-                <span class="text-[10px] text-blue-200">ADD, DD, DBH & Bankeu</span>
+                <span class="font-bold text-white block text-[11px]">ADD Reguler (Tahap)</span>
+                <span class="text-[9.5px] text-blue-200">Penyaluran Tahapan (3 Hal)</span>
+              </div>
+            </label>
+            <!-- 3. PBH / DBH -->
+            <label class="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
+              <input type="radio" name="tipeRekom" value="dbh" class="text-emerald-500 focus:ring-emerald-400" />
+              <div class="leading-tight">
+                <span class="font-bold text-white block text-[11px]">PBH / DBH (Pajak & Retribusi)</span>
+                <span class="text-[9.5px] text-blue-200">Bagi Hasil 50% (2 Hal)</span>
+              </div>
+            </label>
+            <!-- 4. Dana Desa (DD) -->
+            <label class="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition border border-white/20">
+              <input type="radio" name="tipeRekom" value="dd" class="text-emerald-500 focus:ring-emerald-400" />
+              <div class="leading-tight">
+                <span class="font-bold text-white block text-[11px]">DD (Dana Desa APBN)</span>
+                <span class="text-[9.5px] text-blue-200">Penyaluran APBN</span>
               </div>
             </label>
           </div>
         </div>
 
-        <!-- KARTU 1: DATA DESA & PENERIMA REKOMENDASI (AUTO-FILL) -->
+        <!-- KARTU 1: DATA DESA & PENERIMA REKOMENDASI (RKD) -->
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
           <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
             <div class="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">1</div>
@@ -250,44 +265,43 @@
           <!-- Pilihan Desa -->
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">
-              Pilih Nama Desa (Kecamatan Waru) <span class="text-rose-500">*</span>
+              Nama Desa (Kecamatan Waru) <span class="text-rose-500">*</span>
             </label>
             <select id="selectNamaDesa" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white">
-              <!-- Diisi dinamis: Sesulu, Waru, Api-Api, Bangun Mulya -->
+              <!-- Diisi dinamis -->
             </select>
           </div>
 
-          <!-- Kaur Keuangan & Jabatan Penerima Rekomendasi -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-[11px] font-medium text-slate-600 mb-1">Nama Penerima / Kaur Keuangan</label>
-              <input type="text" id="inputKaurKeuangan" value="MASNI" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+              <input type="text" id="inputKaurKeuangan" value="JUMIATI, S.KM" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
             </div>
             <div>
               <label class="block text-[11px] font-medium text-slate-600 mb-1">Nomor Rekening Kas Desa (RKD)</label>
-              <input type="text" id="inputNomorRekening" value="1131400337" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+              <input type="text" id="inputNomorRekening" value="1131400345" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
             </div>
           </div>
 
           <div>
             <label class="block text-[11px] font-medium text-slate-600 mb-1">Jabatan Penerima Rekomendasi</label>
-            <input type="text" id="inputJabatanKaur" value="Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa Sesulu" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            <input type="text" id="inputJabatanKaur" value="Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa Api-api" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
           </div>
 
           <div>
             <label class="block text-[11px] font-medium text-slate-600 mb-1">Nama Kepala Desa</label>
-            <input type="text" id="inputKepalaDesa" value="H. RAHMAN SALEH" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+            <input type="text" id="inputKepalaDesa" value="SUDIRMAN" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
           </div>
         </div>
 
-        <!-- KARTU 2: PARAMETER GAJI / BULAN & NOMINAL PENCAIRAN -->
+        <!-- KARTU 2: PARAMETER PERIODE & BESARAN DANA -->
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
           <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
             <div class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">2</div>
-            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Parameter Periode & Besaran Dana</h3>
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Periode, Tahap & Besaran Dana</h3>
           </div>
 
-          <!-- Section Khusus Siltap / Gaji -->
+          <!-- Section Siltap (Bulan Gaji) -->
           <div id="sectionSiltapFields" class="space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -309,56 +323,65 @@
               </div>
               <div>
                 <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahun Anggaran</label>
-                <input type="number" id="inputTahunAnggaran" value="2026" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
-              </div>
-            </div>
-
-            <!-- Dasar Perdes & Perkades -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-              <div>
-                <label class="block text-[10px] text-slate-600 mb-0.5">No. Perdes APBDes</label>
-                <input type="text" id="inputNomorPerdes" value="7" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
-              </div>
-              <div>
-                <label class="block text-[10px] text-slate-600 mb-0.5">Thn Perdes</label>
-                <input type="text" id="inputTahunPerdes" value="2025" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
-              </div>
-              <div>
-                <label class="block text-[10px] text-slate-600 mb-0.5">No. Perkades</label>
-                <input type="text" id="inputNomorPerkades" value="3" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
-              </div>
-              <div>
-                <label class="block text-[10px] text-slate-600 mb-0.5">Thn Perkades</label>
-                <input type="text" id="inputTahunPerkades" value="2025" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
+                <input type="number" id="inputTahunAnggaran" value="2026" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900" />
               </div>
             </div>
           </div>
 
-          <!-- Section Khusus Reguler (Hidden saat Siltap aktif) -->
-          <div id="sectionRegulerFields" class="hidden space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Jenis Dana</label>
-                <select id="selectJenisDana" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900">
-                  <option value="ADD" selected>ADD (Alokasi Dana Desa)</option>
-                  <option value="DD">DD (Dana Desa)</option>
-                  <option value="DBH">DBH (Bagi Hasil Pajak & Retribusi)</option>
-                  <option value="Bankeu">Bankeu (Bantuan Keuangan Khusus)</option>
-                </select>
-              </div>
+          <!-- Section ADD Reguler & DBH (Tahapan & Persentase) -->
+          <div id="sectionTahapFields" class="hidden space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap Penyaluran</label>
-                <select id="selectTahap" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900">
-                  <option value="Tahap I" selected>Tahap I</option>
-                  <option value="Tahap II">Tahap II</option>
+                <select id="selectTahapReguler" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900">
+                  <option value="Tahap I">Tahap I</option>
+                  <option value="Tahap II" selected>Tahap II</option>
                   <option value="Tahap III">Tahap III</option>
-                  <option value="Salur Sekaligus">Salur Sekaligus (100%)</option>
                 </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Persentase (%)</label>
+                <input type="number" id="inputPersentaseTahap" value="25" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahun Anggaran</label>
+                <input type="number" id="inputTahunAnggaranReguler" value="2026" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900" />
               </div>
             </div>
           </div>
 
-          <!-- Input Nominal Angka (Rp) & Auto Terbilang -->
+          <!-- Dasar Hukum Perdes & Perkades -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-100">
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">No. Perdes APBDes</label>
+              <input type="text" id="inputNomorPerdes" value="7" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">Thn Perdes</label>
+              <input type="text" id="inputTahunPerdes" value="2025" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">No. Perkades</label>
+              <input type="text" id="inputNomorPerkades" value="4" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">Thn Perkades</label>
+              <input type="text" id="inputTahunPerkades" value="2025" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">No. Perdes Kewenangan</label>
+              <input type="text" id="inputNomorPerdesKewenangan" value="2" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">No. Perdes RKP</label>
+              <input type="text" id="inputNomorPerdesRkp" value="2" class="w-full bg-slate-50 border border-slate-300 rounded px-2 py-1 text-xs text-center font-bold" />
+            </div>
+          </div>
+
+          <!-- Nominal & Terbilang -->
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">
               Nominal Pencairan Direkomendasikan (Rp) <span class="text-rose-500">*</span>
@@ -370,16 +393,15 @@
             </div>
           </div>
 
-          <!-- Output Terbilang Otomatis -->
           <div class="bg-amber-50/70 border border-amber-200/80 rounded-lg p-2.5 text-xs">
             <span class="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Terbilang Otomatis:</span>
             <p id="outputTerbilang" class="italic text-slate-900 leading-relaxed font-semibold">
-              Seratus Enam belas juta lima ratus lima puluh ribu rupiah
+              Seratus Enam Belas Juta Lima Ratus Lima Puluh Ribu Rupiah
             </p>
           </div>
         </div>
 
-        <!-- KARTU 3: NOMOR SURAT, TANGGAL & ADMINISTRASI KECAMATAN -->
+        <!-- KARTU 3: NOMOR SURAT & PERIHAL -->
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
           <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
             <div class="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">3</div>
@@ -390,7 +412,7 @@
             <div>
               <label class="block text-[11px] font-semibold text-slate-700 mb-1">Nomor Surat Rekomendasi</label>
               <input type="text" id="inputNomorSurat" value="R-900/179/PMDK/Kec.Waru/2026" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-purple-500 focus:bg-white" />
-              <span class="text-[9.5px] text-slate-400">Format Resmi: R-900/[No]/PMDK/Kec.Waru/[Thn]</span>
+              <span class="text-[9.5px] text-slate-400">Format: R-900/[No]/PMDK/Kec.Waru/[Thn]</span>
             </div>
             <div>
               <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tanggal Surat Rekomendasi</label>
@@ -409,7 +431,7 @@
           <div class="flex items-center justify-between border-b border-slate-100 pb-2">
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">4</div>
-              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Lampiran Berkas Persyaratan (7 Item)</h3>
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Lampiran Berkas Persyaratan</h3>
             </div>
           </div>
 
@@ -418,7 +440,7 @@
           </div>
         </div>
 
-        <!-- KARTU 5: PEJABAT CAMAT & PENGESAHAN (TTE BSRE) -->
+        <!-- KARTU 5: PEJABAT CAMAT WARU -->
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
           <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
             <div class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">5</div>
@@ -450,7 +472,7 @@
     </aside>
 
     <!-- =============================================================================== -->
-    <!-- PANEL KANAN: LIVE PREVIEW DOKUMEN RESMI (SESUAI CONTOH PDF ASLI) -->
+    <!-- PANEL KANAN: LIVE PREVIEW DOKUMEN RESMI (SESUAI DOKUMEN ASLI KECAMATAN WARU) -->
     <!-- =============================================================================== -->
     <section id="panelPreviewKanan" class="w-full lg:w-[55%] xl:w-[58%] bg-slate-300/80 flex flex-col h-full overflow-hidden transition-all duration-200">
       
@@ -532,9 +554,6 @@
           <button id="btnCopyGasScript" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-semibold transition flex items-center gap-1.5">
             📋 Salin Kode Apps Script
           </button>
-          <button id="btnSyncGasData" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold transition flex items-center gap-1.5">
-            🔄 Tarik Riwayat dari Google Sheets
-          </button>
         </div>
       </div>
 
@@ -581,7 +600,7 @@
               <th class="py-2.5 px-3 text-center w-10">No</th>
               <th class="py-2.5 px-3">No. Surat & Tanggal</th>
               <th class="py-2.5 px-3">Desa</th>
-              <th class="py-2.5 px-3">Jenis / Bulan</th>
+              <th class="py-2.5 px-3">Jenis / Perihal</th>
               <th class="py-2.5 px-3 text-right">Nominal (Rp)</th>
               <th class="py-2.5 px-3 text-center">Status</th>
               <th class="py-2.5 px-3 text-center w-28">Aksi</th>
@@ -596,7 +615,6 @@
     </div>
   </div>
 
-  <!-- FLOATING TOAST -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama -->
