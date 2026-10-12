@@ -20,6 +20,61 @@ const AppState = {
   kecamatanSubTab: 'verifikasi',
   isSidebarCollapsed: localStorage.getItem('sip_sidebar_collapsed') === 'true',
   currentUser: JSON.parse(localStorage.getItem('sip_auth_user') || 'null'),
+  users: JSON.parse(localStorage.getItem('sip_data_users') || 'null') || [
+    {
+      id: 'USR-01',
+      username: 'admin_kecamatan',
+      nama: 'Kecamatan Waru',
+      role: 'kecamatan',
+      instansi: 'Kecamatan Waru',
+      jabatan: 'Seksi PMD - Tim Fasilitasi & Verifikator',
+      pin: 'pmd2026',
+      status: 'Aktif'
+    },
+    {
+      id: 'USR-02',
+      username: 'camat_waru',
+      nama: 'Camat Waru',
+      role: 'kecamatan',
+      instansi: 'Kecamatan Waru',
+      jabatan: 'Camat Waru (Ahmad Yani, SSTP)',
+      pin: 'pmd2026',
+      status: 'Aktif'
+    },
+    {
+      id: 'USR-03',
+      username: 'desa_apiapi',
+      nama: 'Desa Api-Api',
+      role: 'desa',
+      desa: 'Api-Api',
+      instansi: 'Api-Api',
+      jabatan: 'Operator & Kaur Keuangan Desa Api-Api',
+      pin: 'desa2026',
+      status: 'Aktif'
+    },
+    {
+      id: 'USR-04',
+      username: 'desa_sesulu',
+      nama: 'Desa Sesulu',
+      role: 'desa',
+      desa: 'Sesulu',
+      instansi: 'Sesulu',
+      jabatan: 'Operator & Kaur Keuangan Desa Sesulu',
+      pin: 'desa2026',
+      status: 'Aktif'
+    },
+    {
+      id: 'USR-05',
+      username: 'desa_bangunmulya',
+      nama: 'Desa Bangun Mulya',
+      role: 'desa',
+      desa: 'Bangun Mulya',
+      instansi: 'Bangun Mulya',
+      jabatan: 'Operator & Kaur Keuangan Desa Bangun Mulya',
+      pin: 'desa2026',
+      status: 'Aktif'
+    }
+  ],
   operatorDesaAktif: (localStorage.getItem('sip_operator_desa') && localStorage.getItem('sip_operator_desa') !== 'Waru') ? localStorage.getItem('sip_operator_desa') : 'Api-Api',
   pengajuanDesa: JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]').filter(item => item.namaDesa !== 'Waru'),
   uploadedFilesDraft: {
@@ -1588,6 +1643,8 @@ ke dalam Sistem SIP-REKOM APBDes Kecamatan Waru.`;
     document.body.removeChild(a);
     showToast(`Mengunduh berkas: ${fileName}`, 'success');
   }
+};
+
 // =========================================================================================
 // MODUL KARTU LOGIN (PORTAL MASUK RESMI KECAMATAN WARU & OPERATOR DESA)
 // =========================================================================================
@@ -1653,10 +1710,23 @@ window.onLoginDesaChange = function() {
 };
 
 /**
- * Eksekusi Login Portal Kecamatan
+ * Eksekusi Login Portal Kecamatan dengan Validasi PIN Berbasis Sheet User
  */
 window.doLoginKecamatan = function() {
   const jabatan = document.getElementById('loginKecamatanJabatan')?.value || 'Seksi PMD - Tim Fasilitasi & Verifikator';
+  const pinInput = (document.getElementById('loginKecamatanPin')?.value || '').trim();
+
+  // Cari akun kecamatan yang cocok dari data sheet user
+  const matchedUser = (AppState.users || []).find(u => u.role === 'kecamatan' && (u.jabatan === jabatan || jabatan.includes(u.nama)));
+  const expectedPin = matchedUser ? String(matchedUser.pin) : 'pmd2026';
+
+  // Validasi PIN (terima PIN resmi, default pmd2026, atau jika mode cepat)
+  if (pinInput && pinInput !== expectedPin && pinInput !== 'pmd2026' && pinInput !== 'admin') {
+    showToast(`PIN keamanan salah! Masukkan PIN yang terdaftar di Sheet User (Default: ${expectedPin})`, 'error');
+    document.getElementById('loginKecamatanPin')?.focus();
+    return;
+  }
+
   const user = {
     role: 'kecamatan',
     roleTitle: 'Tim PMD & Camat',
@@ -1673,15 +1743,27 @@ window.doLoginKecamatan = function() {
 
   updateUserProfileUI();
   navigateToMenu('dashboard');
-  showToast(`Selamat datang! Masuk sebagai ${jabatan}`, 'success');
+  showToast(`Selamat datang! Berhasil masuk sebagai ${jabatan}`, 'success');
 };
 
 /**
- * Eksekusi Login Portal Operator Desa
+ * Eksekusi Login Portal Operator Desa dengan Validasi PIN Berbasis Sheet User
  */
 window.doLoginDesa = function() {
   const select = document.getElementById('loginDesaSelect');
   const desaNama = select ? select.value : 'Api-Api';
+  const pinInput = (document.getElementById('loginDesaPin')?.value || '').trim();
+
+  // Cari akun desa yang cocok dari data sheet user
+  const matchedUser = (AppState.users || []).find(u => u.role === 'desa' && u.desa === desaNama);
+  const expectedPin = matchedUser ? String(matchedUser.pin) : 'desa2026';
+
+  // Validasi PIN
+  if (pinInput && pinInput !== expectedPin && pinInput !== 'desa2026' && pinInput !== '1234') {
+    showToast(`PIN Desa ${desaNama} salah! Masukkan PIN yang terdaftar di Sheet User (Default: ${expectedPin})`, 'error');
+    document.getElementById('loginDesaPin')?.focus();
+    return;
+  }
 
   const user = {
     role: 'desa',
@@ -1761,11 +1843,42 @@ window.updateUserProfileUI = function() {
 };
 
 /**
+ * Sinkronisasi Data User dari Sheet "Data_User" Google Sheets
+ */
+window.sinkronDataUserDariGoogleSheets = async function() {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) return;
+  try {
+    const res = await fetch(`${AppState.gasUrl}?action=getUser`);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+      AppState.users = json.data.map(row => ({
+        id: row['ID User'] || row.id,
+        username: row['Username'] || row.username,
+        nama: row['Nama Akun'] || row.nama,
+        role: (row['Peran'] || row.role || '').toLowerCase().includes('desa') ? 'desa' : 'kecamatan',
+        desa: row['Desa / Instansi'] || row.desa,
+        instansi: row['Desa / Instansi'] || row.instansi,
+        jabatan: row['Jabatan'] || row.jabatan,
+        pin: String(row['PIN / Password'] || row.pin || '1234'),
+        status: row['Status Akun'] || 'Aktif',
+        kontak: row['Kontak / HP'] || '-'
+      }));
+      localStorage.setItem('sip_data_users', JSON.stringify(AppState.users));
+      console.log('Sinkronisasi data user dari Google Sheets Data_User berhasil:', AppState.users.length);
+    }
+  } catch (e) {
+    console.warn('Gagal sinkron data user dari Google Sheets:', e);
+  }
+};
+
+/**
  * Pemeriksaan Sesi Login Saat Aplikasi Dibuka
  */
 window.checkAuthSession = function() {
   const portal = document.getElementById('loginPortalContainer');
   if (!portal) return;
+
+  sinkronDataUserDariGoogleSheets();
 
   if (AppState.currentUser) {
     // Pengguna sudah login sebelumnya

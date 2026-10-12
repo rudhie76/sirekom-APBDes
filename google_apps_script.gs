@@ -33,6 +33,7 @@
 var SHEET_PENGAJUAN_DESA = "Pengajuan_Berkas_Desa";
 var SHEET_REKOMENDASI    = "Riwayat_Rekomendasi";
 var SHEET_MASTER_DESA    = "Master_Desa";
+var SHEET_USER           = "Data_User";
 
 // Nama Folder Induk di Google Drive
 var NAMA_FOLDER_UTAMA_DRIVE = "SIP-REKOM APBDES KECAMATAN WARU";
@@ -182,6 +183,62 @@ function initSheets() {
 
     for (var i = 0; i < defaultDesa.length; i++) {
       sheetDesa.appendRow(defaultDesa[i]);
+    }
+  }
+
+  // 4. Sheet Data User / Pengguna Akses Sistem
+  var sheetUser = ss.getSheetByName(SHEET_USER);
+  if (!sheetUser) {
+    sheetUser = ss.insertSheet(SHEET_USER);
+    var headersUser = [
+      "ID User",
+      "Username",
+      "Nama Akun",
+      "Peran",
+      "Desa / Instansi",
+      "Jabatan",
+      "PIN / Password",
+      "Status Akun",
+      "Kontak / HP"
+    ];
+    sheetUser.appendRow(headersUser);
+
+    var headerRangeU = sheetUser.getRange(1, 1, 1, headersUser.length);
+    headerRangeU.setBackground("#3730A3"); // Indigo Dark
+    headerRangeU.setFontColor("#FFFFFF");
+    headerRangeU.setFontWeight("bold");
+    sheetUser.setFrozenRows(1);
+
+    var defaultUsers = [
+      [
+        "USR-01", "admin_kecamatan", "Kecamatan Waru", "Kecamatan",
+        "Kecamatan Waru", "Seksi PMD - Tim Fasilitasi & Verifikator Berkas",
+        "pmd2026", "Aktif", "081254320000"
+      ],
+      [
+        "USR-02", "camat_waru", "Camat Waru", "Kecamatan",
+        "Kecamatan Waru", "Camat Waru (Ahmad Yani, SSTP)",
+        "camat2026", "Aktif", "081154320001"
+      ],
+      [
+        "USR-03", "desa_apiapi", "Desa Api-Api", "Desa",
+        "Api-Api", "Operator & Kaur Keuangan Desa Api-Api",
+        "desa2026", "Aktif", "082155880003"
+      ],
+      [
+        "USR-04", "desa_sesulu", "Desa Sesulu", "Desa",
+        "Sesulu", "Operator & Kaur Keuangan Desa Sesulu",
+        "desa2026", "Aktif", "081347650002"
+      ],
+      [
+        "USR-05", "desa_bangunmulya", "Desa Bangun Mulya", "Desa",
+        "Bangun Mulya", "Operator & Kaur Keuangan Desa Bangun Mulya",
+        "desa2026", "Aktif", "085246770004"
+      ]
+    ];
+
+    for (var u = 0; u < defaultUsers.length; u++) {
+      sheetUser.appendRow(defaultUsers[u]);
     }
   }
 }
@@ -376,6 +433,30 @@ function doGet(e) {
         success: true,
         data: resultD,
         count: resultD.length
+      });
+    }
+
+    // 5. Ambil Data User / Pengguna untuk Autentikasi
+    if (action === "getUser" || action === "getDataUser") {
+      var sheetU = ss.getSheetByName(SHEET_USER);
+      var dataU = sheetU.getDataRange().getValues();
+      var headersU = dataU[0];
+      var resultU = [];
+
+      for (var u = 1; u < dataU.length; u++) {
+        var rowU = dataU[u];
+        if (!rowU[0]) continue;
+        var itemU = {};
+        for (var cu = 0; cu < headersU.length; cu++) {
+          itemU[headersU[cu]] = rowU[cu];
+        }
+        resultU.push(itemU);
+      }
+
+      return jsonResponse({
+        success: true,
+        data: resultU,
+        count: resultU.length
       });
     }
 
