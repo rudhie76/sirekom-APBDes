@@ -15,7 +15,10 @@ const AppState = {
   isConnected: false,
   
   // Tipe Rekomendasi yang Aktif: 'siltap', 'add_reguler', 'dbh', 'dd'
-  tipeRekomendasi: 'siltap',
+  tipeRekomendasi: 'dbh',
+
+  // Mode Tata Letak Halaman: '1_lembar' (Pas 1 Halaman Rapi) atau 'multi_lembar' (Pisah Lembar)
+  layoutHalaman: '1_lembar',
 
   // Master Desa di Kecamatan Waru (Data Riil Resmi)
   masterDesa: [
@@ -108,7 +111,7 @@ const AppState = {
   // Riwayat Surat yang Tersimpan
   riwayat: JSON.parse(localStorage.getItem('sip_riwayat_rekom') || '[]'),
 
-  // Daftar Lampiran Berkas Sesuai Masing-masing Format
+  // Daftar Lampiran Berkas Sesuai Format
   berkasSiltap: [
     { id: 's1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
     { id: 's2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
@@ -238,10 +241,12 @@ function formatTanggalIndo(dateStr) {
 // INISIALISASI APLIKASI
 // =========================================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  AppState.layoutHalaman = localStorage.getItem('sip_layout_halaman') || '1_lembar';
   populateDesaSelect();
   setupEventListeners();
   loadSavedSettings();
   triggerAutoFillDesa();
+  syncLayoutButtonsUI();
   pilihTipeRekomendasi(AppState.tipeRekomendasi);
   renderHistoryTable();
   updateSyncStatusBadge();
@@ -250,11 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
 window.pilihTipeRekomendasi = function(tipe) {
   AppState.tipeRekomendasi = tipe;
   
-  // Update Radio input
   const radio = document.querySelector(`input[name="tipeRekom"][value="${tipe}"]`);
   if (radio) radio.checked = true;
 
-  // Highlight card aktif
   document.querySelectorAll('.card-tipe-rekom').forEach(card => {
     card.classList.remove('bg-emerald-600', 'border-emerald-400', 'ring-2', 'ring-emerald-400');
     card.classList.add('bg-white/10', 'border-white/20');
@@ -273,6 +276,39 @@ window.pilihTipeRekomendasi = function(tipe) {
   showToast(`Format diubah ke: ${getNamaTipe(tipe)}`, 'info');
 };
 
+window.setLayoutHalaman = function(mode) {
+  AppState.layoutHalaman = mode;
+  localStorage.setItem('sip_layout_halaman', mode);
+  syncLayoutButtonsUI();
+  updateLivePreview();
+  
+  if (mode === '1_lembar') {
+    showToast('Mode 1 Lembar Pas Aktif: Seluruh isi surat pas 1 halaman tanpa lembar ke-2.', 'info');
+  } else {
+    showToast('Mode Format Asli Aktif: Spasi proporsional penuh sesuai dokumen resmi scan PDF.', 'info');
+  }
+};
+
+function syncLayoutButtonsUI() {
+  const mode = AppState.layoutHalaman;
+  const btn1 = document.getElementById('btnLayout1Lembar');
+  const btnMulti = document.getElementById('btnLayoutMultiLembar');
+  const btnForm1 = document.getElementById('btnFormLayout1Lembar');
+  const btnFormMulti = document.getElementById('btnFormLayoutMultiLembar');
+
+  if (mode === '1_lembar') {
+    if (btn1) btn1.className = 'px-2.5 py-1 rounded text-xs font-bold transition flex items-center gap-1 bg-blue-600 text-white shadow-xs';
+    if (btnMulti) btnMulti.className = 'px-2.5 py-1 rounded text-xs font-medium transition flex items-center gap-1 text-slate-700 hover:text-black hover:bg-slate-200';
+    if (btnForm1) btnForm1.className = 'px-2.5 py-1 rounded text-[11px] font-bold bg-blue-600 text-white shadow-xs transition';
+    if (btnFormMulti) btnFormMulti.className = 'px-2.5 py-1 rounded text-[11px] font-medium text-slate-700 hover:bg-slate-100 transition';
+  } else {
+    if (btn1) btn1.className = 'px-2.5 py-1 rounded text-xs font-medium transition flex items-center gap-1 text-slate-700 hover:text-black hover:bg-slate-200';
+    if (btnMulti) btnMulti.className = 'px-2.5 py-1 rounded text-xs font-bold transition flex items-center gap-1 bg-blue-600 text-white shadow-xs';
+    if (btnForm1) btnForm1.className = 'px-2.5 py-1 rounded text-[11px] font-medium text-slate-700 hover:bg-slate-100 transition';
+    if (btnFormMulti) btnFormMulti.className = 'px-2.5 py-1 rounded text-[11px] font-bold bg-blue-600 text-white shadow-xs transition';
+  }
+}
+
 function getNamaTipe(tipe) {
   if (tipe === 'siltap') return 'ADD (Siltap & Tunjangan)';
   if (tipe === 'add_reguler') return 'ADD Reguler (Tahapan)';
@@ -290,7 +326,7 @@ function populateDesaSelect() {
     const opt = document.createElement('option');
     opt.value = desa.nama;
     opt.textContent = `Desa ${desa.nama}`;
-    if (desa.nama === 'Api-Api') opt.selected = true; // Sesuai dokumen Api-Api yang diunggah
+    if (desa.nama === 'Api-Api') opt.selected = true;
     select.appendChild(opt);
   });
 }
@@ -321,20 +357,6 @@ function renderBerkasChecklist() {
 // EVENT LISTENERS
 // =========================================================================================
 function setupEventListeners() {
-  // Radio Switcher 4 Jenis Surat Resmi
-  const radios = document.querySelectorAll('input[name="tipeRekom"]');
-  radios.forEach(r => {
-    r.addEventListener('change', (e) => {
-      AppState.tipeRekomendasi = e.target.value;
-      handleTipeChange();
-      autoUpdatePerihal();
-      renderBerkasChecklist();
-      autoGenerateNomorSurat();
-      updateLivePreview();
-    });
-  });
-
-  // Watch inputs
   const watchInputs = [
     'selectNamaDesa', 'inputKepalaDesa', 'inputKaurKeuangan', 'inputJabatanKaur', 'inputNomorRekening',
     'selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'inputTahunAnggaran', 'inputNominalAngka',
@@ -366,33 +388,27 @@ function setupEventListeners() {
     }
   });
 
-  // Auto Generate Nomor
   document.getElementById('btnGenNomorSurat')?.addEventListener('click', () => {
     autoGenerateNomorSurat();
     updateLivePreview();
     showToast('Nomor surat disesuaikan!', 'info');
   });
 
-  // Cetak & Simpan
   document.getElementById('btnPrintDoc')?.addEventListener('click', () => triggerPrint());
   document.getElementById('btnSaveToDb')?.addEventListener('click', () => saveRecommendationData());
 
-  // Zoom
   document.getElementById('btnZoomIn')?.addEventListener('click', () => changeZoom(10));
   document.getElementById('btnZoomOut')?.addEventListener('click', () => changeZoom(-10));
   document.getElementById('btnZoomReset')?.addEventListener('click', () => resetZoom());
 
-  // Kertas
   document.getElementById('selectPaperSize')?.addEventListener('change', (e) => {
     AppState.paperSize = e.target.value;
     applyPaperSize();
   });
 
-  // Modal Settings & Riwayat Drawer
   setupModalSettingsListeners();
   setupHistoryDrawerListeners();
 
-  // Layout View Switcher
   document.getElementById('btnViewSplit')?.addEventListener('click', () => setViewMode('split'));
   document.getElementById('btnViewForm')?.addEventListener('click', () => setViewMode('form'));
   document.getElementById('btnViewPreview')?.addEventListener('click', () => setViewMode('preview'));
@@ -406,7 +422,6 @@ function handleTipeChange() {
   if (secSiltap) secSiltap.classList.toggle('hidden', !isSiltap);
   if (secTahap) secTahap.classList.toggle('hidden', isSiltap);
 
-  // Set default sample nominal per tipe
   const nominalInput = document.getElementById('inputNominalAngka');
   const tglInput = document.getElementById('inputTanggalSurat');
 
@@ -508,7 +523,7 @@ function handleNominalInput() {
 }
 
 // =========================================================================================
-// RENDER LIVE PREVIEW SESUAI TEMPLATE
+// RENDER LIVE PREVIEW DOKUMEN RESMI (KECAMATAN WARU - PPU)
 // =========================================================================================
 function updateLivePreview() {
   const previewDoc = document.getElementById('previewDocumentContainer');
@@ -527,7 +542,236 @@ function updateLivePreview() {
 }
 
 /**
- * 1. TEMPLATE SILTAP (2 Halaman)
+ * -----------------------------------------------------------------------------------------
+ * 1. RENDER PBH / DBH (DANA BAGI HASIL PAJAK & RETRIBUSI DAERAH)
+ * -----------------------------------------------------------------------------------------
+ */
+function renderLivePreviewDbh() {
+  const previewDoc = document.getElementById('previewDocumentContainer');
+  const namaDesa = document.getElementById('selectNamaDesa')?.value || 'Api-Api';
+  const kaurKeuangan = document.getElementById('inputKaurKeuangan')?.value || 'JUMIATI, S.KM';
+  const jabatanKaur = document.getElementById('inputJabatanKaur')?.value || `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${namaDesa}`;
+  const nomorRekening = document.getElementById('inputNomorRekening')?.value || '1131400345';
+  const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
+  const persen = document.getElementById('inputPersentaseTahap')?.value || '50';
+  const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
+  const nomorSurat = document.getElementById('inputNomorSurat')?.value || `R-900/404/PMDK/Kec.Waru/${tahunAnggaran}`;
+  const tanggalSuratIndo = formatTanggalIndo(document.getElementById('inputTanggalSurat')?.value || '2026-10-06');
+  const nominalAngka = parseCurrencyInput(document.getElementById('inputNominalAngka')?.value || '150021000');
+  const nominalFormatted = formatRupiah(nominalAngka);
+  const terbilangText = convertTerbilang(nominalAngka);
+  const namaCamat = document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
+  const nipCamat = document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
+  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'tte';
+  const perdesKewenangan = document.getElementById('inputNomorPerdesKewenangan')?.value || '2';
+  const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
+  const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
+
+  const perihalText = `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
+
+  // JIKA MODE 1 LEMBAR (PAS 1 HALAMAN TANPA RUANG KOSONG)
+  if (AppState.layoutHalaman === '1_lembar') {
+    previewDoc.innerHTML = `
+      <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[11px] leading-snug" id="suratHalaman1">
+        ${getKopSuratHtml(true)}
+        
+        <!-- BARIS KEPALA SURAT -->
+        <div class="mt-2.5 flex justify-between text-[11px] leading-snug">
+          <div class="w-[56%] pr-2">
+            <table class="w-full border-collapse">
+              <tr><td class="w-16 align-top py-0.2">Nomor</td><td class="w-3 align-top py-0.2">:</td><td class="align-top py-0.2 font-medium">${escapeHtml(nomorSurat)}</td></tr>
+              <tr><td class="align-top py-0.2">Lampiran</td><td class="align-top py-0.2">:</td><td class="align-top py-0.2">-</td></tr>
+              <tr><td class="align-top py-0.2">Perihal</td><td class="align-top py-0.2">:</td><td class="align-top py-0.2 text-justify leading-snug">${perihalText}</td></tr>
+            </table>
+          </div>
+          <div class="w-[44%] pl-4 text-left">
+            <div class="mb-1 text-right">Waru, ${tanggalSuratIndo}</div>
+            <div class="leading-tight pl-2">
+              <div>Kepada</div>
+              <div>Yth. Bupati Penajam Paser Utara</div>
+              <div class="pl-4">Up. Kepala Badan Keuangan</div>
+              <div class="pl-4">dan Aset Daerah Kab. PPU</div>
+              <div>di-</div>
+              <div class="pl-6">Tempat</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DASAR HUKUM 9 POIN -->
+        <div class="mt-2 text-[10.5px] text-justify leading-snug">
+          <div class="flex items-start">
+            <div class="w-14">Dasar</div><div class="w-2">:</div>
+            <div class="flex-1">
+              <ol class="list-decimal pl-4 space-y-0.5">
+                <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;</li>
+                <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;</li>
+                <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
+                <li class="pl-1">Peraturan Daerah Kabupaten Penajam Paser Utara Nomor 1 Tahun 2015 tentang Desa;</li>
+                <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021 tentang Perubahan Peraturan Bupati Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa;</li>
+                <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 1 Tahun 2024 tentang Tata Cara Pengalokasian dan Penyaluran Bagian dari Hasil Pajak dan Retribusi Daerah Kepada Desa;</li>
+                <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
+                <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
+                <li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- REKOMENDASI & PENERIMA -->
+        <div class="mt-2 text-[10.5px] text-justify leading-snug">
+          <p class="indent-8">
+            Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada:
+          </p>
+          <div class="my-1 pl-6">
+            <table class="border-collapse text-[10.5px]">
+              <tr><td class="w-44 py-0.2">Nama</td><td class="w-3">:</td><td class="font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
+              <tr><td class="py-0.2">Jabatan</td><td>:</td><td>${escapeHtml(jabatanKaur)}</td></tr>
+              <tr><td class="py-0.2">Nomor Rekening Kas Desa</td><td>:</td><td class="font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
+            </table>
+          </div>
+          <p class="indent-8">
+            Untuk menerima (mengambil) Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) TA ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
+          </p>
+        </div>
+
+        <!-- 9 LAMPIRAN BERKAS -->
+        <div class="mt-1.5 text-[10px] leading-tight">
+          <p class="font-semibold mb-0.5">Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas persyaratan antara lain:</p>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 pl-4 text-slate-900">
+            ${AppState.berkasDbh.map((item, idx) => `<div>${idx + 1}. ${escapeHtml(item.teks)}</div>`).join('')}
+          </div>
+        </div>
+
+        <!-- KLAUSUL TANGGUNG JAWAB & PENUTUP -->
+        <div class="mt-2 text-[10px] text-justify leading-snug">
+          <p class="indent-6">
+            Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}. Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.
+          </p>
+        </div>
+
+        <!-- TANDA TANGAN & TEMBUSAN -->
+        <div class="mt-2 flex justify-between items-end text-[10.5px]">
+          <div class="w-[50%] text-[10px] leading-tight">
+            <div class="font-bold underline mb-0.5">Tembusan:</div>
+            <ol class="list-decimal pl-4 space-y-0.2">
+              <li>Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. PPU;</li>
+              <li>Arsip.</li>
+            </ol>
+          </div>
+          <div class="w-[45%] text-center leading-tight">
+            <div>Camat Waru,</div>
+            <div class="h-20 flex items-center justify-center my-0.5">
+              ${metodeTte === 'tte' ? getQrCodeSvg() : '<div class="text-xs text-slate-400 italic">(Tanda Tangan Basah)</div>'}
+            </div>
+            <div class="font-bold text-black">${escapeHtml(namaCamat)}</div>
+            <div class="text-[10px] font-mono text-black">NIP. ${escapeHtml(nipCamat)}</div>
+          </div>
+        </div>
+
+        ${getFooterBsreHtml('1 / 1')}
+      </div>
+    `;
+    return;
+  }
+
+  // JIKA MODE MULTI LEMBAR (2 HALAMAN PENUH BERSPASI LEGA PROPORSIONAL SESUAI DOKUMEN ASLI)
+  previewDoc.innerHTML = `
+    <!-- HALAMAN 1 -->
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[12px] leading-relaxed" id="suratHalaman1">
+      ${getKopSuratHtml(true)}
+      <div class="mt-4 flex justify-between text-[12px] leading-relaxed">
+        <div class="w-[55%] pr-2">
+          <table class="w-full border-collapse text-[12px]">
+            <tr><td class="w-16 align-top py-0.5">Nomor</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-medium">${escapeHtml(nomorSurat)}</td></tr>
+            <tr><td class="align-top py-0.5">Lampiran</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">-</td></tr>
+            <tr><td class="align-top py-0.5">Perihal</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 text-justify leading-snug">${perihalText}</td></tr>
+          </table>
+        </div>
+        <div class="w-[45%] pl-4 text-left">
+          <div class="mb-3 text-right">Waru, ${tanggalSuratIndo}</div>
+          <div class="leading-normal pl-4">
+            <div>Kepada</div>
+            <div>Yth. Bupati Penajam Paser Utara</div>
+            <div class="pl-4 leading-tight">Up. Kepala Badan Keuangan</div>
+            <div class="pl-4 leading-tight">dan Aset Daerah Kab. PPU</div>
+            <div>di-</div>
+            <div class="pl-6">Tempat</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 text-[12px] text-justify leading-relaxed">
+        <div class="flex items-start">
+          <div class="w-16">Dasar</div><div class="w-3">:</div>
+          <div class="flex-1">
+            <ol class="list-decimal pl-4 space-y-2">
+              <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;</li>
+              <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;</li>
+              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
+              <li class="pl-1">Peraturan Daerah Kabupaten Penajam Paser Utara Nomor 1 Tahun 2015 tentang Desa;</li>
+              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021 tentang Perubahan Peraturan Bupati Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa;</li>
+              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 1 Tahun 2024 tentang Tata Cara Pengalokasian dan Penyaluran Bagian dari Hasil Pajak dan Retribusi Daerah Kepada Desa;</li>
+              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
+              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
+              <li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 text-[12px] text-justify leading-relaxed">
+        <p class="indent-10">
+          Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
+        </p>
+        <div class="my-3 pl-8">
+          <table class="border-collapse text-[12px]">
+            <tr><td class="w-48 align-top py-1">Nama</td><td class="w-3 align-top py-1">:</td><td class="align-top py-1 font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
+            <tr><td class="align-top py-1">Jabatan</td><td class="align-top py-1">:</td><td class="align-top py-1">${escapeHtml(jabatanKaur)}</td></tr>
+            <tr><td class="align-top py-1">Nomor Rekening Kas Desa</td><td class="align-top py-1">:</td><td class="align-top py-1 font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      ${getFooterBsreHtml('1 / 2')}
+    </div>
+
+    <div class="page-break my-8 print:my-0"></div>
+
+    <!-- HALAMAN 2 -->
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[12px] leading-relaxed" id="suratHalaman2">
+      <div class="text-[12px] text-justify leading-relaxed">
+        <p class="indent-10">
+          Untuk menerima (mengambil) Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
+        </p>
+
+        <p class="indent-10 mt-4">
+          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
+        </p>
+
+        <div class="my-3.5 pl-4">
+          <ol class="list-decimal pl-4 space-y-1.5">
+            ${AppState.berkasDbh.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+          </ol>
+        </div>
+
+        <p class="indent-10 mt-5">
+          Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
+        </p>
+        <p class="indent-10 mt-2.5">
+          Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.
+        </p>
+      </div>
+
+      ${getTtdCamatHtml(namaCamat, nipCamat, metodeTte)}
+      ${getFooterBsreHtml('2 / 2')}
+    </div>
+  `;
+}
+
+/**
+ * -----------------------------------------------------------------------------------------
+ * 2. RENDER ADD - SILTAP (GAJI, BPD, RT & STAF)
+ * -----------------------------------------------------------------------------------------
  */
 function renderLivePreviewSiltap() {
   const previewDoc = document.getElementById('previewDocumentContainer');
@@ -552,11 +796,110 @@ function renderLivePreviewSiltap() {
 
   const perihalText = `Rekomendasi Pencairan ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${escapeHtml(bulanGaji)} Desa ${escapeHtml(namaDesa)} Tahun ${escapeHtml(tahunAnggaran)}`;
 
-  const docHtml = `
+  // JIKA MODE 1 LEMBAR
+  if (AppState.layoutHalaman === '1_lembar') {
+    previewDoc.innerHTML = `
+      <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[11px] leading-snug" id="suratHalaman1">
+        ${getKopSuratHtml()}
+        <div class="mt-2.5 flex justify-between text-[11px] leading-snug">
+          <div class="w-[56%] pr-2">
+            <table class="w-full border-collapse">
+              <tr><td class="w-16 align-top py-0.2">Nomor</td><td class="w-3 align-top py-0.2">:</td><td class="align-top py-0.2 font-medium">${escapeHtml(nomorSurat)}</td></tr>
+              <tr><td class="align-top py-0.2">Lampiran</td><td class="align-top py-0.2">:</td><td class="align-top py-0.2">-</td></tr>
+              <tr><td class="align-top py-0.2">Perihal</td><td class="align-top py-0.2">:</td><td class="align-top py-0.2 text-justify leading-snug">${perihalText}</td></tr>
+            </table>
+          </div>
+          <div class="w-[44%] pl-4 text-left">
+            <div class="mb-1 text-right">Waru, ${tanggalSuratIndo}</div>
+            <div class="leading-tight pl-2">
+              <div>Kepada</div>
+              <div>Yth. Bupati Penajam Paser Utara</div>
+              <div class="pl-4">Up. Kepala Badan Keuangan</div>
+              <div class="pl-4">dan Aset Daerah Kab. PPU</div>
+              <div>di-</div>
+              <div class="pl-6">Tempat</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2 text-[10.5px] text-justify leading-snug">
+          <div class="flex items-start">
+            <div class="w-14">Dasar</div><div class="w-2">:</div>
+            <div class="flex-1">
+              <ol class="list-decimal pl-4 space-y-0.5">
+                <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas UU Nomor 6 Tahun 2014 Tentang Desa;</li>
+                <li class="pl-1">PP Nomor 43 Tahun 2014 jo PP Nomor 11 Tahun 2019 tentang Pelaksanaan UU Desa;</li>
+                <li class="pl-1">Instruksi Menteri Dalam Negeri Nomor 28 Tahun 2022 tentang Pembayaran Siltap Kades dan Perangkat Desa;</li>
+                <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
+                <li class="pl-1">Perbup PPU Nomor 7 Tahun 2019 jo Perbup Nomor 16 Tahun 2021 tentang Pengelolaan Keuangan Desa;</li>
+                <li class="pl-1">Perbup PPU Nomor 14 Tahun 2024 tentang Pengangkatan dan Honorarium Staf Desa;</li>
+                <li class="pl-1">Perbup PPU Nomor 08 Tahun 2025 jo Perbup Nomor 13 Tahun 2024 tentang Besaran Siltap & Tunjangan BPD;</li>
+                <li class="pl-1">Perdes ${escapeHtml(namaDesa)} Nomor ${escapeHtml(nomorPerdes)} Tahun ${escapeHtml(tahunPerdes)} tentang APBDes TA ${escapeHtml(tahunAnggaran)};</li>
+                <li class="pl-1">Perkades ${escapeHtml(namaDesa)} Nomor ${escapeHtml(nomorPerkades)} Tahun ${escapeHtml(tahunPerkades)} tentang Penjabaran APBDes TA ${escapeHtml(tahunAnggaran)}.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2 text-[10.5px] text-justify leading-snug">
+          <p class="indent-8">
+            Memperhatikan dasar diatas dan setelah diverifikasi chek list Dokumen Persyaratan Rekomendasi Pencairan ADD Siltap Bulan ${escapeHtml(bulanGaji)} TA ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}, dengan ini diberikan Rekomendasi Kepada:
+          </p>
+          <div class="my-1 pl-6">
+            <table class="border-collapse text-[10.5px]">
+              <tr><td class="w-44 py-0.2">Nama</td><td class="w-3">:</td><td class="font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
+              <tr><td class="py-0.2">Jabatan</td><td>:</td><td>${escapeHtml(jabatanKaur)}</td></tr>
+              <tr><td class="py-0.2">Rekening Kas Desa</td><td>:</td><td class="font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
+            </table>
+          </div>
+          <p class="indent-8">
+            Untuk menerima (mengambil) Dana ADD Siltap Bulan ${escapeHtml(bulanGaji)} TA ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} Sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
+          </p>
+        </div>
+
+        <div class="mt-1.5 text-[10px] leading-tight">
+          <p class="font-semibold mb-0.5">Sebagai bahan pertimbangan, bersama ini dilampirkan berkas persyaratan:</p>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 pl-4 text-slate-900">
+            ${AppState.berkasSiltap.map((item, idx) => `<div>${idx + 1}. ${escapeHtml(item.teks)}</div>`).join('')}
+          </div>
+        </div>
+
+        <div class="mt-2 text-[10px] text-justify leading-snug">
+          <p class="indent-6">
+            Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}. Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.
+          </p>
+        </div>
+
+        <div class="mt-2 flex justify-between items-end text-[10.5px]">
+          <div class="w-[50%] text-[10px] leading-tight">
+            <div class="font-bold underline mb-0.5">Tembusan:</div>
+            <ol class="list-decimal pl-4 space-y-0.2">
+              <li>Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. PPU;</li>
+              <li>Arsip.</li>
+            </ol>
+          </div>
+          <div class="w-[45%] text-center leading-tight">
+            <div>Camat Waru,</div>
+            <div class="h-20 flex items-center justify-center my-0.5">
+              ${metodeTte === 'tte' ? getQrCodeSvg() : '<div class="text-xs text-slate-400 italic">(Tanda Tangan Basah)</div>'}
+            </div>
+            <div class="font-bold text-black">${escapeHtml(namaCamat)}</div>
+            <div class="text-[10px] font-mono text-black">NIP. ${escapeHtml(nipCamat)}</div>
+          </div>
+        </div>
+
+        ${getFooterBsreHtml('1 / 1')}
+      </div>
+    `;
+    return;
+  }
+
+  // JIKA MODE MULTI LEMBAR (2 HALAMAN PENUH BERSPASI LEGA)
+  previewDoc.innerHTML = `
     <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[12px] leading-relaxed" id="suratHalaman1">
       ${getKopSuratHtml()}
-      <div class="mt-4 flex justify-between text-[11.5px] leading-relaxed">
+      <div class="mt-4 flex justify-between text-[12px] leading-relaxed">
         <div class="w-[55%] pr-2">
           <table class="w-full border-collapse">
             <tr><td class="w-16 align-top py-0.5">Nomor</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-medium">${escapeHtml(nomorSurat)}</td></tr>
@@ -577,11 +920,11 @@ function renderLivePreviewSiltap() {
         </div>
       </div>
 
-      <div class="mt-4 text-[11px] text-justify leading-normal">
+      <div class="mt-5 text-[12px] text-justify leading-relaxed">
         <div class="flex items-start">
           <div class="w-16">Dasar</div><div class="w-3">:</div>
           <div class="flex-1">
-            <ol class="list-decimal pl-4 space-y-1">
+            <ol class="list-decimal pl-4 space-y-2">
               <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;</li>
               <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah beberapa kali terakhir dengan Peraturan Pemerintah Nomor 11 Tahun 2019;</li>
               <li class="pl-1">Instruksi Menteri Dalam Negeri Nomor 28 Tahun 2022 tentang Pembayaran Penghasilan Tetap Kepala Desa dan Perangkat Desa;</li>
@@ -596,7 +939,7 @@ function renderLivePreviewSiltap() {
         </div>
       </div>
 
-      <div class="mt-4 text-[11px] text-justify leading-relaxed">
+      <div class="mt-5 text-[12px] text-justify leading-relaxed">
         <p class="indent-10">
           Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${escapeHtml(bulanGaji)} Desa ${escapeHtml(namaDesa)} Tahun ${escapeHtml(tahunAnggaran)} sesuai dengan
         </p>
@@ -608,14 +951,14 @@ function renderLivePreviewSiltap() {
     <div class="page-break my-8 print:my-0"></div>
 
     <!-- HALAMAN 2 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
-      <div class="text-[11px] text-justify leading-relaxed">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[12px] leading-relaxed" id="suratHalaman2">
+      <div class="text-[12px] text-justify leading-relaxed">
         <p>ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :</p>
         <div class="my-3 pl-8">
-          <table class="border-collapse text-[11px]">
-            <tr><td class="w-48 align-top py-0.5">Nama</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
-            <tr><td class="align-top py-0.5">Jabatan</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">${escapeHtml(jabatanKaur)}</td></tr>
-            <tr><td class="align-top py-0.5">Nomor Rekening Kas Desa</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
+          <table class="border-collapse text-[12px]">
+            <tr><td class="w-48 align-top py-1">Nama</td><td class="w-3 align-top py-1">:</td><td class="align-top py-1 font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
+            <tr><td class="align-top py-1">Jabatan</td><td class="align-top py-1">:</td><td class="align-top py-1">${escapeHtml(jabatanKaur)}</td></tr>
+            <tr><td class="align-top py-1">Nomor Rekening Kas Desa</td><td class="align-top py-1">:</td><td class="align-top py-1 font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
           </table>
         </div>
 
@@ -623,32 +966,32 @@ function renderLivePreviewSiltap() {
           Untuk menerima (mengambil) Dana ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${escapeHtml(bulanGaji)} Desa ${escapeHtml(namaDesa)} Tahun ${escapeHtml(tahunAnggaran)} Sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
         </p>
 
-        <p class="indent-10 mt-2">
+        <p class="indent-10 mt-4">
           Sebagai bahan pertimbangan, bersama ini kami lampirkan berkas-berkas persyaratan Pencairan ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${escapeHtml(bulanGaji)} Desa ${escapeHtml(namaDesa)} Tahun ${escapeHtml(tahunAnggaran)} sebagai berikut:
         </p>
 
-        <div class="my-2 pl-4">
-          <ol class="list-decimal pl-4 space-y-0.5">
+        <div class="my-3.5 pl-4">
+          <ol class="list-decimal pl-4 space-y-1.5">
             ${AppState.berkasSiltap.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
 
-        <p class="indent-10 mt-2">
+        <p class="indent-10 mt-5">
           Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
         </p>
-        <p class="indent-10 mt-2">Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.</p>
+        <p class="indent-10 mt-2.5">Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.</p>
       </div>
 
       ${getTtdCamatHtml(namaCamat, nipCamat, metodeTte)}
       ${getFooterBsreHtml('2 / 2')}
     </div>
   `;
-
-  previewDoc.innerHTML = docHtml;
 }
 
 /**
- * 2. TEMPLATE ADD REGULER (3 Halaman Sesuai PDF Resmi)
+ * -----------------------------------------------------------------------------------------
+ * 3. RENDER ADD REGULER (TAHAPAN PENYALURAN)
+ * -----------------------------------------------------------------------------------------
  */
 function renderLivePreviewAddReguler() {
   const previewDoc = document.getElementById('previewDocumentContainer');
@@ -674,9 +1017,122 @@ function renderLivePreviewAddReguler() {
 
   const perihalText = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} (${escapeHtml(persen)} %) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
 
-  const docHtml = `
+  // JIKA MODE 1/2 LEMBAR RINGKAS (TANPA MEMECAH JADI 3 HALAMAN KOSONG)
+  if (AppState.layoutHalaman === '1_lembar') {
+    previewDoc.innerHTML = `
+      <!-- HALAMAN 1 DARI 2 -->
+      <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[11px] leading-snug" id="suratHalaman1">
+        ${getKopSuratHtml()}
+        <div class="mt-2.5 flex justify-between text-[11px] leading-snug">
+          <div class="w-[56%] pr-2">
+            <table class="w-full border-collapse">
+              <tr><td class="w-16 align-top py-0.2">Nomor</td><td class="w-3 align-top py-0.2">:</td><td class="align-top py-0.2 font-medium">${escapeHtml(nomorSurat)}</td></tr>
+              <tr><td class="align-top py-0.2">Lampiran</td><td class="align-top py-0.2">:</td><td class="align-top py-0.2">-</td></tr>
+              <tr><td class="align-top py-0.2">Perihal</td><td class="align-top py-0.2">:</td><td class="align-top py-0.2 text-justify leading-snug">${perihalText}</td></tr>
+            </table>
+          </div>
+          <div class="w-[44%] pl-4 text-left">
+            <div class="mb-1 text-right">Waru, ${tanggalSuratIndo}</div>
+            <div class="leading-tight pl-2">
+              <div>Kepada</div>
+              <div>Yth. Bupati Penajam Paser Utara</div>
+              <div class="pl-4">Up. Kepala Badan Keuangan</div>
+              <div class="pl-4">dan Aset Daerah Kab. PPU</div>
+              <div>di-</div>
+              <div class="pl-6">Tempat</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2 text-[10.5px] text-justify leading-snug">
+          <div class="flex items-start">
+            <div class="w-14">Dasar</div><div class="w-2">:</div>
+            <div class="flex-1">
+              <ol class="list-decimal pl-4 space-y-0.5">
+                <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas UU Nomor 6 Tahun 2014 Tentang Desa;</li>
+                <li class="pl-1">PP Nomor 43 Tahun 2014 jo PP Nomor 47 Tahun 2015 tentang Pelaksanaan UU Desa;</li>
+                <li class="pl-1">Permendagri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
+                <li class="pl-1">PMK Nomor 146 Tahun 2023 tentang Pengalokasian dan Penyaluran Dana Desa;</li>
+                <li class="pl-1">Permendesa PDTT Nomor 7 Tahun 2023 tentang Prioritas Penggunaan Dana Desa;</li>
+                <li class="pl-1">Perda Kabupaten Penajam Paser Utara Nomor 1 Tahun 2015 tentang Desa;</li>
+                <li class="pl-1">Perbup PPU Nomor 16 Tahun 2021 jo Perbup Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa;</li>
+                <li class="pl-1">Perbup PPU Nomor 1 Tahun 2024 tentang Tata Cara Pengalokasian & Penyaluran Bagian Hasil Pajak & Retribusi;</li>
+                <li class="pl-1">Perbup PPU Nomor 13 Tahun 2023 tentang Tata Cara Pengalokasian dan Pembagian ADD;</li>
+                <li class="pl-1">Perbup PPU Nomor 08 Tahun 2025 jo Perbup Nomor 13 Tahun 2024 tentang Besaran Siltap & Tunjangan BPD;</li>
+                <li class="pl-1">Perbup PPU Nomor 14 Tahun 2024 tentang Pengangkatan dan Honorarium Staf Desa;</li>
+                <li class="pl-1">Perdes ${escapeHtml(namaDesa)} No. ${escapeHtml(perdesKewenangan)}/2019 tentang Kewenangan Desa;</li>
+                <li class="pl-1">Perdes No. ${escapeHtml(perdesRkp)}/2025 tentang RKP Desa TA ${escapeHtml(tahunAnggaran)};</li>
+                <li class="pl-1">Perdes No. ${escapeHtml(perdes)}/2025 tentang APBDes TA ${escapeHtml(tahunAnggaran)};</li>
+                <li class="pl-1">Perkades No. ${escapeHtml(perkades)}/2025 tentang Penjabaran APBDes TA ${escapeHtml(tahunAnggaran)}.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2 text-[10.5px] text-justify leading-snug">
+          <p class="indent-8">
+            Memperhatikan dasar diatas dan setelah dilakukan chek list Dokumen Persyaratan Rekomendasi Pencairan ADD ${escapeHtml(tahap)} (${escapeHtml(persen)}%) TA ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}, diberikan Rekomendasi Kepada:
+          </p>
+          <div class="my-1 pl-6">
+            <table class="border-collapse text-[10.5px]">
+              <tr><td class="w-44 py-0.2">Nama</td><td class="w-3">:</td><td class="font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
+              <tr><td class="py-0.2">Jabatan</td><td>:</td><td>${escapeHtml(jabatanKaur)}</td></tr>
+              <tr><td class="py-0.2">Rekening Kas Desa</td><td>:</td><td class="font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
+            </table>
+          </div>
+          <p class="indent-8">
+            Untuk menerima (mengambil) ADD ${escapeHtml(tahap)} (${escapeHtml(persen)}%) TA ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} Sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
+          </p>
+        </div>
+
+        ${getFooterBsreHtml('1 / 2')}
+      </div>
+
+      <div class="page-break my-8 print:my-0"></div>
+
+      <!-- HALAMAN 2 DARI 2 -->
+      <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[11px] leading-snug" id="suratHalaman2">
+        <div class="text-[10px] leading-tight">
+          <p class="font-semibold mb-1">Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Pencairan ADD ${escapeHtml(tahap)} (${escapeHtml(persen)}%) antara lain:</p>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-1 pl-4 text-slate-900">
+            ${AppState.berkasAddReguler.map((item, idx) => `<div>${idx + 1}. ${escapeHtml(item.teks)}</div>`).join('')}
+          </div>
+        </div>
+
+        <div class="mt-4 text-[10.5px] text-justify leading-snug">
+          <p class="indent-8">
+            Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}. Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.
+          </p>
+        </div>
+
+        <div class="mt-4 flex justify-between items-end text-[11px]">
+          <div class="w-[50%] text-[10.5px] leading-tight">
+            <div class="font-bold underline mb-0.5">Tembusan:</div>
+            <ol class="list-decimal pl-4 space-y-0.5">
+              <li>Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. PPU;</li>
+              <li>Arsip.</li>
+            </ol>
+          </div>
+          <div class="w-[45%] text-center leading-tight">
+            <div>Camat Waru,</div>
+            <div class="h-20 flex items-center justify-center my-0.5">
+              ${metodeTte === 'tte' ? getQrCodeSvg() : '<div class="text-xs text-slate-400 italic">(Tanda Tangan Basah)</div>'}
+            </div>
+            <div class="font-bold text-black">${escapeHtml(namaCamat)}</div>
+            <div class="text-[10px] font-mono text-black">NIP. ${escapeHtml(nipCamat)}</div>
+          </div>
+        </div>
+
+        ${getFooterBsreHtml('2 / 2')}
+      </div>
+    `;
+    return;
+  }
+
+  // JIKA MODE MULTI LEMBAR (3 HALAMAN STANDAR LENGKAP DENGAN FONT LEBIH BESAR)
+  previewDoc.innerHTML = `
     <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[11.5px] leading-relaxed" id="suratHalaman1">
       ${getKopSuratHtml()}
       <div class="mt-4 flex justify-between text-[11.5px] leading-relaxed">
         <div class="w-[55%] pr-2">
@@ -699,7 +1155,7 @@ function renderLivePreviewAddReguler() {
         </div>
       </div>
 
-      <div class="mt-3 text-[10.5px] text-justify leading-tight">
+      <div class="mt-4 text-[11px] text-justify leading-normal">
         <div class="flex items-start">
           <div class="w-14">Dasar</div><div class="w-2">:</div>
           <div class="flex-1">
@@ -726,8 +1182,8 @@ function renderLivePreviewAddReguler() {
     <div class="page-break my-8 print:my-0"></div>
 
     <!-- HALAMAN 2 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
-      <div class="text-[10.5px] text-justify leading-tight">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[11.5px] leading-relaxed" id="suratHalaman2">
+      <div class="text-[11px] text-justify leading-normal">
         <ol start="12" class="list-decimal pl-6 space-y-1">
           <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
           <li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdesRkp)} Tahun 2025 tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
@@ -740,7 +1196,7 @@ function renderLivePreviewAddReguler() {
         </p>
 
         <div class="my-2 pl-8">
-          <table class="border-collapse text-[10.5px]">
+          <table class="border-collapse text-[11px]">
             <tr><td class="w-48 align-top py-0.5">Nama</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
             <tr><td class="align-top py-0.5">Jabatan</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">${escapeHtml(jabatanKaur)}</td></tr>
             <tr><td class="align-top py-0.5">Nomor Rekening Kas Desa</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
@@ -768,9 +1224,9 @@ function renderLivePreviewAddReguler() {
     <div class="page-break my-8 print:my-0"></div>
 
     <!-- HALAMAN 3 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman3">
-      <div class="text-[10.5px] text-justify leading-tight">
-        <ol start="12" class="list-decimal pl-6 space-y-0.5">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[11.5px] leading-relaxed" id="suratHalaman3">
+      <div class="text-[11px] text-justify leading-normal">
+        <ol start="12" class="list-decimal pl-6 space-y-1">
           ${AppState.berkasAddReguler.slice(11).map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
         </ol>
 
@@ -786,133 +1242,12 @@ function renderLivePreviewAddReguler() {
       ${getFooterBsreHtml('3 / 3')}
     </div>
   `;
-
-  previewDoc.innerHTML = docHtml;
 }
 
 /**
- * 3. TEMPLATE PBH / DBH PAJAK & RETRIBUSI DAERAH (2 Halaman Sesuai PDF Resmi)
- */
-function renderLivePreviewDbh() {
-  const previewDoc = document.getElementById('previewDocumentContainer');
-  const namaDesa = document.getElementById('selectNamaDesa')?.value || 'Api-Api';
-  const kaurKeuangan = document.getElementById('inputKaurKeuangan')?.value || 'JUMIATI, S.KM';
-  const jabatanKaur = document.getElementById('inputJabatanKaur')?.value || `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${namaDesa}`;
-  const nomorRekening = document.getElementById('inputNomorRekening')?.value || '1131400345';
-  const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
-  const persen = document.getElementById('inputPersentaseTahap')?.value || '50';
-  const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
-  const nomorSurat = document.getElementById('inputNomorSurat')?.value || `R-900/404/PMDK/Kec.Waru/${tahunAnggaran}`;
-  const tanggalSuratIndo = formatTanggalIndo(document.getElementById('inputTanggalSurat')?.value || '2026-10-06');
-  const nominalAngka = parseCurrencyInput(document.getElementById('inputNominalAngka')?.value || '150021000');
-  const nominalFormatted = formatRupiah(nominalAngka);
-  const terbilangText = convertTerbilang(nominalAngka);
-  const namaCamat = document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
-  const nipCamat = document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
-  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'tte';
-  const perdesKewenangan = document.getElementById('inputNomorPerdesKewenangan')?.value || '2';
-  const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
-  const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
-
-  const perihalText = `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
-
-  const docHtml = `
-    <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman1">
-      ${getKopSuratHtml(true)}
-      <div class="mt-4 flex justify-between text-[11.5px] leading-relaxed">
-        <div class="w-[55%] pr-2">
-          <table class="w-full border-collapse">
-            <tr><td class="w-16 align-top py-0.5">Nomor</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-medium">${escapeHtml(nomorSurat)}</td></tr>
-            <tr><td class="align-top py-0.5">Lampiran</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">-</td></tr>
-            <tr><td class="align-top py-0.5">Perihal</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 text-justify leading-snug">${perihalText}</td></tr>
-          </table>
-        </div>
-        <div class="w-[45%] pl-4 text-left">
-          <div class="mb-3 text-right">Waru, ${tanggalSuratIndo}</div>
-          <div class="leading-normal pl-4">
-            <div>Kepada</div>
-            <div>Yth. Bupati Penajam Paser Utara</div>
-            <div class="pl-4 leading-tight">Up. Kepala Badan Keuangan</div>
-            <div class="pl-4 leading-tight">dan Aset Daerah Kab. PPU</div>
-            <div>di-</div>
-            <div class="pl-6">Tempat</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-3 text-[11px] text-justify leading-tight">
-        <div class="flex items-start">
-          <div class="w-16">Dasar</div><div class="w-3">:</div>
-          <div class="flex-1">
-            <ol class="list-decimal pl-4 space-y-1">
-              <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;</li>
-              <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;</li>
-              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
-              <li class="pl-1">Peraturan Daerah Kabupaten Penajam Paser Utara Nomor 1 Tahun 2015 tentang Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021 tentang Perubahan Peraturan Bupati Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 1 Tahun 2024 tentang Tata Cara Pengalokasian dan Penyaluran Bagian dari Hasil Pajak dan Retribusi Daerah Kepada Desa;</li>
-              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
-              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
-              <li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-3 text-[11px] text-justify leading-relaxed">
-        <p class="indent-10">
-          Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
-        </p>
-        <div class="my-2 pl-8">
-          <table class="border-collapse text-[11px]">
-            <tr><td class="w-48 align-top py-0.5">Nama</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
-            <tr><td class="align-top py-0.5">Jabatan</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">${escapeHtml(jabatanKaur)}</td></tr>
-            <tr><td class="align-top py-0.5">Nomor Rekening Kas Desa</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
-          </table>
-        </div>
-      </div>
-
-      ${getFooterBsreHtml('1 / 2')}
-    </div>
-
-    <div class="page-break my-8 print:my-0"></div>
-
-    <!-- HALAMAN 2 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
-      <div class="text-[11px] text-justify leading-relaxed">
-        <p class="indent-10">
-          Untuk menerima (mengambil) Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
-        </p>
-
-        <p class="indent-10 mt-2">
-          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
-        </p>
-
-        <div class="my-2 pl-4">
-          <ol class="list-decimal pl-4 space-y-0.5">
-            ${AppState.berkasDbh.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
-          </ol>
-        </div>
-
-        <p class="indent-10 mt-3">
-          Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
-        </p>
-        <p class="indent-10 mt-2">
-          Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.
-        </p>
-      </div>
-
-      ${getTtdCamatHtml(namaCamat, nipCamat, metodeTte)}
-      ${getFooterBsreHtml('2 / 2')}
-    </div>
-  `;
-
-  previewDoc.innerHTML = docHtml;
-}
-
-/**
- * 4. TEMPLATE DANA DESA (DD)
+ * -----------------------------------------------------------------------------------------
+ * 4. RENDER DD (DANA DESA APBN)
+ * -----------------------------------------------------------------------------------------
  */
 function renderLivePreviewDd() {
   const previewDoc = document.getElementById('previewDocumentContainer');
@@ -933,70 +1268,76 @@ function renderLivePreviewDd() {
 
   const perihalText = `Rekomendasi Penyaluran Dana Desa (DD) ${escapeHtml(tahap)} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
 
-  const docHtml = `
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman1">
+  previewDoc.innerHTML = `
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans text-[11px] leading-snug" id="suratHalaman1">
       ${getKopSuratHtml()}
-      <div class="mt-4 flex justify-between text-[11.5px] leading-relaxed">
-        <div class="w-[55%] pr-2">
+      <div class="mt-2.5 flex justify-between text-[11px] leading-snug">
+        <div class="w-[56%] pr-2">
           <table class="w-full border-collapse">
-            <tr><td class="w-16 align-top py-0.5">Nomor</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-medium">${escapeHtml(nomorSurat)}</td></tr>
-            <tr><td class="align-top py-0.5">Lampiran</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">-</td></tr>
-            <tr><td class="align-top py-0.5">Perihal</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 text-justify leading-snug">${perihalText}</td></tr>
+            <tr><td class="w-16 align-top py-0.2">Nomor</td><td class="w-3 align-top py-0.2">:</td><td class="align-top py-0.2 font-medium">${escapeHtml(nomorSurat)}</td></tr>
+            <tr><td class="align-top py-0.2">Lampiran</td><td class="align-top py-0.2">:</td><td class="align-top py-0.2">-</td></tr>
+            <tr><td class="align-top py-0.2">Perihal</td><td class="align-top py-0.2">:</td><td class="align-top py-0.2 text-justify leading-snug">${perihalText}</td></tr>
           </table>
         </div>
-        <div class="w-[45%] pl-4 text-left">
-          <div class="mb-3 text-right">Waru, ${tanggalSuratIndo}</div>
-          <div class="leading-normal pl-4">
+        <div class="w-[44%] pl-4 text-left">
+          <div class="mb-1 text-right">Waru, ${tanggalSuratIndo}</div>
+          <div class="leading-tight pl-2">
             <div>Kepada</div>
             <div>Yth. Bupati Penajam Paser Utara</div>
-            <div class="pl-4 leading-tight">Up. Kepala Badan Keuangan</div>
-            <div class="pl-4 leading-tight">dan Aset Daerah Kab. PPU</div>
+            <div class="pl-4">Up. Kepala Badan Keuangan</div>
+            <div class="pl-4">dan Aset Daerah Kab. PPU</div>
             <div>di-</div>
             <div class="pl-6">Tempat</div>
           </div>
         </div>
       </div>
 
-      <div class="mt-4 text-[11px] text-justify leading-relaxed">
-        <p class="indent-10">
-          Berdasarkan hasil verifikasi dokumen persyaratan penyaluran Dana Desa yang diajukan oleh Pemerintah Desa <strong>${escapeHtml(namaDesa)}</strong>, bersama ini Camat Waru memberikan Rekomendasi Penyaluran Dana Desa (DD) ${escapeHtml(tahap)} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Kepada :
+      <div class="mt-3 text-[11px] text-justify leading-relaxed">
+        <p class="indent-8">
+          Berdasarkan hasil verifikasi dokumen persyaratan penyaluran Dana Desa yang diajukan oleh Pemerintah Desa <strong>${escapeHtml(namaDesa)}</strong>, bersama ini Camat Waru memberikan Rekomendasi Penyaluran Dana Desa (DD) ${escapeHtml(tahap)} TA ${escapeHtml(tahunAnggaran)} Kepada:
         </p>
-        <div class="my-3 pl-8">
+        <div class="my-2 pl-6">
           <table class="border-collapse text-[11px]">
-            <tr><td class="w-48 align-top py-0.5">Nama</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
-            <tr><td class="align-top py-0.5">Jabatan</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">${escapeHtml(jabatanKaur)}</td></tr>
-            <tr><td class="align-top py-0.5">Nomor Rekening Kas Desa</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
+            <tr><td class="w-44 py-0.5">Nama</td><td class="w-3">:</td><td class="font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
+            <tr><td class="py-0.5">Jabatan</td><td>:</td><td>${escapeHtml(jabatanKaur)}</td></tr>
+            <tr><td class="py-0.5">Nomor Rekening Kas Desa</td><td>:</td><td class="font-mono font-medium">${escapeHtml(nomorRekening)}</td></tr>
           </table>
         </div>
-
-        <p class="indent-10">
-          Untuk menerima (mengambil) Dana Desa (DD) ${escapeHtml(tahap)} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
+        <p class="indent-8">
+          Untuk menerima (mengambil) Dana Desa (DD) ${escapeHtml(tahap)} TA ${escapeHtml(tahunAnggaran)} Sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
         </p>
-
-        <p class="indent-10 mt-2">
-          Sebagai bahan pertimbangan, bersama ini dilampirkan berkas persyaratan penyaluran yang telah diverifikasi lengkap.
-        </p>
-
-        <div class="my-2 pl-4">
-          <ol class="list-decimal pl-4 space-y-0.5">
-            ${AppState.berkasDd.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
-          </ol>
+        <div class="mt-2 text-[10.5px]">
+          <p class="font-semibold mb-1">Sebagai bahan pertimbangan, bersama ini dilampirkan berkas persyaratan:</p>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 pl-4">
+            ${AppState.berkasDd.map((item, idx) => `<div>${idx + 1}. ${escapeHtml(item.teks)}</div>`).join('')}
+          </div>
         </div>
-
-        <p class="indent-10 mt-3">
-          Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
-        </p>
-        <p class="indent-10 mt-2">
-          Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.
+        <p class="indent-8 mt-3">
+          Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}. Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.
         </p>
       </div>
 
-      ${getTtdCamatHtml(namaCamat, nipCamat, metodeTte)}
+      <div class="mt-3 flex justify-between items-end text-[11px]">
+        <div class="w-[50%] text-[10.5px] leading-tight">
+          <div class="font-bold underline mb-0.5">Tembusan:</div>
+          <ol class="list-decimal pl-4 space-y-0.2">
+            <li>Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. PPU;</li>
+            <li>Arsip.</li>
+          </ol>
+        </div>
+        <div class="w-[45%] text-center leading-tight">
+          <div>Camat Waru,</div>
+          <div class="h-20 flex items-center justify-center my-0.5">
+            ${metodeTte === 'tte' ? getQrCodeSvg() : '<div class="text-xs text-slate-400 italic">(Tanda Tangan Basah)</div>'}
+          </div>
+          <div class="font-bold text-black">${escapeHtml(namaCamat)}</div>
+          <div class="text-[10px] font-mono text-black">NIP. ${escapeHtml(nipCamat)}</div>
+        </div>
+      </div>
+
       ${getFooterBsreHtml('1 / 1')}
     </div>
   `;
-
-  previewDoc.innerHTML = docHtml;
 }
 
 // =========================================================================================
@@ -1004,7 +1345,7 @@ function renderLivePreviewDd() {
 // =========================================================================================
 function getKopSuratHtml(withWa = false) {
   return `
-    <div class="kop-surat flex items-center justify-between pb-2 border-b-[3px] border-black relative">
+    <div class="kop-surat flex items-center justify-between pb-1.5 border-b-[3px] border-black relative">
       <div class="w-20 flex-shrink-0 flex items-center justify-center">
         ${getLogoPenajamSvg()}
       </div>
@@ -1099,11 +1440,11 @@ function applyPaperSize() {
     if (size === 'folio') {
       sheet.style.width = '215mm';
       sheet.style.minHeight = '330mm';
-      sheet.style.padding = '18mm 20mm 15mm 22mm';
+      sheet.style.padding = AppState.layoutHalaman === '1_lembar' ? '14mm 18mm 14mm 20mm' : '18mm 20mm 15mm 22mm';
     } else {
       sheet.style.width = '210mm';
       sheet.style.minHeight = '297mm';
-      sheet.style.padding = '16mm 18mm 15mm 20mm';
+      sheet.style.padding = AppState.layoutHalaman === '1_lembar' ? '12mm 16mm 12mm 18mm' : '16mm 18mm 15mm 20mm';
     }
   });
 }
