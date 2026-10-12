@@ -1157,12 +1157,12 @@ function applyPaperSize() {
       sheet.style.width = '215mm';
       sheet.style.minHeight = '330mm';
       sheet.style.maxHeight = '330mm';
-      sheet.style.padding = '16mm 20mm 15mm 22mm';
+      sheet.style.padding = '1cm 1cm 2cm 1.5cm';
     } else {
       sheet.style.width = '210mm';
       sheet.style.minHeight = '297mm';
       sheet.style.maxHeight = '297mm';
-      sheet.style.padding = '13mm 18mm 13mm 20mm';
+      sheet.style.padding = '1cm 1cm 2cm 1.5cm';
     }
   });
 }
