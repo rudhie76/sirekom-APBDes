@@ -1497,7 +1497,14 @@ const FileStorage = {
     }
   },
 
-  async downloadFile(id, fallbackName = 'Dokumen.pdf') {
+  async downloadFile(id, fallbackName = 'Dokumen.pdf', driveUrl = null) {
+    // Jika link Google Drive tersedia dan valid, buka/unduh langsung dari Google Drive
+    if (driveUrl && typeof driveUrl === 'string' && driveUrl.startsWith('http') && driveUrl !== '-') {
+      window.open(driveUrl, '_blank');
+      showToast(`Membuka berkas dari Google Drive: ${fallbackName}`, 'success');
+      return;
+    }
+
     let file = null;
     try {
       file = await this.getFile(id);
@@ -1832,6 +1839,50 @@ window.submitPengajuanDesa = async function() {
   AppState.pengajuanDesa.unshift(newSubmission);
   localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
 
+  // Sinkronisasi otomatis ke Google Drive & Google Sheets jika URL GAS dikonfigurasi
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    try {
+      btnKirim.innerHTML = '<span>☁️ Mengunggah ke Google Drive & Sheets...</span>';
+      const payloadGas = {
+        action: 'simpanPengajuanDesa',
+        id: newSubmission.id,
+        namaDesa: newSubmission.namaDesa,
+        jenisDana: newSubmission.jenisDana,
+        tahap: newSubmission.tahap,
+        tahunAnggaran: newSubmission.tahunAnggaran,
+        nominal: newSubmission.nominal,
+        nomorSp: newSubmission.nomorSp,
+        tanggalSp: newSubmission.tanggalSp,
+        nomorRekomDesa: newSubmission.nomorRekomDesa,
+        tanggalRekomDesa: newSubmission.tanggalRekomDesa,
+        status: newSubmission.status,
+        fileSp: draft.sp ? { name: draft.sp.name, type: draft.sp.type, dataUrl: draft.sp.dataUrl } : null,
+        fileCeklist: draft.ceklist ? { name: draft.ceklist.name, type: draft.ceklist.type, dataUrl: draft.ceklist.dataUrl } : null,
+        fileRekom: draft.rekom ? { name: draft.rekom.name, type: draft.rekom.type, dataUrl: draft.rekom.dataUrl } : null
+      };
+
+      const res = await fetch(AppState.gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payloadGas)
+      });
+      const resJson = await res.json();
+      if (resJson.success) {
+        newSubmission.driveFolderUrl = resJson.driveFolderUrl;
+        if (resJson.driveFiles) {
+          if (resJson.driveFiles.sp && resJson.driveFiles.sp.url !== '-') newSubmission.driveSpUrl = resJson.driveFiles.sp.url;
+          if (resJson.driveFiles.ceklist && resJson.driveFiles.ceklist.url !== '-') newSubmission.driveCeklistUrl = resJson.driveFiles.ceklist.url;
+          if (resJson.driveFiles.rekom && resJson.driveFiles.rekom.url !== '-') newSubmission.driveRekomUrl = resJson.driveFiles.rekom.url;
+        }
+        localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+        showToast('Berkas berhasil disimpan ke Google Drive & dicatat di Google Sheets!', 'success');
+      }
+    } catch (gasErr) {
+      console.warn('Gagal sinkron ke Google Drive:', gasErr);
+      showToast('Berkas tersimpan di database lokal (Offline Google Sheets).', 'info');
+    }
+  }
+
   renderTabelPengajuanDesa();
   updateBadgePengajuanDesa();
   resetFormPengajuanDesa();
@@ -1896,15 +1947,19 @@ function renderTabelPengajuanDesa() {
         </td>
         <td class="py-3 px-3 text-center">
           <div class="flex flex-col gap-1 items-center">
-            <button onclick="downloadDokumenPengajuan('${item.fileSpId}', '${item.fileSpName}')" class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold border border-emerald-200 transition flex items-center gap-1 w-full justify-center">
+            <button onclick="downloadDokumenPengajuan('${item.fileSpId}', '${item.fileSpName}', '${item.driveSpUrl || ''}')" class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold border border-emerald-200 transition flex items-center gap-1 w-full justify-center">
               <span>📄 Unduh SP</span>
             </button>
-            <button onclick="downloadDokumenPengajuan('${item.fileCeklistId}', '${item.fileCeklistName}')" class="px-2 py-0.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded text-[10px] font-bold border border-teal-200 transition flex items-center gap-1 w-full justify-center">
+            <button onclick="downloadDokumenPengajuan('${item.fileCeklistId}', '${item.fileCeklistName}', '${item.driveCeklistUrl || ''}')" class="px-2 py-0.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded text-[10px] font-bold border border-teal-200 transition flex items-center gap-1 w-full justify-center">
               <span>📋 Unduh Ceklist</span>
             </button>
-            <button onclick="downloadDokumenPengajuan('${item.fileRekomDesaId}', '${item.fileRekomDesaName}')" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[10px] font-bold border border-blue-200 transition flex items-center gap-1 w-full justify-center">
+            <button onclick="downloadDokumenPengajuan('${item.fileRekomDesaId}', '${item.fileRekomDesaName}', '${item.driveRekomUrl || ''}')" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[10px] font-bold border border-blue-200 transition flex items-center gap-1 w-full justify-center">
               <span>📑 Unduh Rekom</span>
             </button>
+            ${item.driveFolderUrl ? `
+            <a href="${item.driveFolderUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[9.5px] font-bold border border-indigo-200 transition flex items-center gap-1 w-full justify-center mt-0.5" title="Buka Folder Google Drive Desa">
+              <span>📂 Folder Drive</span>
+            </a>` : ''}
           </div>
         </td>
         <td class="py-3 px-3 text-center">
@@ -2038,15 +2093,19 @@ window.renderTabelPengajuanKecamatan = function() {
       </td>
       <td class="py-3 px-3 text-center">
         <div class="flex flex-col gap-1 items-center">
-          <button onclick="downloadDokumenPengajuan('${item.fileSpId}', '${item.fileSpName}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
+          <button onclick="downloadDokumenPengajuan('${item.fileSpId}', '${item.fileSpName}', '${item.driveSpUrl || ''}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
             <span>📥 Unduh SP</span>
           </button>
-          <button onclick="downloadDokumenPengajuan('${item.fileCeklistId}', '${item.fileCeklistName}')" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
+          <button onclick="downloadDokumenPengajuan('${item.fileCeklistId}', '${item.fileCeklistName}', '${item.driveCeklistUrl || ''}')" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
             <span>📥 Unduh Ceklist</span>
           </button>
-          <button onclick="downloadDokumenPengajuan('${item.fileRekomDesaId}', '${item.fileRekomDesaName}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
+          <button onclick="downloadDokumenPengajuan('${item.fileRekomDesaId}', '${item.fileRekomDesaName}', '${item.driveRekomUrl || ''}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
             <span>📥 Unduh Rekom Desa</span>
           </button>
+          ${item.driveFolderUrl ? `
+          <a href="${item.driveFolderUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[9.5px] font-bold border border-indigo-200 transition flex items-center gap-1 w-full justify-center mt-0.5" title="Buka Folder Google Drive Desa Ini">
+            <span>📂 Folder Drive Desa</span>
+          </a>` : ''}
         </div>
       </td>
       <td class="py-3 px-3 text-center">
@@ -2059,10 +2118,32 @@ window.renderTabelPengajuanKecamatan = function() {
 };
 
 /**
- * Download Dokumen Pengajuan
+ * Download Dokumen Pengajuan (dari Google Drive jika ada, fallback ke IndexedDB)
  */
-window.downloadDokumenPengajuan = function(fileId, defaultName) {
-  FileStorage.downloadFile(fileId, defaultName);
+window.downloadDokumenPengajuan = function(fileId, defaultName, driveUrl = null) {
+  FileStorage.downloadFile(fileId, defaultName, driveUrl);
+};
+
+/**
+ * Membuka Folder Google Drive Kecamatan / Desa
+ */
+window.openDriveFolderKecamatan = async function() {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) {
+    alert('URL Google Apps Script belum disetel di Konfigurasi Google Sheets.\n\nSilakan masukkan URL Web App Google Apps Script terlebih dahulu agar folder Google Drive otomatis terbuka.');
+    return;
+  }
+  try {
+    showToast('Membuka folder Google Drive SIP-REKOM...', 'info');
+    const res = await fetch(`${AppState.gasUrl}?action=ping`);
+    const data = await res.json();
+    if (data.driveFolderUrl) {
+      window.open(data.driveFolderUrl, '_blank');
+    } else {
+      window.open('https://drive.google.com/', '_blank');
+    }
+  } catch (e) {
+    window.open('https://drive.google.com/', '_blank');
+  }
 };
 
 /**
@@ -2126,11 +2207,72 @@ window.prosesPengajuanKeRekomendasi = function(id) {
 };
 
 /**
- * Sinkronisasi Pengajuan ke Google Sheets jika URL GAS diset
+ * Sinkronisasi Pengajuan ke Google Sheets & Google Drive
  */
-window.sinkronPengajuanKeGoogleSheets = function() {
-  updateBadgePengajuanDesa();
-  renderTabelPengajuanKecamatan();
-  showToast('Data pengajuan desa berhasil disegarkan!', 'info');
+window.sinkronPengajuanKeGoogleSheets = async function() {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) {
+    updateBadgePengajuanDesa();
+    renderTabelPengajuanKecamatan();
+    renderTabelPengajuanDesa();
+    showToast('Data lokal disegarkan. Untuk sinkron Google Sheets & Drive, silakan atur URL Web App di Konfigurasi Google Sheets.', 'info');
+    return;
+  }
+
+  try {
+    showToast('Menghubungkan ke Google Sheets & Google Drive...', 'info');
+    const url = `${AppState.gasUrl}?action=getPengajuanDesa&_t=${Date.now()}`;
+    const res = await fetch(url);
+    const result = await res.json();
+
+    if (result.success && Array.isArray(result.data)) {
+      const cloudList = result.data.map(row => ({
+        id: row['ID Pengajuan'] || `PENG-${Date.now()}`,
+        waktuKirim: row['Waktu Pengajuan'] ? new Date(row['Waktu Pengajuan']).toISOString() : new Date().toISOString(),
+        namaDesa: row['Nama Desa'] || '',
+        jenisDana: row['Jenis Dana'] || 'add_reguler',
+        tahap: row['Tahap Pencairan'] || '',
+        tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
+        nominal: Number(row['Nominal Angka (Rp)']) || 0,
+        nomorSp: row['Nomor SP Desa'] || '',
+        tanggalSp: row['Tanggal SP Desa'] ? String(row['Tanggal SP Desa']).substring(0, 10) : '',
+        nomorRekomDesa: row['Nomor Rekomendasi Desa'] || '',
+        tanggalRekomDesa: row['Tanggal Rekom Desa'] ? String(row['Tanggal Rekom Desa']).substring(0, 10) : '',
+        fileSpId: `file_sp_${row['ID Pengajuan']}`,
+        fileSpName: row['Nama File SP'] || 'Surat_Pengantar.pdf',
+        driveSpUrl: row['Link Google Drive SP'] && row['Link Google Drive SP'] !== '-' ? row['Link Google Drive SP'] : null,
+        fileCeklistId: `file_cek_${row['ID Pengajuan']}`,
+        fileCeklistName: row['Nama File Ceklist'] || 'Ceklist_Berkas.pdf',
+        driveCeklistUrl: row['Link Google Drive Ceklist'] && row['Link Google Drive Ceklist'] !== '-' ? row['Link Google Drive Ceklist'] : null,
+        fileRekomDesaId: `file_rek_${row['ID Pengajuan']}`,
+        fileRekomDesaName: row['Nama File Rekom Desa'] || 'Rekomendasi_Desa.pdf',
+        driveRekomUrl: row['Link Google Drive Rekom Desa'] && row['Link Google Drive Rekom Desa'] !== '-' ? row['Link Google Drive Rekom Desa'] : null,
+        driveFolderUrl: row['Folder Google Drive Desa'] && row['Folder Google Drive Desa'] !== '-' ? row['Folder Google Drive Desa'] : null,
+        status: row['Status Verifikasi'] || 'Menunggu Verifikasi'
+      }));
+
+      // Gabungkan data cloud dengan lokal tanpa duplikasi berdasarkan ID
+      const existingMap = new Map();
+      cloudList.forEach(item => existingMap.set(item.id, item));
+      (AppState.pengajuanDesa || []).forEach(item => {
+        if (!existingMap.has(item.id)) {
+          existingMap.set(item.id, item);
+        }
+      });
+
+      AppState.pengajuanDesa = Array.from(existingMap.values());
+      // Urutkan waktu terbaru di atas
+      AppState.pengajuanDesa.sort((a, b) => new Date(b.waktuKirim) - new Date(a.waktuKirim));
+
+      localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+      showToast(`Berhasil menarik ${cloudList.length} data pengajuan dari Google Sheets!`, 'success');
+    }
+  } catch (err) {
+    console.error('Error sinkron dari Google Sheets:', err);
+    showToast('Gagal menarik data dari Google Sheets. Periksa URL Web App atau koneksi internet.', 'error');
+  } finally {
+    updateBadgePengajuanDesa();
+    renderTabelPengajuanKecamatan();
+    renderTabelPengajuanDesa();
+  }
 };
 

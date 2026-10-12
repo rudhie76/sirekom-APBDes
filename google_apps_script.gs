@@ -3,45 +3,88 @@
  * GOOGLE APPS SCRIPT: SIP-REKOM APBDES KECAMATAN WARU
  * KABUPATEN PENAJAM PASER UTARA
  * =========================================================================================
- * Backend Database Google Sheets untuk Generator & Pengelola Surat Rekomendasi Pencairan APBDes
- * (ADD, DD, DBH, dan Bantuan Keuangan / Bankeu)
+ * Backend Database Google Sheets & Penyimpanan Berkas Google Drive Otomatis
+ * untuk:
+ * 1. Penyimpanan Berkas Pengajuan Operator Desa (Surat Pengantar, Ceklist, Rekomendasi Desa)
+ *    ke Folder Google Drive dan Pencatatan ke Sheet "Pengajuan_Berkas_Desa"
+ * 2. Penyimpanan Arsip Surat Rekomendasi Camat Waru ke Sheet "Riwayat_Rekomendasi"
+ * 3. Master Data Desa ke Sheet "Master_Desa"
  * 
- * CARA PEMASANGAN (DEPLOI):
- * 1. Buka Google Sheets baru di https://sheets.new
- * 2. Beri nama spreadsheet, misal: "DATABASE REKOMENDASI APBDES KECAMATAN WARU"
- * 3. Klik menu: Extensions (Ekstensi) > Apps Script
- * 4. Hapus semua kode default di Apps Script, lalu tempelkan (paste) seluruh isi file ini.
- * 5. Klik icon Save (Simpan) / tekan Ctrl + S.
- * 6. Klik tombol "Deploy" (Terapkan) di kanan atas > "New deployment" (Penerapan baru).
- * 7. Pilih jenis: "Web app" (Aplikasi web).
- * 8. Konfigurasi:
- *    - Description: "SIP Rekom APBDes API v1"
- *    - Execute as: "Me" (Saya / akun Google Anda)
- *    - Who has access: "Anyone" (Siapa saja)  <-- PENTING agar web lokal dapat terhubung tanpa CORS error!
- * 9. Klik "Deploy". Berikan izin (Authorize access) jika diminta.
- * 10. Salin "Web app URL" (contoh: https://script.google.com/macros/s/XXXXX/exec)
- * 11. Tempelkan URL tersebut ke Pengaturan Google Sheets di aplikasi web Anda.
+ * -----------------------------------------------------------------------------------------
+ * PETUNJUK PENERAPAN / DEPLOYMENT DI GOOGLE SPREADSHEET:
+ * 1. Buka Google Sheets baru di https://sheets.new (atau gunakan Spreadsheet yang sudah ada).
+ * 2. Beri nama file Spreadsheet, misalnya: "DATABASE SIP-REKOM KECAMATAN WARU".
+ * 3. Klik menu: Extensions (Ekstensi) > Apps Script.
+ * 4. Hapus seluruh kode default di editor, lalu paste (tempelkan) SELURUH isi file ini.
+ * 5. Klik icon Simpan (Save) / tekan Ctrl + S.
+ * 6. Klik tombol "Deploy" (Terapkan) di pojok kanan atas > pilih "New deployment" (Penerapan baru).
+ * 7. Pada jenis penerapan (ikon roda gigi), pilih "Web app" (Aplikasi web).
+ * 8. Konfigurasi penting:
+ *    - Description : "SIP Rekom APBDes API v2 Drive & Sheets"
+ *    - Execute as  : "Me" (Saya / akun Google Anda)
+ *    - Who has access : "Anyone" (Siapa saja)  <-- WAJIB agar aplikasi web dapat mengirim file!
+ * 9. Klik "Deploy". Klik "Authorize access" (Izinkan akses) dan setujui izin Google Drive & Sheets.
+ * 10. Salin "Web app URL" (contoh: https://script.google.com/macros/s/AKfycb.../exec).
+ * 11. Buka aplikasi web SIP-REKOM > klik tombol "Google Sheets" > tempelkan URL tersebut > klik "Simpan Konfigurasi".
  * =========================================================================================
  */
 
-// Nama-nama sheet yang akan digunakan
-var SHEET_REKOMENDASI = "Riwayat_Rekomendasi";
-var SHEET_MASTER_DESA = "Master_Desa";
+// Konstanta Nama Sheet
+var SHEET_PENGAJUAN_DESA = "Pengajuan_Berkas_Desa";
+var SHEET_REKOMENDASI    = "Riwayat_Rekomendasi";
+var SHEET_MASTER_DESA    = "Master_Desa";
+
+// Nama Folder Induk di Google Drive
+var NAMA_FOLDER_UTAMA_DRIVE = "SIP-REKOM APBDES KECAMATAN WARU";
 
 /**
- * Inisialisasi Sheet dan Kolom jika belum ada
+ * Inisialisasi Sheet dan Struktur Kolom
  */
 function initSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  // 1. Sheet Riwayat Rekomendasi
+
+  // 1. Sheet Pengajuan Berkas Desa (Lengkap dengan Link Google Drive)
+  var sheetPengajuan = ss.getSheetByName(SHEET_PENGAJUAN_DESA);
+  if (!sheetPengajuan) {
+    sheetPengajuan = ss.insertSheet(SHEET_PENGAJUAN_DESA);
+    var headersPengajuan = [
+      "ID Pengajuan",
+      "Waktu Kirim (WITA)",
+      "Nama Desa",
+      "Jenis Dana",
+      "Tahap / Bulan",
+      "Tahun Anggaran",
+      "Nominal (Rp)",
+      "Nomor Surat Pengantar (SP)",
+      "Tanggal SP Desa",
+      "Nomor Rekomendasi Desa",
+      "Tanggal Rekom Desa",
+      "Nama File SP",
+      "Link Google Drive SP",
+      "Nama File Ceklist",
+      "Link Google Drive Ceklist",
+      "Nama File Rekom Desa",
+      "Link Google Drive Rekom Desa",
+      "Folder Google Drive Desa",
+      "Status Verifikasi"
+    ];
+    sheetPengajuan.appendRow(headersPengajuan);
+
+    var headerRangeP = sheetPengajuan.getRange(1, 1, 1, headersPengajuan.length);
+    headerRangeP.setBackground("#047857"); // Emerald Dark
+    headerRangeP.setFontColor("#FFFFFF");
+    headerRangeP.setFontWeight("bold");
+    sheetPengajuan.setFrozenRows(1);
+  }
+
+  // 2. Sheet Riwayat Rekomendasi Camat yang Diterbitkan
   var sheetRekom = ss.getSheetByName(SHEET_REKOMENDASI);
   if (!sheetRekom) {
     sheetRekom = ss.insertSheet(SHEET_REKOMENDASI);
     var headersRekom = [
-      "ID",
-      "Waktu Simpan",
-      "Nomor Surat",
+      "ID Rekomendasi",
+      "Waktu Terbit",
+      "Nomor Surat Rekomendasi",
       "Tanggal Surat",
       "Nama Desa",
       "Jenis Dana",
@@ -53,25 +96,21 @@ function initSheets() {
       "Nomor Rekening RKD",
       "Kepala Desa",
       "Kaur Keuangan",
-      "Nomor Surat Pengantar",
-      "Tanggal Pengantar Desa",
       "Nama Camat",
       "NIP Camat",
-      "Metode TTE / Tanda Tangan",
-      "Kelengkapan Berkas",
+      "Metode TTE / Format",
       "Status Penyaluran"
     ];
     sheetRekom.appendRow(headersRekom);
-    
-    // Format Header
-    var headerRange = sheetRekom.getRange(1, 1, 1, headersRekom.length);
-    headerRange.setBackground("#1E3A8A"); // Navy blue
-    headerRange.setFontColor("#FFFFFF");
-    headerRange.setFontWeight("bold");
+
+    var headerRangeR = sheetRekom.getRange(1, 1, 1, headersRekom.length);
+    headerRangeR.setBackground("#1E3A8A"); // Navy Blue
+    headerRangeR.setFontColor("#FFFFFF");
+    headerRangeR.setFontWeight("bold");
     sheetRekom.setFrozenRows(1);
   }
-  
-  // 2. Sheet Master Desa
+
+  // 3. Sheet Master Data Desa di Kecamatan Waru
   var sheetDesa = ss.getSheetByName(SHEET_MASTER_DESA);
   if (!sheetDesa) {
     sheetDesa = ss.insertSheet(SHEET_MASTER_DESA);
@@ -81,68 +120,46 @@ function initSheets() {
       "Kepala Desa",
       "Kaur Keuangan / Bendahara",
       "Bank Penyalur",
-      "Nomor Rekening Kas Desa (RKD)",
+      "Nomor Rekening RKD",
       "Atas Nama Rekening",
       "Alamat Kantor Desa",
-      "Kontak / Telepon"
+      "Kontak / HP"
     ];
     sheetDesa.appendRow(headersDesa);
-    
-    // Format Header
-    var headerRangeDesa = sheetDesa.getRange(1, 1, 1, headersDesa.length);
-    headerRangeDesa.setBackground("#065F46"); // Emerald green
-    headerRangeDesa.setFontColor("#FFFFFF");
-    headerRangeDesa.setFontWeight("bold");
+
+    var headerRangeD = sheetDesa.getRange(1, 1, 1, headersDesa.length);
+    headerRangeD.setBackground("#0F172A"); // Slate Dark
+    headerRangeD.setFontColor("#FFFFFF");
+    headerRangeD.setFontWeight("bold");
     sheetDesa.setFrozenRows(1);
-    
-    // Tambahkan data desa default di Kecamatan Waru
+
     var defaultDesa = [
       [
-        "DESA-01",
-        "Waru",
-        "KARTONO, S.Pd",
-        "SRI WAHYUNI, S.E",
+        "DESA-03", "Api-Api", "SUDIRMAN", "JUMIATI, S.KM",
         "PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru",
-        "007201889901",
-        "Pemerintah Desa Waru (RKD)",
-        "Jl. Propinsi Km. 25, Desa Waru, Kec. Waru",
-        "081254320001"
+        "1131400345", "Pemerintah Desa Api-Api (RKD)",
+        "Jl. Silkar RT. 02, Desa Api-Api, Kec. Waru", "082155880003"
       ],
       [
-        "DESA-02",
-        "Sesulu",
-        "H. RAHMAN SALEH",
-        "NURDIANTO, S.Kom",
+        "DESA-02", "Sesulu", "H. RAHMAN SALEH", "MASNI",
         "PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru",
-        "007201889902",
-        "Pemerintah Desa Sesulu (RKD)",
-        "Jl. Negara Km. 32 RT. 04, Desa Sesulu, Kec. Waru",
-        "081347650002"
+        "1131400337", "Pemerintah Desa Sesulu (RKD)",
+        "Jl. Negara Km. 32 RT. 04, Desa Sesulu, Kec. Waru", "081347650002"
       ],
       [
-        "DESA-03",
-        "Api-Api",
-        "SUDIRMAN",
-        "M. FACHRI ROZI",
+        "DESA-01", "Waru", "KARTONO, S.Pd", "SRI WAHYUNI, S.E",
         "PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru",
-        "007201889903",
-        "Pemerintah Desa Api-Api (RKD)",
-        "Jl. Silkar RT. 02, Desa Api-Api, Kec. Waru",
-        "082155880003"
+        "1131400122", "Pemerintah Desa Waru (RKD)",
+        "Jl. Propinsi Km. 25, Desa Waru, Kec. Waru", "081254320001"
       ],
       [
-        "DESA-04",
-        "Bangun Mulya",
-        "BOIMIN, S.Sos",
-        "EKO PRASETYO",
+        "DESA-04", "Bangun Mulya", "BOIMIN, S.Sos", "EKO PRASETYO",
         "PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru",
-        "007201889904",
-        "Pemerintah Desa Bangun Mulya (RKD)",
-        "Jl. Usaha Tani RT. 06, Desa Bangun Mulya, Kec. Waru",
-        "085246770004"
+        "1131400678", "Pemerintah Desa Bangun Mulya (RKD)",
+        "Jl. Usaha Tani RT. 06, Desa Bangun Mulya, Kec. Waru", "085246770004"
       ]
     ];
-    
+
     for (var i = 0; i < defaultDesa.length; i++) {
       sheetDesa.appendRow(defaultDesa[i]);
     }
@@ -150,78 +167,167 @@ function initSheets() {
 }
 
 /**
+ * Mengambil atau Membuat Folder di Google Drive Secara Otomatis
+ */
+function getOrCreateFolder(folderName, parentFolder) {
+  var parent = parentFolder || DriveApp.getRootFolder();
+  var folders = parent.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  var newFolder = parent.createFolder(folderName);
+  newFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return newFolder;
+}
+
+/**
+ * Menyimpan File Base64 ke dalam Folder Google Drive
+ */
+function saveFileToDrive(filePayload, targetFolder, prefixName) {
+  if (!filePayload || (!filePayload.base64 && !filePayload.dataUrl)) {
+    return { name: "-", url: "-", id: "-" };
+  }
+
+  try {
+    var rawData = filePayload.base64 || "";
+    var mimeType = filePayload.type || "application/pdf";
+    var originalName = filePayload.name || (prefixName + ".pdf");
+
+    // Jika format dataUrl (data:application/pdf;base64,....)
+    if (filePayload.dataUrl && filePayload.dataUrl.indexOf("base64,") > -1) {
+      var parts = filePayload.dataUrl.split("base64,");
+      rawData = parts[1];
+      var metaPart = parts[0];
+      if (metaPart.indexOf(":") > -1 && metaPart.indexOf(";") > -1) {
+        mimeType = metaPart.substring(metaPart.indexOf(":") + 1, metaPart.indexOf(";"));
+      }
+    }
+
+    if (!rawData) {
+      return { name: originalName, url: "-", id: "-" };
+    }
+
+    var decodedBytes = Utilities.base64Decode(rawData);
+    var blob = Utilities.newBlob(decodedBytes, mimeType, originalName);
+    var savedFile = targetFolder.createFile(blob);
+    savedFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    return {
+      name: savedFile.getName(),
+      url: savedFile.getUrl(),
+      downloadUrl: "https://drive.google.com/uc?export=download&id=" + savedFile.getId(),
+      id: savedFile.getId()
+    };
+  } catch (err) {
+    Logger.log("Error saveFileToDrive: " + err.toString());
+    return { name: filePayload.name || "-", url: "Error: " + err.toString(), id: "-" };
+  }
+}
+
+/**
  * Handle GET Requests
  * Contoh: ?action=ping
- *         ?action=getMasterDesa
+ *         ?action=getPengajuanDesa
  *         ?action=getRiwayat
+ *         ?action=getMasterDesa
  */
 function doGet(e) {
   try {
     initSheets();
     var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "ping";
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    
+
+    // 1. Tes Koneksi & Info Drive
     if (action === "ping") {
+      var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
       return jsonResponse({
         success: true,
-        message: "Koneksi Google Sheets SIP-REKOM APBDes Kecamatan Waru Aktif!",
-        timestamp: new Date().toISOString(),
+        message: "Koneksi Google Sheets & Google Drive SIP-REKOM Kecamatan Waru Aktif!",
         spreadsheetName: ss.getName(),
-        spreadsheetId: ss.getId()
+        spreadsheetId: ss.getId(),
+        driveFolderName: mainFolder.getName(),
+        driveFolderUrl: mainFolder.getUrl(),
+        timestamp: Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss")
       });
     }
-    
-    if (action === "getMasterDesa") {
-      var sheet = ss.getSheetByName(SHEET_MASTER_DESA);
-      var data = sheet.getDataRange().getValues();
-      var headers = data[0];
-      var result = [];
-      
-      for (var r = 1; r < data.length; r++) {
-        var row = data[r];
-        if (!row[1]) continue; // Lewati jika nama desa kosong
+
+    // 2. Ambil Semua Pengajuan Berkas Desa Lengkap dengan Link Drive
+    if (action === "getPengajuanDesa") {
+      var sheetP = ss.getSheetByName(SHEET_PENGAJUAN_DESA);
+      var dataP = sheetP.getDataRange().getValues();
+      var headersP = dataP[0];
+      var resultP = [];
+
+      for (var r = 1; r < dataP.length; r++) {
+        var row = dataP[r];
+        if (!row[0]) continue;
         var item = {};
-        for (var c = 0; c < headers.length; c++) {
-          item[headers[c]] = row[c];
+        for (var c = 0; c < headersP.length; c++) {
+          item[headersP[c]] = row[c];
         }
-        result.push(item);
+        resultP.push(item);
       }
-      
+
       return jsonResponse({
         success: true,
-        data: result,
-        count: result.length
+        data: resultP,
+        count: resultP.length
       });
     }
-    
+
+    // 3. Ambil Riwayat Rekomendasi Camat
     if (action === "getRiwayat") {
-      var sheet = ss.getSheetByName(SHEET_REKOMENDASI);
-      var data = sheet.getDataRange().getValues();
-      var headers = data[0];
-      var result = [];
-      
-      for (var r = 1; r < data.length; r++) {
-        var row = data[r];
-        if (!row[0]) continue; // Lewati jika ID kosong
-        var item = {};
-        for (var c = 0; c < headers.length; c++) {
-          item[headers[c]] = row[c];
+      var sheetR = ss.getSheetByName(SHEET_REKOMENDASI);
+      var dataR = sheetR.getDataRange().getValues();
+      var headersR = dataR[0];
+      var resultR = [];
+
+      for (var i = 1; i < dataR.length; i++) {
+        var rowR = dataR[i];
+        if (!rowR[0]) continue;
+        var itemR = {};
+        for (var j = 0; j < headersR.length; j++) {
+          itemR[headersR[j]] = rowR[j];
         }
-        result.push(item);
+        resultR.push(itemR);
       }
-      
+
       return jsonResponse({
         success: true,
-        data: result,
-        count: result.length
+        data: resultR,
+        count: resultR.length
       });
     }
-    
+
+    // 4. Ambil Master Data Desa
+    if (action === "getMasterDesa") {
+      var sheetD = ss.getSheetByName(SHEET_MASTER_DESA);
+      var dataD = sheetD.getDataRange().getValues();
+      var headersD = dataD[0];
+      var resultD = [];
+
+      for (var d = 1; d < dataD.length; d++) {
+        var rowD = dataD[d];
+        if (!rowD[1]) continue;
+        var itemD = {};
+        for (var k = 0; k < headersD.length; k++) {
+          itemD[headersD[k]] = rowD[k];
+        }
+        resultD.push(itemD);
+      }
+
+      return jsonResponse({
+        success: true,
+        data: resultD,
+        count: resultD.length
+      });
+    }
+
     return jsonResponse({
       success: false,
-      message: "Aksi tidak dikenali: " + action
+      message: "Action GET tidak dikenali: " + action
     });
-    
+
   } catch (err) {
     return jsonResponse({
       success: false,
@@ -232,14 +338,16 @@ function doGet(e) {
 
 /**
  * Handle POST Requests
- * Menyimpan data rekomendasi baru atau update data
+ * 1. simpanPengajuanDesa: Unggah 3 Dokumen (SP, Ceklist, Rekomendasi) ke Google Drive & Catat ke Sheet
+ * 2. simpanRekomendasi: Catat Rekomendasi Camat ke Sheet Riwayat
+ * 3. updateStatusPengajuan: Perbarui status verifikasi pengajuan desa
  */
 function doPost(e) {
   try {
     initSheets();
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var payload;
-    
+
     if (e.postData && e.postData.contents) {
       try {
         payload = JSON.parse(e.postData.contents);
@@ -249,17 +357,76 @@ function doPost(e) {
     } else {
       payload = e.parameter;
     }
-    
-    var action = payload.action || "simpanRekomendasi";
-    
-    if (action === "simpanRekomendasi") {
-      var sheet = ss.getSheetByName(SHEET_REKOMENDASI);
-      var id = payload.id || ("REK-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
+
+    var action = payload.action || "simpanPengajuanDesa";
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 1: SIMPAN PENGAJUAN DESA LENGKAP DENGAN UPLOAD FILE KE GOOGLE DRIVE
+    // -------------------------------------------------------------------------------------
+    if (action === "simpanPengajuanDesa") {
+      var sheetPengajuan = ss.getSheetByName(SHEET_PENGAJUAN_DESA);
+      var namaDesa = payload.namaDesa || "Desa";
+      var id = payload.id || ("PENG-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
       var timestamp = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
-      
+
+      // 1. Buat / Ambil Folder Induk & Subfolder Desa di Google Drive
+      var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
+      var subFolderDesa = getOrCreateFolder("Berkas_" + namaDesa.replace(/\s+/g, "_"), mainFolder);
+
+      // 2. Simpan Ketiga Berkas ke Google Drive
+      var spResult = saveFileToDrive(payload.fileSp, subFolderDesa, "SP_" + namaDesa);
+      var ceklistResult = saveFileToDrive(payload.fileCeklist, subFolderDesa, "Ceklist_" + namaDesa);
+      var rekomResult = saveFileToDrive(payload.fileRekom, subFolderDesa, "Rekomendasi_" + namaDesa);
+
+      // 3. Catat Seluruh Data dan Link Google Drive ke Baris Spreadsheet
       var rowData = [
         id,
         timestamp,
+        namaDesa,
+        payload.jenisDana || "-",
+        payload.tahap || "-",
+        payload.tahunAnggaran || "-",
+        payload.nominal || 0,
+        payload.nomorSp || "-",
+        payload.tanggalSp || "-",
+        payload.nomorRekomDesa || "-",
+        payload.tanggalRekomDesa || "-",
+        spResult.name,
+        spResult.url,
+        ceklistResult.name,
+        ceklistResult.url,
+        rekomResult.name,
+        rekomResult.url,
+        subFolderDesa.getUrl(),
+        payload.status || "Menunggu Verifikasi"
+      ];
+
+      sheetPengajuan.appendRow(rowData);
+
+      return jsonResponse({
+        success: true,
+        message: "Berkas berhasil diunggah ke Google Drive dan dicatat di Google Sheets!",
+        id: id,
+        driveFolderUrl: subFolderDesa.getUrl(),
+        driveFiles: {
+          sp: spResult,
+          ceklist: ceklistResult,
+          rekom: rekomResult
+        }
+      });
+    }
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 2: SIMPAN REKOMENDASI CAMAT YANG DITERBITKAN
+    // -------------------------------------------------------------------------------------
+    if (action === "simpanRekomendasi") {
+      var sheetRekom = ss.getSheetByName(SHEET_REKOMENDASI);
+      var idRekom = payload.id || ("REK-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
+      var timestampRekom = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
+
+      var rowRekom = [
+        idRekom,
+        timestampRekom,
         payload.nomorSurat || "-",
         payload.tanggalSurat || "-",
         payload.namaDesa || "-",
@@ -272,30 +439,50 @@ function doPost(e) {
         payload.nomorRekening || "-",
         payload.kepalaDesa || "-",
         payload.kaurKeuangan || "-",
-        payload.nomorSuratPengantar || "-",
-        payload.tanggalPengantarDesa || "-",
         payload.namaCamat || "-",
         payload.nipCamat || "-",
         payload.metodeTte || "TTE Elektronik BSrE",
-        Array.isArray(payload.kelengkapanBerkas) ? payload.kelengkapanBerkas.join("; ") : (payload.kelengkapanBerkas || "-"),
         payload.status || "Diterbitkan"
       ];
-      
-      sheet.appendRow(rowData);
-      
+
+      sheetRekom.appendRow(rowRekom);
+
       return jsonResponse({
         success: true,
-        message: "Surat Rekomendasi berhasil disimpan ke Google Sheets!",
-        id: id,
-        rowNumber: sheet.getLastRow()
+        message: "Surat Rekomendasi Camat berhasil dicatat ke Google Sheets!",
+        id: idRekom
       });
     }
-    
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 3: UPDATE STATUS PENGAJUAN DESA (MISAL KETIKA DIVERIFIKASI / SELESAI)
+    // -------------------------------------------------------------------------------------
+    if (action === "updateStatusPengajuan") {
+      var sheetP = ss.getSheetByName(SHEET_PENGAJUAN_DESA);
+      var dataP = sheetP.getDataRange().getValues();
+      var targetId = payload.id;
+      var newStatus = payload.status || "Diverifikasi";
+      var updated = false;
+
+      for (var r = 1; r < dataP.length; r++) {
+        if (dataP[r][0] === targetId) {
+          sheetP.getRange(r + 1, 19).setValue(newStatus); // Kolom 19: Status Verifikasi
+          updated = true;
+          break;
+        }
+      }
+
+      return jsonResponse({
+        success: updated,
+        message: updated ? "Status berhasil diperbarui." : "ID pengajuan tidak ditemukan."
+      });
+    }
+
     return jsonResponse({
       success: false,
-      message: "Action POST tidak valid: " + action
+      message: "Action POST tidak dikenali: " + action
     });
-    
+
   } catch (err) {
     return jsonResponse({
       success: false,
@@ -305,7 +492,7 @@ function doPost(e) {
 }
 
 /**
- * Helper untuk response JSON dengan CORS Header
+ * Output Response JSON dengan Header CORS
  */
 function jsonResponse(data) {
   var output = ContentService.createTextOutput(JSON.stringify(data));
