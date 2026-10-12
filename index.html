@@ -166,8 +166,158 @@
 <body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen flex overflow-hidden">
 
   <!-- ================================================================================= -->
-  <!-- SIDEBAR NAVIGATION MENU (PROFESIONAL DENGAN FITUR HIDE / UNHIDE) -->
+  <!-- MODAL / PORTAL KARTU LOGIN PROFESIONAL (KECAMATAN WARU & OPERATOR DESA) -->
   <!-- ================================================================================= -->
+  <div id="loginPortalContainer" class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4 sm:p-6 transition-all duration-300">
+    
+    <!-- Background Ambient Glow & Lighting -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-indigo-600/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Main Card Login -->
+    <div class="relative w-full max-w-xl bg-slate-900/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl">
+      
+      <!-- Card Header: Logo & Judul Instansi Resmi -->
+      <div class="p-6 sm:p-7 text-center border-b border-slate-800 bg-gradient-to-b from-slate-800/60 to-transparent relative">
+        <div class="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-800/90 p-2 flex items-center justify-center border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/10 mb-3.5 ring-4 ring-slate-800/80">
+          <img src="logo_ppu.png" alt="Logo Kab. Penajam Paser Utara" class="w-full h-full object-contain" />
+        </div>
+        
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/30 text-blue-300 text-[10.5px] font-bold uppercase tracking-wider mb-2">
+          <span>🏛️ KABUPATEN PENAJAM PASER UTARA</span>
+        </div>
+        
+        <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+          SIP-REKOM APBDES
+        </h1>
+        <p class="text-xs sm:text-sm font-bold text-emerald-400 mt-0.5 uppercase tracking-wide">
+          KECAMATAN WARU
+        </p>
+        <p class="text-[11px] sm:text-xs text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+          Sistem Pelayanan Rekomendasi Pencairan APBDes (ADD Siltap, ADD Reguler, PBH/DBH, dan Dana Desa)
+        </p>
+      </div>
+
+      <!-- Card Role Selector Switcher (Pilihan: Kecamatan vs Desa) -->
+      <div class="p-6 sm:p-7 space-y-5">
+        <div>
+          <label class="block text-center text-[10.5px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+            Pilih Akses Masuk Sistem
+          </label>
+          <div class="grid grid-cols-2 gap-2.5 p-1 bg-slate-950/90 rounded-2xl border border-slate-800">
+            <!-- Tab Kecamatan -->
+            <button id="btnRoleKecamatan" onclick="switchLoginRole('kecamatan')" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 bg-blue-600 text-white shadow-md">
+              <span class="text-base">🏛️</span>
+              <div class="text-left leading-tight">
+                <div class="text-xs font-bold">Kecamatan Waru</div>
+                <div class="text-[9.5px] font-normal opacity-85">Tim PMD & Camat</div>
+              </div>
+            </button>
+
+            <!-- Tab Desa -->
+            <button id="btnRoleDesa" onclick="switchLoginRole('desa')" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60">
+              <span class="text-base">🏡</span>
+              <div class="text-left leading-tight">
+                <div class="text-xs font-bold">Operator Desa</div>
+                <div class="text-[9.5px] font-normal opacity-85">3 Desa di Kec. Waru</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- FORM 1: LOGIN KECAMATAN WARU -->
+        <div id="panelLoginKecamatan" class="space-y-4">
+          <div class="p-3.5 rounded-2xl bg-blue-950/40 border border-blue-800/40 text-blue-200 text-xs flex items-start gap-3">
+            <span class="text-base">ℹ️</span>
+            <div class="leading-relaxed">
+              <strong class="text-white block mb-0.5">Portal Verifikator & Camat Waru</strong>
+              Akses verifikasi berkas permohonan desa, telaah kelengkapan administrasi, dan penerbitan Surat Rekomendasi resmi format Sri Kandi.
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Akses / Jabatan Masuk</label>
+              <select id="loginKecamatanJabatan" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="Seksi PMD - Tim Fasilitasi & Verifikator">Seksi PMD - Tim Fasilitasi & Verifikator Berkas</option>
+                <option value="Camat Waru (Ahmad Yani, SSTP)">Camat Waru - Penandatangan Surat Rekomendasi</option>
+                <option value="Administrator Sistem">Administrator Sistem Kecamatan Waru</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] font-bold text-slate-300">Kode Akses Masuk</label>
+                <span class="text-[10px] text-slate-500">Default: pmd2026</span>
+              </div>
+              <input type="password" id="loginKecamatanPin" placeholder="Masukkan PIN atau biarkan terisi" value="pmd2026" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono" />
+            </div>
+          </div>
+
+          <button onclick="doLoginKecamatan()" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 group">
+            <span>Masuk ke Portal Kecamatan Waru</span>
+            <span class="group-hover:translate-x-1 transition-transform">→</span>
+          </button>
+        </div>
+
+        <!-- FORM 2: LOGIN OPERATOR DESA -->
+        <div id="panelLoginDesa" class="hidden space-y-4">
+          <div class="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-200 text-xs flex items-start gap-3">
+            <span class="text-base">🏡</span>
+            <div class="leading-relaxed">
+              <strong class="text-white block mb-0.5">Portal Operator & Keuangan Desa</strong>
+              Akses khusus desa untuk mengisi data pengajuan pencairan APBDes dan mengunggah berkas persyaratan (Surat Pengantar, Ceklist, Rekom Desa).
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Pilih Desa Anda <span class="text-emerald-400">*</span></label>
+              <select id="loginDesaSelect" onchange="onLoginDesaChange()" class="w-full bg-slate-950 border border-emerald-600/60 rounded-xl px-3.5 py-2.5 text-xs font-bold text-emerald-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="Api-Api">Desa Api-Api</option>
+                <option value="Sesulu">Desa Sesulu</option>
+                <option value="Bangun Mulya">Desa Bangun Mulya</option>
+              </select>
+            </div>
+
+            <!-- Kartu Info Ringkas Pejabat Desa Terpilih -->
+            <div id="cardLoginInfoDesa" class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+              <!-- Diisi otomatis oleh JavaScript onLoginDesaChange -->
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] font-bold text-slate-300">Kode Akses Operator</label>
+                <span class="text-[10px] text-slate-500">Default: desa2026</span>
+              </div>
+              <input type="password" id="loginDesaPin" placeholder="Masukkan PIN atau biarkan terisi" value="desa2026" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono" />
+            </div>
+          </div>
+
+          <button id="btnLoginDesaSubmit" onclick="doLoginDesa()" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2 group">
+            <span id="textBtnLoginDesa">Masuk sebagai Operator Desa Api-Api</span>
+            <span class="group-hover:translate-x-1 transition-transform">→</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Card Footer -->
+      <div class="p-3.5 bg-slate-950/90 border-t border-slate-800 flex items-center justify-between text-[10.5px] text-slate-500 px-6 sm:px-7">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Sistem Resmi Kecamatan Waru</span>
+        </div>
+        <div>
+          <span>Format Srikandi & BSrE</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
   <aside id="appSidebar" class="bg-slate-900 text-white w-64 md:w-64 flex flex-col flex-shrink-0 transition-all duration-300 z-40 select-none border-r border-slate-800 shadow-xl fixed md:static inset-y-0 left-0 -translate-x-full md:translate-x-0">
     
     <!-- Header Sidebar: Logo & Brand + Tombol Hide/Collapse -->
@@ -255,9 +405,25 @@
       </button>
     </div>
 
-    <!-- Footer Sidebar -->
-    <div class="p-3 border-t border-slate-800 flex-shrink-0 bg-slate-950/60">
-      <div id="badgeSyncStatusSidebar" class="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-[11px] text-slate-300 flex items-center gap-2">
+    <!-- Footer Sidebar & User Profile -->
+    <div class="p-3 border-t border-slate-800 flex-shrink-0 bg-slate-950/80 space-y-2">
+      <!-- User Profile Card -->
+      <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 shadow-2xs">
+        <div class="flex items-center gap-2.5 overflow-hidden">
+          <div id="sidebarUserAvatar" class="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/40 flex items-center justify-center text-sm flex-shrink-0 shadow-inner">
+            🏛️
+          </div>
+          <div class="sidebar-text truncate leading-tight">
+            <div id="sidebarUserName" class="text-xs font-bold text-white truncate">Kecamatan Waru</div>
+            <div id="sidebarUserRole" class="text-[9.5px] text-emerald-400 font-medium truncate">Tim Fasilitasi PMD</div>
+          </div>
+        </div>
+        <button onclick="logoutUser()" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition flex-shrink-0" title="Keluar / Ganti Akun">
+          <span class="text-xs">🚪</span>
+        </button>
+      </div>
+
+      <div id="badgeSyncStatusSidebar" class="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 text-[11px] text-slate-300 flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
         <div class="sidebar-text truncate leading-tight">
           <div class="font-bold text-white text-[10.5px]">Sistem Terhubung</div>
@@ -318,6 +484,18 @@
           <span>📂</span>
           <span class="hidden sm:inline text-[11px]">Drive</span>
         </button>
+
+        <!-- User Badge & Tombol Keluar di Topbar -->
+        <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
+          <div class="hidden sm:flex flex-col text-right leading-tight">
+            <span id="topbarUserName" class="text-xs font-bold text-slate-800 truncate max-w-[130px]">Kecamatan Waru</span>
+            <span id="topbarUserRole" class="text-[9.5px] text-emerald-600 font-semibold truncate">Tim PMD</span>
+          </div>
+          <button onclick="logoutUser()" class="p-1.5 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition flex items-center gap-1.5 shadow-2xs" title="Keluar / Ganti Akun">
+            <span>🚪</span>
+            <span class="hidden md:inline text-[11px]">Keluar</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -1489,6 +1667,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261012_remove_waru_desa"></script>
+  <script src="app.js?v=20261012_login_card"></script>
 </body>
 </html>

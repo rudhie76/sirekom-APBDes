@@ -19,6 +19,7 @@ const AppState = {
   activeMenu: localStorage.getItem('sip_active_menu') || 'dashboard',
   kecamatanSubTab: 'verifikasi',
   isSidebarCollapsed: localStorage.getItem('sip_sidebar_collapsed') === 'true',
+  currentUser: JSON.parse(localStorage.getItem('sip_auth_user') || 'null'),
   operatorDesaAktif: (localStorage.getItem('sip_operator_desa') && localStorage.getItem('sip_operator_desa') !== 'Waru') ? localStorage.getItem('sip_operator_desa') : 'Api-Api',
   pengajuanDesa: JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]').filter(item => item.namaDesa !== 'Waru'),
   uploadedFilesDraft: {
@@ -242,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHistoryTable();
   updateSyncStatusBadge();
   initDesaOperatorFeature();
+  checkAuthSession();
 });
 
 window.pilihTipeRekomendasi = function(tipe) {
@@ -1586,6 +1588,194 @@ ke dalam Sistem SIP-REKOM APBDes Kecamatan Waru.`;
     document.body.removeChild(a);
     showToast(`Mengunduh berkas: ${fileName}`, 'success');
   }
+// =========================================================================================
+// MODUL KARTU LOGIN (PORTAL MASUK RESMI KECAMATAN WARU & OPERATOR DESA)
+// =========================================================================================
+
+/**
+ * Switcher Tab Peran Login (Kecamatan vs Operator Desa)
+ */
+window.switchLoginRole = function(role) {
+  const btnKec = document.getElementById('btnRoleKecamatan');
+  const btnDesa = document.getElementById('btnRoleDesa');
+  const panelKec = document.getElementById('panelLoginKecamatan');
+  const panelDesa = document.getElementById('panelLoginDesa');
+
+  if (role === 'kecamatan') {
+    if (btnKec) {
+      btnKec.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 bg-blue-600 text-white shadow-md';
+    }
+    if (btnDesa) {
+      btnDesa.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60';
+    }
+    if (panelKec) panelKec.classList.remove('hidden');
+    if (panelDesa) panelDesa.classList.add('hidden');
+  } else {
+    if (btnKec) {
+      btnKec.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60';
+    }
+    if (btnDesa) {
+      btnDesa.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 bg-emerald-600 text-white shadow-md';
+    }
+    if (panelKec) panelKec.classList.add('hidden');
+    if (panelDesa) panelDesa.classList.remove('hidden');
+    onLoginDesaChange();
+  }
+};
+
+/**
+ * Menampilkan Info Pejabat Desa saat Dropdown Desa di Kartu Login Berubah
+ */
+window.onLoginDesaChange = function() {
+  const select = document.getElementById('loginDesaSelect');
+  const cardInfo = document.getElementById('cardLoginInfoDesa');
+  const textBtn = document.getElementById('textBtnLoginDesa');
+  if (!select) return;
+
+  const desaNama = select.value;
+  const desaData = AppState.masterDesa.find(d => d.nama === desaNama);
+
+  if (cardInfo && desaData) {
+    cardInfo.innerHTML = `
+      <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-1.5">
+        <span class="font-bold text-white text-xs">Pemerintah Desa ${escapeHtml(desaData.nama)}</span>
+        <span class="text-[10px] text-emerald-400 font-bold">Terverifikasi</span>
+      </div>
+      <div>👤 Kepala Desa: <strong class="text-slate-200">${escapeHtml(desaData.kades)}</strong></div>
+      <div>💼 Kaur Keuangan: <strong class="text-slate-200">${escapeHtml(desaData.kaurKeuangan)}</strong></div>
+      <div class="font-mono text-[10px] text-slate-400">💳 RKD: ${escapeHtml(desaData.rekening)} (Bankaltimtara)</div>
+    `;
+  }
+
+  if (textBtn) {
+    textBtn.textContent = `Masuk sebagai Operator Desa ${desaNama}`;
+  }
+};
+
+/**
+ * Eksekusi Login Portal Kecamatan
+ */
+window.doLoginKecamatan = function() {
+  const jabatan = document.getElementById('loginKecamatanJabatan')?.value || 'Seksi PMD - Tim Fasilitasi & Verifikator';
+  const user = {
+    role: 'kecamatan',
+    roleTitle: 'Tim PMD & Camat',
+    name: 'Kecamatan Waru',
+    detail: jabatan,
+    loginAt: new Date().toISOString()
+  };
+
+  AppState.currentUser = user;
+  localStorage.setItem('sip_auth_user', JSON.stringify(user));
+
+  const portal = document.getElementById('loginPortalContainer');
+  if (portal) portal.classList.add('hidden');
+
+  updateUserProfileUI();
+  navigateToMenu('dashboard');
+  showToast(`Selamat datang! Masuk sebagai ${jabatan}`, 'success');
+};
+
+/**
+ * Eksekusi Login Portal Operator Desa
+ */
+window.doLoginDesa = function() {
+  const select = document.getElementById('loginDesaSelect');
+  const desaNama = select ? select.value : 'Api-Api';
+
+  const user = {
+    role: 'desa',
+    roleTitle: 'Operator Desa',
+    name: `Desa ${desaNama}`,
+    desa: desaNama,
+    detail: 'Operator & Kaur Keuangan',
+    loginAt: new Date().toISOString()
+  };
+
+  AppState.currentUser = user;
+  AppState.operatorDesaAktif = desaNama;
+  localStorage.setItem('sip_auth_user', JSON.stringify(user));
+  localStorage.setItem('sip_operator_desa', desaNama);
+
+  const portal = document.getElementById('loginPortalContainer');
+  if (portal) portal.classList.add('hidden');
+
+  // Sinkronkan pilihan desa di form pengajuan
+  const selectOp = document.getElementById('selectDesaOperator');
+  if (selectOp) selectOp.value = desaNama;
+  onOperatorDesaChange();
+
+  updateUserProfileUI();
+  navigateToMenu('pengajuan_desa');
+  showToast(`Selamat datang! Masuk sebagai Operator Desa ${desaNama}`, 'success');
+};
+
+/**
+ * Keluar Akun & Tampilkan Kembali Kartu Login
+ */
+window.logoutUser = function() {
+  if (!confirm('Apakah Anda ingin keluar dan kembali ke Kartu Pilihan Login?')) return;
+
+  AppState.currentUser = null;
+  localStorage.removeItem('sip_auth_user');
+
+  const portal = document.getElementById('loginPortalContainer');
+  if (portal) portal.classList.remove('hidden');
+
+  onLoginDesaChange();
+  showToast('Anda telah keluar. Silakan pilih kartu login untuk masuk.', 'info');
+};
+
+/**
+ * Perbarui UI Profil Pengguna di Sidebar dan Topbar
+ */
+window.updateUserProfileUI = function() {
+  const user = AppState.currentUser;
+  if (!user) return;
+
+  const isKecamatan = user.role === 'kecamatan';
+
+  // Sidebar User elements
+  const sideAvatar = document.getElementById('sidebarUserAvatar');
+  const sideName = document.getElementById('sidebarUserName');
+  const sideRole = document.getElementById('sidebarUserRole');
+
+  if (sideAvatar) {
+    sideAvatar.textContent = isKecamatan ? '🏛️' : '🏡';
+    sideAvatar.className = isKecamatan 
+      ? 'w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/40 flex items-center justify-center text-sm flex-shrink-0 shadow-inner'
+      : 'w-8 h-8 rounded-lg bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-sm flex-shrink-0 shadow-inner';
+  }
+  if (sideName) sideName.textContent = user.name;
+  if (sideRole) sideRole.textContent = isKecamatan ? 'Tim PMD & Camat' : 'Operator Desa';
+
+  // Topbar User elements
+  const topName = document.getElementById('topbarUserName');
+  const topRole = document.getElementById('topbarUserRole');
+
+  if (topName) topName.textContent = user.name;
+  if (topRole) {
+    topRole.textContent = isKecamatan ? 'Kecamatan Waru' : 'Operator Desa';
+    topRole.className = isKecamatan ? 'text-[9.5px] text-blue-600 font-bold truncate' : 'text-[9.5px] text-emerald-600 font-bold truncate';
+  }
+};
+
+/**
+ * Pemeriksaan Sesi Login Saat Aplikasi Dibuka
+ */
+window.checkAuthSession = function() {
+  const portal = document.getElementById('loginPortalContainer');
+  if (!portal) return;
+
+  if (AppState.currentUser) {
+    // Pengguna sudah login sebelumnya
+    portal.classList.add('hidden');
+    updateUserProfileUI();
+  } else {
+    // Pengguna belum login, tampilkan kartu login gate
+    portal.classList.remove('hidden');
+    onLoginDesaChange();
+  }
 };
 
 /**
@@ -1595,6 +1785,9 @@ function initDesaOperatorFeature() {
   if (localStorage.getItem('sip_operator_desa') === 'Waru') {
     localStorage.setItem('sip_operator_desa', 'Api-Api');
     AppState.operatorDesaAktif = 'Api-Api';
+  }
+  if (AppState.currentUser && AppState.currentUser.role === 'desa' && AppState.currentUser.desa) {
+    AppState.operatorDesaAktif = AppState.currentUser.desa;
   }
   if (AppState.pengajuanDesa && AppState.pengajuanDesa.some(item => item.namaDesa === 'Waru')) {
     AppState.pengajuanDesa = AppState.pengajuanDesa.filter(item => item.namaDesa !== 'Waru');
