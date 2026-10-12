@@ -608,8 +608,6 @@ function renderLivePreviewSiltap() {
           </table>
         </div>
       </div>
-
-      ${getFooterBsreHtml('1 / 2')}
     </div>
 
     <!-- HALAMAN 2 -->
@@ -638,7 +636,6 @@ function renderLivePreviewSiltap() {
       </div>
 
       ${getTtdCamatHtml(namaCamat, nipCamat, metodeTte)}
-      ${getFooterBsreHtml('2 / 2')}
     </div>
   `;
 
@@ -717,8 +714,6 @@ function renderLivePreviewAddReguler() {
           </div>
         </div>
       </div>
-
-      ${getFooterBsreHtml('1 / 3')}
     </div>
 
     <!-- HALAMAN 2 -->
@@ -762,8 +757,6 @@ function renderLivePreviewAddReguler() {
           </ol>
         </div>
       </div>
-
-      ${getFooterBsreHtml('2 / 3')}
     </div>
 
     <!-- HALAMAN 3 -->
@@ -784,7 +777,6 @@ function renderLivePreviewAddReguler() {
       </div>
 
       ${getTtdCamatHtml(namaCamat, nipCamat, metodeTte)}
-      ${getFooterBsreHtml('3 / 3')}
     </div>
   `;
 
@@ -873,8 +865,6 @@ function renderLivePreviewDbh() {
           </table>
         </div>
       </div>
-
-      ${getFooterBsreHtml('1 / 2')}
     </div>
 
     <!-- HALAMAN 2 -->
@@ -903,7 +893,6 @@ function renderLivePreviewDbh() {
       </div>
 
       ${getTtdCamatHtml(namaCamat, nipCamat, metodeTte)}
-      ${getFooterBsreHtml('2 / 2')}
     </div>
   `;
 
@@ -991,7 +980,6 @@ function renderLivePreviewDd() {
       </div>
 
       ${getTtdCamatHtml(namaCamat, nipCamat, metodeTte)}
-      ${getFooterBsreHtml('1 / 1')}
     </div>
   `;
 
@@ -1055,17 +1043,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
 }
 
 function getFooterBsreHtml(pageStr) {
-  return `
-    <div class="absolute bottom-4 left-8 right-8 text-[8.5pt] text-neutral-800 leading-tight pt-2 border-t border-slate-200 flex justify-between items-end">
-      <div class="max-w-[85%] text-left">
-        Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik<br>
-        yang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara (BSSN).
-      </div>
-      <div class="font-bold text-[9pt] text-slate-700 text-right whitespace-nowrap pl-2">
-        ${pageStr}
-      </div>
-    </div>
-  `;
+  return '';
 }
 
 function getLogoPenajamSvg() {
