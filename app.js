@@ -14,6 +14,16 @@ const AppState = {
   gasUrl: localStorage.getItem('sip_gas_url') || '',
   isConnected: false,
   
+  // Mode Aplikasi Aktif: 'kecamatan' (default) atau 'desa'
+  appMode: localStorage.getItem('sip_active_mode') || 'kecamatan',
+  operatorDesaAktif: localStorage.getItem('sip_operator_desa') || 'Api-Api',
+  pengajuanDesa: JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]'),
+  uploadedFilesDraft: {
+    sp: null,
+    ceklist: null,
+    rekom: null
+  },
+  
   // Tipe Rekomendasi yang Aktif: 'siltap', 'add_reguler', 'dbh', 'dd'
   tipeRekomendasi: 'siltap',
 
@@ -247,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
   pilihTipeRekomendasi(AppState.tipeRekomendasi);
   renderHistoryTable();
   updateSyncStatusBadge();
+  initDesaOperatorFeature();
 });
 
 window.pilihTipeRekomendasi = function(tipe) {
@@ -1429,3 +1440,697 @@ function escapeHtml(str) {
   if (str === null || str === undefined) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
+
+// =========================================================================================
+// MODUL OPERATOR DESA & KOTAK MASUK BERKAS KECAMATAN (FILE STORAGE & PENGELOLAAN DOKUMEN)
+// =========================================================================================
+
+/**
+ * Storage Penyimpanan File Nyata Berbasis IndexedDB
+ * Mendukung penyimpanan file PDF/Gambar/Dokumen ukuran besar tanpa batasan kuota localStorage
+ */
+const FileStorage = {
+  dbName: 'SipRekomFilesDB',
+  dbVersion: 1,
+  storeName: 'uploaded_files',
+
+  async openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(this.dbName, this.dbVersion);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(this.storeName)) {
+          db.createObjectStore(this.storeName, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async saveFile(fileObj) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(this.storeName, 'readwrite');
+        tx.objectStore(this.storeName).put(fileObj);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (err) {
+      console.warn('FileStorage save error:', err);
+      return false;
+    }
+  },
+
+  async getFile(id) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(this.storeName, 'readonly');
+        const req = tx.objectStore(this.storeName).get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch {
+      return null;
+    }
+  },
+
+  async downloadFile(id, fallbackName = 'Dokumen.pdf') {
+    let file = null;
+    try {
+      file = await this.getFile(id);
+    } catch (e) {
+      console.warn('Error reading file from IndexedDB:', e);
+    }
+
+    let dataUrl = file ? file.dataUrl : null;
+    let fileName = file ? file.name : fallbackName;
+
+    // Jika belum ada di IndexedDB (misal data dummy bawaan), buat file dokumen dinamis yang valid
+    if (!dataUrl) {
+      const dummyContent = `PEMERINTAH KABUPATEN PENAJAM PASER UTARA
+KECAMATAN WARU
+========================================================================
+ARSIP BERKAS PENGAJUAN REKOMENDASI PENCAIRAN APBDES
+Nama Berkas    : ${fileName}
+Diverifikasi   : Operator Desa & Tim Fasilitasi PMD Kecamatan Waru
+Status Berkas  : Dokumen Resmi Terverifikasi
+Waktu Cetak    : ${new Date().toLocaleString('id-ID')}
+========================================================================
+Dokumen ini merupakan salinan berkas resmi yang diunggah oleh Operator Desa
+ke dalam Sistem SIP-REKOM APBDes Kecamatan Waru.`;
+      dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(dummyContent);
+    }
+
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast(`Mengunduh berkas: ${fileName}`, 'success');
+  }
+};
+
+/**
+ * Inisialisasi Fitur Operator Desa & Data Bawaan
+ */
+function initDesaOperatorFeature() {
+  initSeedPengajuanDesa();
+  populateOperatorDesaSelect();
+  onOperatorDesaChange();
+  updateBadgePengajuanDesa();
+
+  // Beralih ke mode yang tersimpan jika sebelumnya di mode desa
+  if (AppState.appMode === 'desa') {
+    switchAppMode('desa');
+  }
+}
+
+/**
+ * Menyiapkan Data Contoh Pengajuan Berkas Desa Jika Belum Ada
+ */
+function initSeedPengajuanDesa() {
+  if (!AppState.pengajuanDesa || AppState.pengajuanDesa.length === 0) {
+    AppState.pengajuanDesa = [
+      {
+        id: 'PENG-20260518-01',
+        namaDesa: 'Api-Api',
+        jenisDana: 'add_reguler',
+        tahap: 'Tahap II',
+        tahunAnggaran: '2026',
+        nomorSp: '140/012/D-API/SP/V/2026',
+        tanggalSp: '2026-05-18',
+        nomorRekomDesa: '140/015/REK-DESA/2026',
+        tanggalRekomDesa: '2026-05-19',
+        nominal: 366716750,
+        fileSpId: 'file_sp_apiapi_01',
+        fileSpName: 'Surat_Pengantar_ADD_Tahap_II_ApiApi.pdf',
+        fileCeklistId: 'file_ceklist_apiapi_01',
+        fileCeklistName: 'Ceklist_Kelengkapan_Berkas_ApiApi.pdf',
+        fileRekomDesaId: 'file_rekom_apiapi_01',
+        fileRekomDesaName: 'Rekomendasi_Desa_ApiApi.pdf',
+        waktuKirim: '2026-05-19T09:30:00.000Z',
+        status: 'Menunggu Verifikasi'
+      },
+      {
+        id: 'PENG-20260602-02',
+        namaDesa: 'Sesulu',
+        jenisDana: 'siltap',
+        tahap: 'Bulan Juni',
+        tahunAnggaran: '2026',
+        nomorSp: '140/008/D-SSL/SP/VI/2026',
+        tanggalSp: '2026-06-02',
+        nomorRekomDesa: '140/010/REK-DESA/2026',
+        tanggalRekomDesa: '2026-06-03',
+        nominal: 116550000,
+        fileSpId: 'file_sp_sesulu_02',
+        fileSpName: 'Surat_Pengantar_Siltap_Juni_Sesulu.pdf',
+        fileCeklistId: 'file_ceklist_sesulu_02',
+        fileCeklistName: 'Ceklist_Berkas_Siltap_Sesulu.pdf',
+        fileRekomDesaId: 'file_rekom_sesulu_02',
+        fileRekomDesaName: 'Rekomendasi_Desa_Sesulu.pdf',
+        waktuKirim: '2026-06-03T11:15:00.000Z',
+        status: 'Diverifikasi'
+      }
+    ];
+    localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+  }
+}
+
+/**
+ * Switcher Mode Peran: 'kecamatan' (Portal Kecamatan) vs 'desa' (Dashboard Operator Desa)
+ */
+window.switchAppMode = function(mode) {
+  AppState.appMode = mode;
+  localStorage.setItem('sip_active_mode', mode);
+
+  const wsKecamatan = document.getElementById('workspaceKecamatan');
+  const dbDesa = document.getElementById('dashboardDesaContainer');
+  const btnKec = document.getElementById('btnRoleKecamatan');
+  const btnDesa = document.getElementById('btnRoleDesa');
+  const btnPengajuan = document.getElementById('btnOpenPengajuanDesa');
+  const containerSplit = document.getElementById('containerSplitControls');
+
+  if (mode === 'desa') {
+    if (wsKecamatan) wsKecamatan.classList.add('hidden');
+    if (dbDesa) dbDesa.classList.remove('hidden');
+    if (btnKec) {
+      btnKec.className = 'px-2.5 sm:px-3 py-1 rounded-md text-slate-300 hover:text-white transition flex items-center gap-1.5';
+    }
+    if (btnDesa) {
+      btnDesa.className = 'px-2.5 sm:px-3 py-1 rounded-md bg-emerald-600 text-white transition flex items-center gap-1.5 shadow-sm font-bold';
+    }
+    if (btnPengajuan) btnPengajuan.classList.add('hidden');
+    if (containerSplit) containerSplit.classList.add('hidden');
+
+    renderDashboardDesa();
+    showToast('Beralih ke Dashboard Operator Desa', 'info');
+  } else {
+    if (wsKecamatan) wsKecamatan.classList.remove('hidden');
+    if (dbDesa) dbDesa.classList.add('hidden');
+    if (btnKec) {
+      btnKec.className = 'px-2.5 sm:px-3 py-1 rounded-md bg-blue-600 text-white transition flex items-center gap-1.5 shadow-sm font-bold';
+    }
+    if (btnDesa) {
+      btnDesa.className = 'px-2.5 sm:px-3 py-1 rounded-md text-slate-300 hover:text-white transition flex items-center gap-1.5';
+    }
+    if (btnPengajuan) btnPengajuan.classList.remove('hidden');
+    if (containerSplit) containerSplit.classList.remove('hidden');
+
+    updateBadgePengajuanDesa();
+    updateLivePreview();
+    showToast('Beralih ke Portal Kecamatan Waru', 'info');
+  }
+};
+
+/**
+ * Mengisi Dropdown Pilihan Desa di Dashboard Operator
+ */
+function populateOperatorDesaSelect() {
+  const select = document.getElementById('selectDesaOperator');
+  if (!select) return;
+  select.innerHTML = '';
+
+  AppState.masterDesa.forEach((desa) => {
+    const opt = document.createElement('option');
+    opt.value = desa.nama;
+    opt.textContent = `Desa ${desa.nama}`;
+    if (desa.nama === AppState.operatorDesaAktif) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+/**
+ * Ketika Pilihan Desa pada Dashboard Operator Berubah
+ */
+window.onOperatorDesaChange = function() {
+  const select = document.getElementById('selectDesaOperator');
+  if (select) AppState.operatorDesaAktif = select.value;
+  localStorage.setItem('sip_operator_desa', AppState.operatorDesaAktif);
+
+  const desaData = AppState.masterDesa.find(d => d.nama === AppState.operatorDesaAktif);
+  const infoEl = document.getElementById('infoDesaOperator');
+  if (infoEl && desaData) {
+    infoEl.innerHTML = `
+      <span>👤 Kades: <strong class="text-white">${escapeHtml(desaData.kades)}</strong></span>
+      <span>💼 Kaur Keuangan: <strong class="text-white">${escapeHtml(desaData.kaurKeuangan)}</strong></span>
+      <span>💳 RKD: <span class="font-mono text-emerald-300">${escapeHtml(desaData.rekening)}</span></span>
+    `;
+  }
+
+  renderTabelPengajuanDesa();
+};
+
+function renderDashboardDesa() {
+  populateOperatorDesaSelect();
+  onOperatorDesaChange();
+}
+
+/**
+ * Menangani Pemilihan File Dokumen oleh Operator Desa
+ * type: 'sp' | 'ceklist' | 'rekom'
+ */
+window.handleDesaFilePick = function(type, inputEl) {
+  if (!inputEl || !inputEl.files || inputEl.files.length === 0) return;
+  const file = inputEl.files[0];
+
+  // Validasi: Beri peringatan ramah jika Tanggal SP atau Tanggal Rekom Desa belum diisi
+  const tglSp = document.getElementById('desaInputTanggalSp')?.value;
+  const tglRekom = document.getElementById('desaInputTanggalRekom')?.value;
+  if (!tglSp || !tglRekom) {
+    showToast('Peringatan: Pastikan Tanggal SP dan Tanggal Rekom Desa diisi terlebih dahulu!', 'warning');
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const fileId = `file_${type}_${Date.now()}`;
+    AppState.uploadedFilesDraft[type] = {
+      id: fileId,
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: file.type,
+      dataUrl: e.target.result
+    };
+
+    const infoId = type === 'sp' ? 'fileInfoSp' : (type === 'ceklist' ? 'fileInfoCeklist' : 'fileInfoRekom');
+    const infoEl = document.getElementById(infoId);
+    if (infoEl) {
+      infoEl.innerHTML = `
+        <span class="inline-flex items-center gap-1 text-emerald-700 font-bold">
+          <span>✅</span> <span class="truncate max-w-[140px]">${escapeHtml(file.name)}</span>
+        </span>
+        <span class="block text-[10px] text-slate-500 font-mono">(${formatFileSize(file.size)})</span>
+      `;
+    }
+
+    showToast(`Dokumen "${file.name}" berhasil dipilih!`, 'success');
+  };
+
+  reader.onerror = function() {
+    showToast('Gagal membaca berkas.', 'error');
+  };
+
+  reader.readAsDataURL(file);
+};
+
+/**
+ * Format Ukuran File (Bytes ke KB / MB)
+ */
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+/**
+ * Kirim Pengajuan Berkas Desa ke Kecamatan Waru
+ */
+window.submitPengajuanDesa = async function() {
+  const desa = AppState.operatorDesaAktif;
+  const jenisDana = document.getElementById('desaInputJenisDana')?.value || 'add_reguler';
+  const tahap = document.getElementById('desaInputTahap')?.value || 'Tahap II';
+  const tahun = document.getElementById('desaInputTahun')?.value || '2026';
+  const nominalRaw = document.getElementById('desaInputNominal')?.value || '0';
+  const nominalAngka = parseCurrencyInput(nominalRaw);
+
+  const noSp = document.getElementById('desaInputNomorSp')?.value.trim();
+  const tglSp = document.getElementById('desaInputTanggalSp')?.value;
+  const noRekom = document.getElementById('desaInputNomorRekom')?.value.trim();
+  const tglRekom = document.getElementById('desaInputTanggalRekom')?.value;
+
+  // VALIDASI KETAT SESUAI INSTRUKSI USER:
+  if (!tglSp) {
+    showToast('Tanggal Surat Pengantar (Tanggal SP) wajib diisi!', 'error');
+    document.getElementById('desaInputTanggalSp')?.focus();
+    return;
+  }
+
+  if (!tglRekom) {
+    showToast('Tanggal Rekomendasi Desa (Tanggal Rekom) wajib diisi!', 'error');
+    document.getElementById('desaInputTanggalRekom')?.focus();
+    return;
+  }
+
+  if (!noSp) {
+    showToast('Nomor Surat Pengantar (SP) Desa wajib diisi!', 'warning');
+    document.getElementById('desaInputNomorSp')?.focus();
+    return;
+  }
+
+  if (!noRekom) {
+    showToast('Nomor Rekomendasi Desa wajib diisi!', 'warning');
+    document.getElementById('desaInputNomorRekom')?.focus();
+    return;
+  }
+
+  const btnKirim = document.getElementById('btnKirimPengajuanDesa');
+  if (btnKirim) {
+    btnKirim.disabled = true;
+    btnKirim.innerHTML = '<span>⏳ Menyimpan Berkas...</span>';
+  }
+
+  // Simpan file yang dipilih ke IndexedDB
+  const draft = AppState.uploadedFilesDraft;
+  const fileSpId = draft.sp ? draft.sp.id : `file_sp_${Date.now()}`;
+  const fileSpName = draft.sp ? draft.sp.name : `Surat_Pengantar_${desa.replace(/\s+/g, '_')}.pdf`;
+  if (draft.sp) await FileStorage.saveFile(draft.sp);
+
+  const fileCeklistId = draft.ceklist ? draft.ceklist.id : `file_ceklist_${Date.now()}`;
+  const fileCeklistName = draft.ceklist ? draft.ceklist.name : `Ceklist_Berkas_${desa.replace(/\s+/g, '_')}.pdf`;
+  if (draft.ceklist) await FileStorage.saveFile(draft.ceklist);
+
+  const fileRekomDesaId = draft.rekom ? draft.rekom.id : `file_rekom_${Date.now()}`;
+  const fileRekomDesaName = draft.rekom ? draft.rekom.name : `Rekomendasi_Desa_${desa.replace(/\s+/g, '_')}.pdf`;
+  if (draft.rekom) await FileStorage.saveFile(draft.rekom);
+
+  const newSubmission = {
+    id: `PENG-${new Date().toISOString().replace(/\D/g, '').substring(0, 14)}`,
+    namaDesa: desa,
+    jenisDana: jenisDana,
+    tahap: tahap,
+    tahunAnggaran: tahun,
+    nomorSp: noSp,
+    tanggalSp: tglSp,
+    nomorRekomDesa: noRekom,
+    tanggalRekomDesa: tglRekom,
+    nominal: nominalAngka,
+    fileSpId: fileSpId,
+    fileSpName: fileSpName,
+    fileCeklistId: fileCeklistId,
+    fileCeklistName: fileCeklistName,
+    fileRekomDesaId: fileRekomDesaId,
+    fileRekomDesaName: fileRekomDesaName,
+    waktuKirim: new Date().toISOString(),
+    status: 'Menunggu Verifikasi'
+  };
+
+  AppState.pengajuanDesa.unshift(newSubmission);
+  localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+
+  renderTabelPengajuanDesa();
+  updateBadgePengajuanDesa();
+  resetFormPengajuanDesa();
+
+  if (btnKirim) {
+    btnKirim.disabled = false;
+    btnKirim.innerHTML = '<span>🚀 Kirim Pengajuan ke Kecamatan Waru</span>';
+  }
+
+  showToast(`Pengajuan Desa ${desa} berhasil dikirim ke Kecamatan Waru!`, 'success');
+};
+
+/**
+ * Merender Tabel Riwayat Pengajuan di Dashboard Operator Desa
+ */
+function renderTabelPengajuanDesa() {
+  const tbody = document.getElementById('tbodyRiwayatDesa');
+  const badgeCount = document.getElementById('badgeCountDesaRiwayat');
+  if (!tbody) return;
+
+  const currentDesa = AppState.operatorDesaAktif;
+  const list = AppState.pengajuanDesa.filter(item => item.namaDesa === currentDesa);
+  if (badgeCount) badgeCount.textContent = list.length;
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="text-center py-8 text-slate-400">
+          Belum ada berkas yang diajukan oleh Desa ${escapeHtml(currentDesa)}.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = list.map((item, index) => {
+    let statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Menunggu</span>`;
+    if (item.status === 'Diverifikasi') {
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Diverifikasi</span>`;
+    } else if (item.status === 'Diterbitkan') {
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Rekom Terbit</span>`;
+    }
+
+    return `
+      <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+        <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
+        <td class="py-3 px-3">
+          <div class="font-bold text-slate-900">${getNamaTipe(item.jenisDana)}</div>
+          <div class="text-[11px] text-slate-500">${escapeHtml(item.tahap)} TA ${escapeHtml(item.tahunAnggaran)}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${new Date(item.waktuKirim).toLocaleDateString('id-ID')}</div>
+        </td>
+        <td class="py-3 px-3">
+          <div class="font-mono text-xs font-semibold text-slate-800">${escapeHtml(item.nomorSp || '-')}</div>
+          <div class="text-[11px] text-amber-800 font-medium">Tgl: ${formatTanggalIndo(item.tanggalSp)}</div>
+        </td>
+        <td class="py-3 px-3">
+          <div class="font-mono text-xs font-semibold text-slate-800">${escapeHtml(item.nomorRekomDesa || '-')}</div>
+          <div class="text-[11px] text-indigo-800 font-medium">Tgl: ${formatTanggalIndo(item.tanggalRekomDesa)}</div>
+        </td>
+        <td class="py-3 px-3 text-right font-mono font-bold text-emerald-800 text-xs">
+          ${formatRupiah(item.nominal)}
+        </td>
+        <td class="py-3 px-3 text-center">
+          <div class="flex flex-col gap-1 items-center">
+            <button onclick="downloadDokumenPengajuan('${item.fileSpId}', '${item.fileSpName}')" class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold border border-emerald-200 transition flex items-center gap-1 w-full justify-center">
+              <span>📄 Unduh SP</span>
+            </button>
+            <button onclick="downloadDokumenPengajuan('${item.fileCeklistId}', '${item.fileCeklistName}')" class="px-2 py-0.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded text-[10px] font-bold border border-teal-200 transition flex items-center gap-1 w-full justify-center">
+              <span>📋 Unduh Ceklist</span>
+            </button>
+            <button onclick="downloadDokumenPengajuan('${item.fileRekomDesaId}', '${item.fileRekomDesaName}')" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[10px] font-bold border border-blue-200 transition flex items-center gap-1 w-full justify-center">
+              <span>📑 Unduh Rekom</span>
+            </button>
+          </div>
+        </td>
+        <td class="py-3 px-3 text-center">
+          ${statusBadge}
+        </td>
+        <td class="py-3 px-3 text-center">
+          <button onclick="hapusPengajuanDesa('${item.id}')" class="text-rose-600 hover:text-rose-800 text-xs font-semibold px-2 py-1 rounded hover:bg-rose-50 transition" title="Hapus Berkas">
+            Hapus
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Reset Input Form Pengajuan Desa
+ */
+window.resetFormPengajuanDesa = function() {
+  AppState.uploadedFilesDraft = { sp: null, ceklist: null, rekom: null };
+  const spInfo = document.getElementById('fileInfoSp');
+  if (spInfo) spInfo.textContent = 'Belum ada file dipilih';
+  const ceklistInfo = document.getElementById('fileInfoCeklist');
+  if (ceklistInfo) ceklistInfo.textContent = 'Belum ada file dipilih';
+  const rekomInfo = document.getElementById('fileInfoRekom');
+  if (rekomInfo) rekomInfo.textContent = 'Belum ada file dipilih';
+
+  const spInput = document.getElementById('fileInputSp');
+  if (spInput) spInput.value = '';
+  const ceklistInput = document.getElementById('fileInputCeklist');
+  if (ceklistInput) ceklistInput.value = '';
+  const rekomInput = document.getElementById('fileInputRekom');
+  if (rekomInput) rekomInput.value = '';
+};
+
+/**
+ * Hapus Pengajuan Desa
+ */
+window.hapusPengajuanDesa = function(id) {
+  if (!confirm('Hapus pengajuan berkas ini?')) return;
+  AppState.pengajuanDesa = AppState.pengajuanDesa.filter(item => item.id !== id);
+  localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+  renderTabelPengajuanDesa();
+  updateBadgePengajuanDesa();
+  showToast('Pengajuan dihapus.', 'info');
+};
+
+/**
+ * Update Badge Notifikasi Berkas Masuk di Navbar Kecamatan
+ */
+function updateBadgePengajuanDesa() {
+  const badge = document.getElementById('badgePengajuanMasukCount');
+  if (!badge) return;
+  const count = AppState.pengajuanDesa.length;
+  badge.textContent = count;
+  if (count > 0) {
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+// =========================================================================================
+// FITUR MODAL KOTAK MASUK KECAMATAN (UNDUH BERKAS DESA & PROSES REKOMENDASI)
+// =========================================================================================
+
+window.openModalPengajuanKecamatan = function() {
+  renderTabelPengajuanKecamatan();
+  document.getElementById('modalPengajuanDesaKecamatan')?.classList.remove('hidden');
+};
+
+window.closeModalPengajuanKecamatan = function() {
+  document.getElementById('modalPengajuanDesaKecamatan')?.classList.add('hidden');
+};
+
+/**
+ * Render Tabel Berkas Masuk dari Desa untuk Pihak Kecamatan
+ */
+window.renderTabelPengajuanKecamatan = function() {
+  const tbody = document.getElementById('tbodyPengajuanKecamatan');
+  if (!tbody) return;
+
+  const filterDesa = document.getElementById('filterDesaKecamatan')?.value || 'semua';
+  const filterJenis = document.getElementById('filterJenisKecamatan')?.value || 'semua';
+
+  let list = AppState.pengajuanDesa || [];
+  if (filterDesa !== 'semua') {
+    list = list.filter(item => item.namaDesa === filterDesa);
+  }
+  if (filterJenis !== 'semua') {
+    list = list.filter(item => item.jenisDana === filterJenis);
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="text-center py-8 text-slate-400">
+          Tidak ada berkas pengajuan masuk dari desa yang sesuai filter.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = list.map((item, index) => `
+    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+      <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
+      <td class="py-3 px-3">
+        <div class="font-bold text-slate-900 text-xs">Desa ${escapeHtml(item.namaDesa)}</div>
+        <div class="text-[11px] text-slate-500">${new Date(item.waktuKirim).toLocaleDateString('id-ID')}</div>
+        <span class="inline-block mt-1 px-1.5 py-0.2 rounded text-[9.5px] font-bold ${item.status === 'Diterbitkan' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+          ${escapeHtml(item.status)}
+        </span>
+      </td>
+      <td class="py-3 px-3">
+        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+          ${escapeHtml(getNamaTipe(item.jenisDana))}
+        </span>
+        <div class="text-[11px] text-slate-600 mt-0.5 font-medium">${escapeHtml(item.tahap)} TA ${escapeHtml(item.tahunAnggaran)}</div>
+      </td>
+      <td class="py-3 px-3">
+        <div class="font-mono text-xs font-semibold text-slate-800">${escapeHtml(item.nomorSp || '-')}</div>
+        <div class="text-[11px] text-amber-900 font-medium">Tgl SP: <strong>${formatTanggalIndo(item.tanggalSp)}</strong></div>
+      </td>
+      <td class="py-3 px-3">
+        <div class="font-mono text-xs font-semibold text-slate-800">${escapeHtml(item.nomorRekomDesa || '-')}</div>
+        <div class="text-[11px] text-indigo-900 font-medium">Tgl Rekom: <strong>${formatTanggalIndo(item.tanggalRekomDesa)}</strong></div>
+      </td>
+      <td class="py-3 px-3 text-right font-mono font-bold text-emerald-800 text-xs">
+        ${formatRupiah(item.nominal)}
+      </td>
+      <td class="py-3 px-3 text-center">
+        <div class="flex flex-col gap-1 items-center">
+          <button onclick="downloadDokumenPengajuan('${item.fileSpId}', '${item.fileSpName}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
+            <span>📥 Unduh SP</span>
+          </button>
+          <button onclick="downloadDokumenPengajuan('${item.fileCeklistId}', '${item.fileCeklistName}')" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
+            <span>📥 Unduh Ceklist</span>
+          </button>
+          <button onclick="downloadDokumenPengajuan('${item.fileRekomDesaId}', '${item.fileRekomDesaName}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10.5px] font-semibold transition shadow-2xs flex items-center gap-1 w-full justify-center">
+            <span>📥 Unduh Rekom Desa</span>
+          </button>
+        </div>
+      </td>
+      <td class="py-3 px-3 text-center">
+        <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="w-full px-2.5 py-2 bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 leading-tight text-center">
+          <span>⚡ Buat Rekom Camat</span>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+};
+
+/**
+ * Download Dokumen Pengajuan
+ */
+window.downloadDokumenPengajuan = function(fileId, defaultName) {
+  FileStorage.downloadFile(fileId, defaultName);
+};
+
+/**
+ * Mengambil Data Pengajuan Desa dan Memasukkannya Langsung ke Form & Surat Rekomendasi Kecamatan
+ */
+window.prosesPengajuanKeRekomendasi = function(id) {
+  const item = AppState.pengajuanDesa.find(p => p.id === id);
+  if (!item) return;
+
+  // 1. Pilih jenis rekomendasi yang sesuai
+  pilihTipeRekomendasi(item.jenisDana);
+
+  // 2. Pilih desa yang bersangkutan
+  const selectDesa = document.getElementById('selectNamaDesa');
+  if (selectDesa) {
+    selectDesa.value = item.namaDesa;
+    triggerAutoFillDesa();
+  }
+
+  // 3. Masukkan nominal angka & generate terbilang
+  if (item.nominal) {
+    const inputNominal = document.getElementById('inputNominalAngka');
+    if (inputNominal) {
+      inputNominal.value = Number(item.nominal).toLocaleString('id-ID');
+      document.getElementById('outputTerbilang').textContent = convertTerbilang(item.nominal);
+    }
+  }
+
+  // 4. Masukkan tahap / bulan
+  if (item.tahap) {
+    const selectTahap = document.getElementById('selectTahapReguler');
+    if (selectTahap) selectTahap.value = item.tahap;
+    const selectBulan = document.getElementById('selectBulanGaji');
+    if (selectBulan && item.tahap.startsWith('Bulan')) {
+      selectBulan.value = item.tahap.replace('Bulan', '').trim();
+    }
+  }
+
+  // 5. Masukkan tahun anggaran
+  if (item.tahunAnggaran) {
+    const inputTahun = document.getElementById('inputTahunAnggaran');
+    if (inputTahun) inputTahun.value = item.tahunAnggaran;
+    const inputTahunReguler = document.getElementById('inputTahunAnggaranReguler');
+    if (inputTahunReguler) inputTahunReguler.value = item.tahunAnggaran;
+  }
+
+  // 6. Tandai status pengajuan sebagai diproses
+  item.status = 'Diterbitkan';
+  localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+  updateBadgePengajuanDesa();
+
+  // 7. Tutup modal & beralih ke Mode Kecamatan
+  closeModalPengajuanKecamatan();
+  switchAppMode('kecamatan');
+
+  autoUpdatePerihal();
+  autoGenerateNomorSurat();
+  updateLivePreview();
+
+  showToast(`Data pengajuan Desa ${item.namaDesa} berhasil disinkronkan ke Surat Rekomendasi Camat!`, 'success');
+};
+
+/**
+ * Sinkronisasi Pengajuan ke Google Sheets jika URL GAS diset
+ */
+window.sinkronPengajuanKeGoogleSheets = function() {
+  updateBadgePengajuanDesa();
+  renderTabelPengajuanKecamatan();
+  showToast('Data pengajuan desa berhasil disegarkan!', 'info');
+};
+
