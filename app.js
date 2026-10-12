@@ -1003,29 +1003,32 @@ function renderLivePreviewDd() {
 // HTML BUILDERS & REUSABLE COMPONENTS
 // =========================================================================================
 function getKopSuratHtml(withWa = true) {
+  const waIconBase64 = 'data:image/png;base64,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';
   return `
-    <div class="kop-surat flex items-center justify-between pb-2 border-b-[3px] border-black relative">
-      <div class="w-20 flex-shrink-0 flex items-center justify-center">
-        ${getLogoPenajamSvg()}
+    <div class="kop-surat flex items-center justify-between pb-2 border-b-[3.5px] border-black relative">
+      <div class="w-20 flex-shrink-0 flex items-center justify-start">
+        <img src="logo_ppu.png" alt="Logo Kabupaten Penajam Paser Utara" class="w-[74px] h-[86px] object-contain drop-shadow-xs" />
       </div>
-      <div class="flex-1 text-center px-1">
+      <div class="flex-1 text-center px-1 font-sans">
         <h3 class="text-[13pt] font-bold uppercase tracking-wider text-black leading-tight">
           PEMERINTAH KABUPATEN PENAJAM PASER UTARA
         </h3>
         <h2 class="text-[16pt] font-black uppercase tracking-wider text-black leading-tight mt-0.5">
           KECAMATAN WARU
         </h2>
-        <p class="text-[9.5pt] text-black leading-snug mt-1">
-          Jalan Propinsi KM. 25, WA. 0821-9564-7788
+        <p class="text-[10pt] text-black leading-normal mt-1 flex items-center justify-center">
+          <span>Jalan Propinsi Km. 25,</span>
+          <img src="icon_wa.png" onerror="this.onerror=null; this.src='${waIconBase64}';" alt="WA" class="inline-block w-[16px] h-[16px] mx-1 align-middle" />
+          <span>WA. 0821-9564-7788</span>
         </p>
-        <p class="text-[9.5pt] text-black leading-snug">
+        <p class="text-[10pt] text-black leading-normal">
           Website : <span class="text-blue-700 underline">https://kecwaru.penajamkab.go.id/</span>
         </p>
-        <p class="text-[9.5pt] text-black leading-snug">
+        <p class="text-[10pt] text-black leading-normal">
           Email : <span class="text-blue-700 underline">kecamatanwaru2014@gmail.com</span> Pos 76284
         </p>
       </div>
-      <div class="w-16 flex-shrink-0"></div>
+      <div class="w-20 flex-shrink-0"></div>
     </div>
   `;
 }
