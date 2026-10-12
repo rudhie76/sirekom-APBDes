@@ -431,7 +431,7 @@
             SIP-REKOM APBDES
           </div>
           <div class="text-[10.5px] text-slate-500 pt-1 border-t border-slate-100 flex items-center justify-between font-medium">
-            <span>Subfolder 4 Desa</span>
+            <span>Subfolder 3 Desa</span>
             <a href="javascript:void(0)" onclick="openDriveFolderKecamatan()" class="text-blue-600 hover:underline font-bold">Buka Drive →</a>
           </div>
         </div>
@@ -483,18 +483,18 @@
 
       </div>
 
-      <!-- MONITORING 4 DESA DI KECAMATAN WARU -->
+      <!-- MONITORING 3 DESA DI KECAMATAN WARU -->
       <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
-              <span>📍 Monitoring 4 Desa di Wilayah Kecamatan Waru</span>
+              <span>📍 Monitoring 3 Desa di Wilayah Kecamatan Waru</span>
             </h3>
             <p class="text-[11px] text-slate-500">Status kelengkapan rekening kas desa (RKD) dan rekapitulasi permohonan</p>
           </div>
         </div>
 
-        <div id="dashGridDesa" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div id="dashGridDesa" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Diisi otomatis oleh JavaScript renderDashboardSummary -->
         </div>
       </div>
@@ -569,10 +569,9 @@
             <div class="flex items-center gap-1.5">
               <label class="text-xs font-semibold text-slate-700">Filter Desa:</label>
               <select id="filterDesaKecamatan" onchange="renderTabelPengajuanKecamatan()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 focus:bg-white">
-                <option value="semua">Semua Desa (4 Desa)</option>
+                <option value="semua">Semua Desa (3 Desa)</option>
                 <option value="Api-Api">Desa Api-Api</option>
                 <option value="Sesulu">Desa Sesulu</option>
-                <option value="Waru">Desa Waru</option>
                 <option value="Bangun Mulya">Desa Bangun Mulya</option>
               </select>
             </div>
@@ -975,7 +974,7 @@
             <span>📍 Pilih Desa Anda:</span>
           </label>
           <select id="selectDesaOperator" onchange="onOperatorDesaChange()" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:ring-2 focus:ring-emerald-400">
-            <!-- Diisi dinamis: Desa Api-Api, Desa Sesulu, Desa Waru, Desa Bangun Mulya -->
+            <!-- Diisi dinamis: Desa Api-Api, Desa Sesulu, Desa Bangun Mulya -->
           </select>
           <div id="infoDesaOperator" class="text-[10px] text-slate-400 flex flex-col gap-0.5 mt-0.5">
             <!-- Otomatis diisi Kepala Desa & Kaur Keuangan -->
@@ -1431,7 +1430,6 @@
               <option value="semua">Semua Desa</option>
               <option value="Api-Api">Desa Api-Api</option>
               <option value="Sesulu">Desa Sesulu</option>
-              <option value="Waru">Desa Waru</option>
               <option value="Bangun Mulya">Desa Bangun Mulya</option>
             </select>
           </div>
@@ -1491,6 +1489,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261012_sidebar_nav"></script>
+  <script src="app.js?v=20261012_remove_waru_desa"></script>
 </body>
 </html>

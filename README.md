@@ -15,7 +15,7 @@ Aplikasi web interaktif modern berbasis **HTML5**, **Tailwind CSS**, dan **Vanil
 
 2. **Antarmuka Split View Interaktif**:
    - **Panel Form Input (Kiri)**:
-     - Master Desa Terintegrasi: *Desa Waru, Desa Sesulu, Desa Api-Api, dan Desa Bangun Mulya*.
+     - Master Desa Terintegrasi: *Desa Api-Api, Desa Sesulu, dan Desa Bangun Mulya* (Kecamatan Waru terdiri dari 3 Desa dan 1 Kelurahan Waru).
      - Fitur **Auto-Fill**: Memilih desa akan otomatis mengisi nama Kepala Desa, Kaur Keuangan / Bendahara Desa, Bank Penyalur (*PT BPD Kaltim Kaltara / Bankaltimtara Capem Waru*), dan Nomor Rekening Kas Desa (RKD).
      - Pilihan Jenis Dana: **ADD** (Alokasi Dana Desa), **DD** (Dana Desa), **DBH** (Bagi Hasil Pajak & Retribusi), dan **Bankeu** (Bantuan Keuangan Khusus).
      - Pilihan Tahap: Tahap I, Tahap II, Tahap III, Salur Sekaligus, hingga Siltap per Triwulan.

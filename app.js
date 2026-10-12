@@ -19,8 +19,8 @@ const AppState = {
   activeMenu: localStorage.getItem('sip_active_menu') || 'dashboard',
   kecamatanSubTab: 'verifikasi',
   isSidebarCollapsed: localStorage.getItem('sip_sidebar_collapsed') === 'true',
-  operatorDesaAktif: localStorage.getItem('sip_operator_desa') || 'Api-Api',
-  pengajuanDesa: JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]'),
+  operatorDesaAktif: (localStorage.getItem('sip_operator_desa') && localStorage.getItem('sip_operator_desa') !== 'Waru') ? localStorage.getItem('sip_operator_desa') : 'Api-Api',
+  pengajuanDesa: JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]').filter(item => item.namaDesa !== 'Waru'),
   uploadedFilesDraft: {
     sp: null,
     ceklist: null,
@@ -30,7 +30,7 @@ const AppState = {
   // Tipe Rekomendasi yang Aktif: 'siltap', 'add_reguler', 'dbh', 'dd'
   tipeRekomendasi: 'siltap',
 
-  // Master Desa di Kecamatan Waru (Data Riil Resmi)
+  // Master 3 Desa di Kecamatan Waru (Kecamatan Waru memiliki 3 Desa & 1 Kelurahan Waru)
   masterDesa: [
     {
       id: 'DESA-03',
@@ -68,25 +68,6 @@ const AppState = {
       nomorPerdes: '7',
       tahunPerdes: '2025',
       nomorPerkades: '3',
-      tahunPerkades: '2025'
-    },
-    {
-      id: 'DESA-01',
-      nama: 'Waru',
-      kades: 'KARTONO, S.Pd',
-      kaurKeuangan: 'SRI WAHYUNI, S.E',
-      jabatanKaur: 'Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa Waru',
-      bank: 'PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru',
-      rekening: '1131400122',
-      atasNama: 'Pemerintah Desa Waru (RKD)',
-      alamat: 'Jl. Propinsi Km. 25, Desa Waru, Kec. Waru',
-      nomorPerdesKewenangan: '1',
-      tahunPerdesKewenangan: '2019',
-      nomorPerdesRkp: '1',
-      tahunPerdesRkp: '2025',
-      nomorPerdes: '5',
-      tahunPerdes: '2025',
-      nomorPerkades: '2',
       tahunPerkades: '2025'
     },
     {
@@ -1611,6 +1592,14 @@ ke dalam Sistem SIP-REKOM APBDes Kecamatan Waru.`;
  * Inisialisasi Fitur Operator Desa & Data Bawaan
  */
 function initDesaOperatorFeature() {
+  if (localStorage.getItem('sip_operator_desa') === 'Waru') {
+    localStorage.setItem('sip_operator_desa', 'Api-Api');
+    AppState.operatorDesaAktif = 'Api-Api';
+  }
+  if (AppState.pengajuanDesa && AppState.pengajuanDesa.some(item => item.namaDesa === 'Waru')) {
+    AppState.pengajuanDesa = AppState.pengajuanDesa.filter(item => item.namaDesa !== 'Waru');
+    localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+  }
   initSeedPengajuanDesa();
   populateOperatorDesaSelect();
   onOperatorDesaChange();
@@ -1928,7 +1917,7 @@ window.renderDashboardSummary = function() {
     elTextSyncSidebar.textContent = (AppState.isConnected && AppState.gasUrl) ? 'Sheets & Drive Aktif' : 'Mode Database Lokal';
   }
 
-  // Render Grid 4 Desa di Dashboard
+  // Render Grid 3 Desa di Dashboard (Api-Api, Sesulu, Bangun Mulya)
   const desaCardsContainer = document.getElementById('dashGridDesa');
   if (desaCardsContainer && AppState.masterDesa) {
     desaCardsContainer.innerHTML = AppState.masterDesa.map(desa => {

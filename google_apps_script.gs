@@ -173,12 +173,6 @@ function initSheets() {
         "Jl. Negara Km. 32 RT. 04, Desa Sesulu, Kec. Waru", "081347650002"
       ],
       [
-        "DESA-01", "Waru", "KARTONO, S.Pd", "SRI WAHYUNI, S.E",
-        "PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru",
-        "1131400122", "Pemerintah Desa Waru (RKD)",
-        "Jl. Propinsi Km. 25, Desa Waru, Kec. Waru", "081254320001"
-      ],
-      [
         "DESA-04", "Bangun Mulya", "BOIMIN, S.Sos", "EKO PRASETYO",
         "PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru",
         "1131400678", "Pemerintah Desa Bangun Mulya (RKD)",
