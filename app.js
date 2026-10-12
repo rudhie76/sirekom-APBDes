@@ -1236,7 +1236,18 @@ function setupModalSettingsListeners() {
     AppState.gasUrl = document.getElementById('inputGasUrl').value.trim();
     testGasConnection(false);
   });
-  document.getElementById('btnCopyGasScript')?.addEventListener('click', () => {
+  document.getElementById('btnCopyGasScript')?.addEventListener('click', async () => {
+    try {
+      const res = await fetch('google_apps_script.gs');
+      if (res.ok) {
+        const codeText = await res.text();
+        await navigator.clipboard.writeText(codeText);
+        showToast('Seluruh kode Google Apps Script berhasil disalin ke Clipboard!', 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn('Gagal fetch kode Apps Script:', e);
+    }
     showToast('Silakan buka file google_apps_script.gs di folder aplikasi.', 'info');
   });
 }
@@ -1245,22 +1256,71 @@ async function testGasConnection(isSilent = false) {
   const url = AppState.gasUrl;
   const statusEl = document.getElementById('statusGasTest');
   if (!url || !url.startsWith('http')) {
-    if (statusEl) statusEl.innerHTML = '<span class="text-rose-600 font-semibold">❌ URL belum diisi</span>';
+    if (statusEl) statusEl.innerHTML = '<span class="text-rose-600 font-semibold text-xs">❌ URL belum diisi</span>';
     updateSyncStatusBadge(false);
     return;
   }
+
+  if (statusEl) statusEl.innerHTML = '<span class="text-slate-500 font-medium text-xs">⏳ Menguji koneksi ke Google...</span>';
+
   try {
-    const pingUrl = url.includes('?') ? `${url}&action=ping` : `${url}?action=ping`;
+    const pingUrl = url.includes('?') ? `${url}&action=ping&_t=${Date.now()}` : `${url}?action=ping&_t=${Date.now()}`;
     const res = await (await fetch(pingUrl)).json();
     if (res.success) {
       AppState.isConnected = true;
-      if (statusEl) statusEl.innerHTML = `<span class="text-emerald-600 font-semibold">✅ Terhubung ke: "${res.spreadsheetName}"</span>`;
-      if (!isSilent) showToast('Koneksi Google Sheets Berhasil!', 'success');
+      if (res.driveStatus === 'PERLU_IZIN') {
+        if (statusEl) {
+          statusEl.innerHTML = `
+            <div class="text-amber-700 font-semibold text-xs mt-1 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+              ⚠️ Terhubung ke Spreadsheet: <b>"${escapeHtml(res.spreadsheetName)}"</b><br/>
+              <span class="text-[11px] font-normal text-amber-900 mt-1 block">
+                Namun <b>Izin Google Drive</b> belum disetujui di Apps Script.<br/>
+                👉 Buka editor Apps Script, pilih fungsi <b>AKTIFKAN_IZIN_DAN_TEST</b>, lalu klik <b>Jalankan (Run)</b> ▶️ dan klik <b>Izinkan</b>.
+              </span>
+            </div>
+          `;
+        }
+        if (!isSilent) showToast('Spreadsheet terhubung! Izin Google Drive perlu diotorisasi.', 'warning');
+      } else {
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="text-emerald-600 font-semibold text-xs">✅ Terhubung ke: "${escapeHtml(res.spreadsheetName)}" & Google Drive Aktif!</span>`;
+        }
+        if (!isSilent) showToast('Koneksi Google Sheets & Drive Berhasil!', 'success');
+      }
       updateSyncStatusBadge(true);
+    } else {
+      AppState.isConnected = false;
+      const errMsg = res.error || res.message || 'Gagal terhubung';
+      let errorDetailHtml = `<span class="text-rose-600 font-semibold text-xs">❌ ${escapeHtml(errMsg)}</span>`;
+      if (errMsg.includes('DriveApp') || errMsg.includes('permission')) {
+        errorDetailHtml = `
+          <div class="text-rose-700 font-semibold text-xs mt-1 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
+            ❌ <b>Izin Google Drive Belum Diotorisasi di Apps Script</b><br/>
+            <span class="text-[11px] font-normal text-slate-700 mt-1 block leading-relaxed">
+              1. Buka Apps Script di Google Sheets Anda.<br/>
+              2. Tempelkan kode terbaru dari <b>google_apps_script.gs</b> lalu simpan.<br/>
+              3. Di toolbar atas, pilih fungsi <b>AKTIFKAN_IZIN_DAN_TEST</b>.<br/>
+              4. Klik tombol <b>Jalankan (Run)</b> ▶️.<br/>
+              5. Klik <b>Tinjau Izin</b> > Pilih Akun > <b>Lanjutan</b> > <b>Izinkan</b>.<br/>
+              6. Klik <b>Terapkan (Deploy)</b> > <b>Kelola Penerapan</b> > Edit > Versi: <b>Baru</b> > <b>Terapkan</b>.
+            </span>
+          </div>
+        `;
+      }
+      if (statusEl) statusEl.innerHTML = errorDetailHtml;
+      if (!isSilent) showToast('Izin Google Drive belum diotorisasi di Apps Script!', 'error');
+      updateSyncStatusBadge(false);
     }
-  } catch {
+  } catch (err) {
     AppState.isConnected = false;
-    if (statusEl) statusEl.innerHTML = '<span class="text-rose-600 font-semibold">❌ Gagal terhubung</span>';
+    if (statusEl) {
+      statusEl.innerHTML = `
+        <div class="text-rose-600 font-semibold text-xs mt-1">
+          ❌ Gagal terhubung ke URL Google Apps Script.<br/>
+          <span class="text-[10.5px] font-normal text-slate-600">Pastikan saat Deploy, akses diset ke: <b>"Who has access: Anyone (Siapa saja)"</b>.</span>
+        </div>
+      `;
+    }
     updateSyncStatusBadge(false);
   }
 }

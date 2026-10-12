@@ -38,6 +38,32 @@ var SHEET_MASTER_DESA    = "Master_Desa";
 var NAMA_FOLDER_UTAMA_DRIVE = "SIP-REKOM APBDES KECAMATAN WARU";
 
 /**
+ * =========================================================================================
+ * FUNGSI OTORISASI IZIN GOOGLE DRIVE & SPREADSHEET (JALANKAN 1 KALI DI APPS SCRIPT):
+ * =========================================================================================
+ * Jika saat tes koneksi muncul pesan izin Google Drive belum diaktifkan:
+ * 1. Di bagian atas editor Apps Script (dekat tombol 'Debug' dan 'Jalankan'),
+ *    pilih fungsi: "AKTIFKAN_IZIN_DAN_TEST"
+ * 2. Klik tombol "Jalankan" (Run) ▶️
+ * 3. Akan muncul kotak dialog "Otorisasi Diperlukan" (Authorization required)
+ * 4. Klik "Tinjau Izin" (Review permissions) -> Pilih Akun Google Anda
+ * 5. Klik "Lanjutan" (Advanced) di bagian kiri bawah
+ * 6. Klik "Buka [Nama Spreadsheet] (tidak aman)"
+ * 7. Klik "Izinkan" (Allow)
+ * 8. Setelah itu, buat penerapan baru:
+ *    Klik "Terapkan" (Deploy) > "Kelola Penerapan" > Edit > Versi: "Baru" > "Terapkan".
+ * =========================================================================================
+ */
+function AKTIFKAN_IZIN_DAN_TEST() {
+  initSheets();
+  var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
+  Logger.log("✅ BERHASIL! Izin Google Drive & Spreadsheet sudah aktif.");
+  Logger.log("📁 Folder Google Drive: " + mainFolder.getName());
+  Logger.log("🔗 URL Folder: " + mainFolder.getUrl());
+  return "Izin Google Drive & Spreadsheet BERHASIL diaktifkan!";
+}
+
+/**
  * Inisialisasi Sheet dan Struktur Kolom
  */
 function initSheets() {
@@ -170,14 +196,32 @@ function initSheets() {
  * Mengambil atau Membuat Folder di Google Drive Secara Otomatis
  */
 function getOrCreateFolder(folderName, parentFolder) {
-  var parent = parentFolder || DriveApp.getRootFolder();
-  var folders = parent.getFoldersByName(folderName);
-  if (folders.hasNext()) {
-    return folders.next();
+  try {
+    if (parentFolder) {
+      var folders = parentFolder.getFoldersByName(folderName);
+      if (folders.hasNext()) {
+        return folders.next();
+      }
+      var newFolder = parentFolder.createFolder(folderName);
+      try {
+        newFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (shErr) {}
+      return newFolder;
+    } else {
+      var rootFolders = DriveApp.getFoldersByName(folderName);
+      if (rootFolders.hasNext()) {
+        return rootFolders.next();
+      }
+      var newRootFolder = DriveApp.createFolder(folderName);
+      try {
+        newRootFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } catch (shErr2) {}
+      return newRootFolder;
+    }
+  } catch (err) {
+    Logger.log("Error getOrCreateFolder (" + folderName + "): " + err.toString());
+    throw err;
   }
-  var newFolder = parent.createFolder(folderName);
-  newFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return newFolder;
 }
 
 /**
@@ -239,14 +283,32 @@ function doGet(e) {
 
     // 1. Tes Koneksi & Info Drive
     if (action === "ping") {
-      var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
+      var driveStatus = "OK";
+      var driveUrl = "-";
+      var driveFolderName = NAMA_FOLDER_UTAMA_DRIVE;
+      var driveMessage = "Google Drive Aktif";
+
+      try {
+        var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
+        driveUrl = mainFolder.getUrl();
+        driveFolderName = mainFolder.getName();
+      } catch (driveErr) {
+        driveStatus = "PERLU_IZIN";
+        driveMessage = "Izin Google Drive belum diaktifkan. Jalankan fungsi 'AKTIFKAN_IZIN_DAN_TEST' di Apps Script: " + driveErr.toString();
+        Logger.log("DriveApp warning: " + driveErr.toString());
+      }
+
       return jsonResponse({
         success: true,
-        message: "Koneksi Google Sheets & Google Drive SIP-REKOM Kecamatan Waru Aktif!",
+        message: driveStatus === "OK"
+          ? "Koneksi Google Sheets & Google Drive SIP-REKOM Kecamatan Waru Aktif!"
+          : "Koneksi Google Sheets Aktif. Namun izin Google Drive perlu diotorisasi.",
         spreadsheetName: ss.getName(),
         spreadsheetId: ss.getId(),
-        driveFolderName: mainFolder.getName(),
-        driveFolderUrl: mainFolder.getUrl(),
+        driveStatus: driveStatus,
+        driveFolderName: driveFolderName,
+        driveFolderUrl: driveUrl,
+        driveMessage: driveMessage,
         timestamp: Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss")
       });
     }
@@ -369,14 +431,24 @@ function doPost(e) {
       var id = payload.id || ("PENG-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
       var timestamp = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
 
-      // 1. Buat / Ambil Folder Induk & Subfolder Desa di Google Drive
-      var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
-      var subFolderDesa = getOrCreateFolder("Berkas_" + namaDesa.replace(/\s+/g, "_"), mainFolder);
+      var subFolderUrl = "-";
+      var spResult = { name: "-", url: "-", id: "-" };
+      var ceklistResult = { name: "-", url: "-", id: "-" };
+      var rekomResult = { name: "-", url: "-", id: "-" };
 
-      // 2. Simpan Ketiga Berkas ke Google Drive
-      var spResult = saveFileToDrive(payload.fileSp, subFolderDesa, "SP_" + namaDesa);
-      var ceklistResult = saveFileToDrive(payload.fileCeklist, subFolderDesa, "Ceklist_" + namaDesa);
-      var rekomResult = saveFileToDrive(payload.fileRekom, subFolderDesa, "Rekomendasi_" + namaDesa);
+      try {
+        // 1. Buat / Ambil Folder Induk & Subfolder Desa di Google Drive
+        var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
+        var subFolderDesa = getOrCreateFolder("Berkas_" + namaDesa.replace(/\s+/g, "_"), mainFolder);
+        subFolderUrl = subFolderDesa.getUrl();
+
+        // 2. Simpan Ketiga Berkas ke Google Drive
+        spResult = saveFileToDrive(payload.fileSp, subFolderDesa, "SP_" + namaDesa);
+        ceklistResult = saveFileToDrive(payload.fileCeklist, subFolderDesa, "Ceklist_" + namaDesa);
+        rekomResult = saveFileToDrive(payload.fileRekom, subFolderDesa, "Rekomendasi_" + namaDesa);
+      } catch (driveErr) {
+        Logger.log("Peringatan DriveApp (perlu izin): " + driveErr.toString());
+      }
 
       // 3. Catat Seluruh Data dan Link Google Drive ke Baris Spreadsheet
       var rowData = [
@@ -397,7 +469,7 @@ function doPost(e) {
         ceklistResult.url,
         rekomResult.name,
         rekomResult.url,
-        subFolderDesa.getUrl(),
+        subFolderUrl,
         payload.status || "Menunggu Verifikasi"
       ];
 
@@ -405,9 +477,11 @@ function doPost(e) {
 
       return jsonResponse({
         success: true,
-        message: "Berkas berhasil diunggah ke Google Drive dan dicatat di Google Sheets!",
+        message: subFolderUrl !== "-"
+          ? "Berkas berhasil diunggah ke Google Drive dan dicatat di Google Sheets!"
+          : "Pengajuan berhasil dicatat di Google Sheets (Google Drive perlu otorisasi).",
         id: id,
-        driveFolderUrl: subFolderDesa.getUrl(),
+        driveFolderUrl: subFolderUrl,
         driveFiles: {
           sp: spResult,
           ceklist: ceklistResult,
