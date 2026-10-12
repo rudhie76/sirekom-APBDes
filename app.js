@@ -155,14 +155,16 @@ const AppState = {
   ],
 
   berkasDd: [
-    { id: 'dd1', teks: 'Surat Permohonan Penyaluran Dana Desa dari Kepala Desa;', checked: true },
-    { id: 'dd2', teks: 'Surat Rekomendasi Penyaluran dari Camat;', checked: true },
-    { id: 'dd3', teks: 'Ceklist Kelengkapan Berkas Verifikasi Tim Kecamatan;', checked: true },
-    { id: 'dd4', teks: 'Peraturan Desa tentang APBDes Tahun Anggaran Berjalan;', checked: true },
-    { id: 'dd5', teks: 'Laporan Realisasi Penyerapan dan Capaian Output Dana Desa Tahap Sebelumnya;', checked: true },
-    { id: 'dd6', teks: 'Surat Pernyataan Tanggung Jawab Mutlak (SPTJM) Kepala Desa;', checked: true },
-    { id: 'dd7', teks: 'Fotokopi Rekening Kas Desa (RKD) yang aktif;', checked: true },
-    { id: 'dd8', teks: 'Fotokopi NPWP Pemerintah Desa.', checked: true }
+    { id: 'dd1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
+    { id: 'dd2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
+    { id: 'dd3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
+    { id: 'dd4', teks: 'Peraturan Desa tentang APBDesa Tahun Anggaran 2026;', checked: true },
+    { id: 'dd5', teks: 'Peraturan Kepala Desa tentang Penjabaran APBDesa Tahun Anggaran 2026;', checked: true },
+    { id: 'dd6', teks: 'Rencana Penggunaan Dana Desa Tahap I sebesar 60%', checked: true },
+    { id: 'dd7', teks: 'Fotocopy Keputusan Kepala Desa tentang PPKD;', checked: true },
+    { id: 'dd8', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
+    { id: 'dd9', teks: 'Foto Copy Rekening Kas Desa;', checked: true },
+    { id: 'dd10', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
   ],
 
   currentZoom: 100,
@@ -420,8 +422,12 @@ function handleTipeChange() {
     if (nominalInput) nominalInput.value = '150.021.000';
     if (tglInput) tglInput.value = '2026-10-06';
   } else if (AppState.tipeRekomendasi === 'dd') {
-    if (nominalInput) nominalInput.value = '280.000.000';
-    if (tglInput) tglInput.value = '2026-06-15';
+    if (nominalInput) nominalInput.value = '224.073.600';
+    if (tglInput) tglInput.value = '2026-03-09';
+    const tahapSelect = document.getElementById('selectTahapReguler');
+    if (tahapSelect) tahapSelect.value = 'Tahap 1';
+    const persenInput = document.getElementById('inputPersentaseTahap');
+    if (persenInput) persenInput.value = '60';
   }
 
   handleNominalInput();
@@ -476,8 +482,9 @@ function autoUpdatePerihal() {
     const persen = document.getElementById('inputPersentaseTahap')?.value || '50';
     inputPerihal.value = `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${tahap} (${persen}%) Tahun Anggaran ${tahun} Desa ${desa}`;
   } else if (AppState.tipeRekomendasi === 'dd') {
-    const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap I';
-    inputPerihal.value = `Rekomendasi Penyaluran Dana Desa (DD) ${tahap} Tahun Anggaran ${tahun} Desa ${desa}`;
+    const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap 1';
+    const persen = document.getElementById('inputPersentaseTahap')?.value || '60';
+    inputPerihal.value = `Rekomendasi Pencairan Dana Desa (DD) ${tahap} ${persen} % Tahun Anggaran ${tahun} Desa ${desa}`;
   }
 }
 
@@ -490,7 +497,7 @@ function autoGenerateNomorSurat() {
   if (AppState.tipeRekomendasi === 'siltap') nomorUrut = 179;
   else if (AppState.tipeRekomendasi === 'add_reguler') nomorUrut = 325;
   else if (AppState.tipeRekomendasi === 'dbh') nomorUrut = 404;
-  else if (AppState.tipeRekomendasi === 'dd') nomorUrut = 210;
+  else if (AppState.tipeRekomendasi === 'dd') nomorUrut = 82;
 
   inputNomor.value = `R-900/${nomorUrut}/PMDK/Kec.Waru/${tahun}`;
 }
@@ -900,29 +907,52 @@ function renderLivePreviewDbh() {
 }
 
 /**
- * 4. TEMPLATE DANA DESA (DD)
+ * 4. TEMPLATE DANA DESA (DD) (3 Halaman Sesuai Format PDF Resmi)
  */
 function renderLivePreviewDd() {
   const previewDoc = document.getElementById('previewDocumentContainer');
   const namaDesa = document.getElementById('selectNamaDesa')?.value || 'Api-Api';
-  const kaurKeuangan = document.getElementById('inputKaurKeuangan')?.value || 'JUMIATI, S.KM';
+  const kaurKeuangan = document.getElementById('inputKaurKeuangan')?.value || 'JUMIATI,S.KM';
   const jabatanKaur = document.getElementById('inputJabatanKaur')?.value || `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${namaDesa}`;
   const nomorRekening = document.getElementById('inputNomorRekening')?.value || '1131400345';
-  const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap I';
+  const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap 1';
+  const persen = document.getElementById('inputPersentaseTahap')?.value || '60';
   const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
-  const nomorSurat = document.getElementById('inputNomorSurat')?.value || `R-900/210/PMDK/Kec.Waru/${tahunAnggaran}`;
-  const tanggalSuratIndo = formatTanggalIndo(document.getElementById('inputTanggalSurat')?.value || '2026-06-15');
-  const nominalAngka = parseCurrencyInput(document.getElementById('inputNominalAngka')?.value || '280000000');
+  const nomorSurat = document.getElementById('inputNomorSurat')?.value || `R-900/82/PMDK/Kec.Waru/${tahunAnggaran}`;
+  const tanggalSuratIndo = formatTanggalIndo(document.getElementById('inputTanggalSurat')?.value || '2026-03-09');
+  const nominalAngka = parseCurrencyInput(document.getElementById('inputNominalAngka')?.value || '224073600');
   const nominalFormatted = formatRupiah(nominalAngka);
   const terbilangText = convertTerbilang(nominalAngka);
   const namaCamat = document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
   const nipCamat = document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
   const metodeTte = document.getElementById('selectMetodeTte')?.value || 'tte';
+  const perdesKewenangan = document.getElementById('inputNomorPerdesKewenangan')?.value || '2';
+  const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
+  const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
 
-  const perihalText = `Rekomendasi Penyaluran Dana Desa (DD) ${escapeHtml(tahap)} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
+  const perihalText = document.getElementById('inputPerihalSurat')?.value || `Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${escapeHtml(persen)} % Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
+
+  const berkasDdList = [
+    { id: 'dd1', teks: 'Permohonan Pencairan Dari Kepala Desa;' },
+    { id: 'dd2', teks: 'Rekomendasi Pencairan Dari Camat;' },
+    { id: 'dd3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;' },
+    { id: 'dd4', teks: `Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang APBDesa Tahun Anggaran ${escapeHtml(tahunAnggaran)};` },
+    { id: 'dd5', teks: `Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran APBDesa Tahun Anggaran ${escapeHtml(tahunAnggaran)};` },
+    { id: 'dd6', teks: `Rencana Penggunaan Dana Desa ${escapeHtml(tahap)} sebesar ${escapeHtml(persen)}%` },
+    { id: 'dd7', teks: 'Fotocopy Keputusan Kepala Desa tentang PPKD;' },
+    { id: 'dd8', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;' },
+    { id: 'dd9', teks: 'Foto Copy Rekening Kas Desa;' },
+    { id: 'dd10', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).' }
+  ];
+
+  const berkasFiltered = berkasDdList.filter(item => {
+    const cb = document.getElementById(`berkas_${item.id}`);
+    return !cb || cb.checked;
+  });
 
   const docHtml = `
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman1">
+    <!-- HALAMAN 1 -->
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
       <div class="mt-4 flex justify-between text-[11pt] leading-normal">
         <div class="w-[55%] pr-2">
@@ -945,11 +975,49 @@ function renderLivePreviewDd() {
         </div>
       </div>
 
-      <div class="mt-4 text-[11pt] text-justify leading-normal">
-        <p class="indent-10">
-          Berdasarkan hasil verifikasi dokumen persyaratan penyaluran Dana Desa yang diajukan oleh Pemerintah Desa <strong>${escapeHtml(namaDesa)}</strong>, bersama ini Camat Waru memberikan Rekomendasi Penyaluran Dana Desa (DD) ${escapeHtml(tahap)} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Kepada :
+      <div class="mt-3 text-[11pt] text-justify leading-snug">
+        <div class="flex items-start">
+          <div class="w-20 flex-shrink-0">Dasar</div><div class="w-3 flex-shrink-0">:</div>
+          <div class="flex-1">
+            <ol class="list-decimal pl-5 space-y-1">
+              <li class="pl-1">Undang-Undang Nomor 7 Tahun 2022 tentang Pembentukan Kabupaten Penajam Paser Utara (Lembaran Negara Republik Indonesia Tahun 2022 Nomor 20, Tambahan Lembaran Negara Republik Indonesia Nomor 4182);</li>
+              <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;</li>
+              <li class="pl-1">Peraturan Pemerintah Nomor 37 Tahun 2023 tentang Pengelolaan Tranfer ke Daerah (Lembaran Negara Republik Indonsia Tahun 2023 nomor 37);</li>
+              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 111 Tahun 2014 tentang Pedoman Teknis Peraturan Di Desa (Berita Negara Republik Indonesia Tahun 2014 Nomor 2091);</li>
+              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 114 Tahun 2014 tentang Pedoman Pembangunan Desa (Berita Negara Republik Indonesia Tahun 2014 Nomor 2094);</li>
+              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 44 Tahun 2016 tentang Kewenangan Desa (Berita Negara Republik Indonesia Tahun 2016 Nomor 1037);</li>
+              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa</li>
+              <li class="pl-1">Peraturan Menteri Desa, Pembangunan Daerah Tertinggal, dan Transmigrasi Republik Indonesia Nomor 16 Tahun 2019 tentang Musyawarah Desa (Berita Negara Republik Indonesia Tahun 2019 Nomor 1203);</li>
+              <li class="pl-1">Peraturan Menteri Desa dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 2 Tahun 2024 tentang Petunjuk Operasional Atas Fokus Penggunaan Dana Desa Tahun 2025</li>
+              <li class="pl-1">Peraturan Menteri Desa Dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 16 Tahun 2025 tentang Petunjuk Operasional Atas Fokus Penggunaan Dana Desa Tahun 2026. (Berita Negara Republik Indonesia Tahun 2025 Nomor 1151);</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HALAMAN 2 -->
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman2">
+      <div class="text-[11pt] text-justify leading-snug">
+        <div class="flex items-start">
+          <div class="w-20 flex-shrink-0"></div><div class="w-3 flex-shrink-0"></div>
+          <div class="flex-1">
+            <ol start="11" class="list-decimal pl-5 space-y-1">
+              <li class="pl-1">Keputusan Menteri Desa dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 3 Tahun 2025 tentang Panduan Penggunaan Dana Desa untuk Ketahanan Pangan dalam mendukung Swasembada Pangan;</li>
+              <li class="pl-1">Peraturan Menteri Keuangan Republik Indonesia Nomor 7 Tahun 2026 tentang Pengelolaan Dana Desa Tahun Anggaran 2026;</li>
+              <li class="pl-1">Peraturan Bupati Nomor 16 Tahun 2021 Tentang Perubahan Atas Peraturan Bupati Nomor 7 Tahun 2019 Tentang Pengelolaan Keuangan Desa;</li>
+              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
+              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
+              <li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
+            </ol>
+          </div>
+        </div>
+
+        <p class="indent-10 mt-3 leading-normal">
+          Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${escapeHtml(persen)} % Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
         </p>
-        <div class="my-3 pl-8">
+
+        <div class="my-2 pl-8">
           <table class="border-collapse text-[11pt]">
             <tr><td class="w-48 align-top py-0.5">Nama</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-bold uppercase">${escapeHtml(kaurKeuangan)}</td></tr>
             <tr><td class="align-top py-0.5">Jabatan</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">${escapeHtml(jabatanKaur)}</td></tr>
@@ -957,24 +1025,29 @@ function renderLivePreviewDd() {
           </table>
         </div>
 
-        <p class="indent-10">
-          Untuk menerima (mengambil) Dana Desa (DD) ${escapeHtml(tahap)} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
+        <p class="indent-10 leading-normal">
+          Untuk menerima (mengambil) Dana Desa (DD) ${escapeHtml(tahap)} ${escapeHtml(persen)} % Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar . <strong>${nominalFormatted} (${terbilangText})</strong>
         </p>
 
-        <p class="indent-10 mt-2">
-          Sebagai bahan pertimbangan, bersama ini dilampirkan berkas persyaratan penyaluran yang telah diverifikasi lengkap.
+        <p class="indent-10 mt-2 leading-normal">
+          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${escapeHtml(persen)} % Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
         </p>
 
         <div class="my-2 pl-4">
-          <ol class="list-decimal pl-4 space-y-0.5">
-            ${AppState.berkasDd.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+          <ol class="list-decimal pl-5 space-y-0.5">
+            ${berkasFiltered.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
+      </div>
+    </div>
 
-        <p class="indent-10 mt-3">
+    <!-- HALAMAN 3 -->
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman3">
+      <div class="text-[11pt] text-justify leading-snug">
+        <p class="indent-10 mt-4 leading-normal">
           Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
         </p>
-        <p class="indent-10 mt-2">
+        <p class="indent-10 mt-2 leading-normal">
           Demikian Rekomendasi ini disampaikan sebagai bahan kebijakan lebih lanjut.
         </p>
       </div>
