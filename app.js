@@ -1054,8 +1054,8 @@ function getHeaderSuratHtml() {
 
       <div class="mt-4 leading-normal text-left">
         <div>Yth . \${jabatan_tujuan}</div>
-        <div>di</div>
-        <div>Tempat</div>
+        <div>Di -</div>
+        <div class="pl-6">Tempat</div>
       </div>
     </div>
   `;
