@@ -563,26 +563,7 @@ function renderLivePreviewSiltap() {
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
-      <div class="mt-4 flex justify-between text-[11pt] leading-normal">
-        <div class="w-[55%] pr-2">
-          <table class="w-full border-collapse">
-            <tr><td class="w-20 align-top py-0.5">Nomor</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-medium">${escapeHtml(nomorSurat)}</td></tr>
-            <tr><td class="align-top py-0.5">Lampiran</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">-</td></tr>
-            <tr><td class="align-top py-0.5">Perihal</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 text-justify leading-snug">${perihalText}</td></tr>
-          </table>
-        </div>
-        <div class="w-[45%] pl-4 text-left">
-          <div class="mb-3 text-right">Waru, ${tanggalSuratIndo}</div>
-          <div class="leading-normal pl-4">
-            <div>Kepada</div>
-            <div>Yth. Bupati Penajam Paser Utara</div>
-            <div class="pl-4 leading-tight">Up. Kepala Badan Keuangan</div>
-            <div class="pl-4 leading-tight">dan Aset Daerah Kab. PPU</div>
-            <div>di-</div>
-            <div class="pl-6">Tempat</div>
-          </div>
-        </div>
-      </div>
+      ${getHeaderSuratHtml()}
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
@@ -680,26 +661,7 @@ function renderLivePreviewAddReguler() {
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
-      <div class="mt-4 flex justify-between text-[11pt] leading-normal">
-        <div class="w-[55%] pr-2">
-          <table class="w-full border-collapse">
-            <tr><td class="w-20 align-top py-0.5">Nomor</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-medium">${escapeHtml(nomorSurat)}</td></tr>
-            <tr><td class="align-top py-0.5">Lampiran</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">-</td></tr>
-            <tr><td class="align-top py-0.5">Perihal</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 text-justify leading-snug">${perihalText}</td></tr>
-          </table>
-        </div>
-        <div class="w-[45%] pl-4 text-left">
-          <div class="mb-3 text-right">Waru, ${tanggalSuratIndo}</div>
-          <div class="leading-normal pl-4">
-            <div>Kepada</div>
-            <div>Yth. Bupati Penajam Paser Utara</div>
-            <div class="pl-4 leading-tight">Up. Kepala Badan Keuangan</div>
-            <div class="pl-4 leading-tight">dan Aset Daerah Kab. PPU</div>
-            <div>di-</div>
-            <div class="pl-6">Tempat</div>
-          </div>
-        </div>
-      </div>
+      ${getHeaderSuratHtml()}
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
@@ -820,26 +782,7 @@ function renderLivePreviewDbh() {
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
-      <div class="mt-4 flex justify-between text-[11pt] leading-normal">
-        <div class="w-[55%] pr-2">
-          <table class="w-full border-collapse">
-            <tr><td class="w-20 align-top py-0.5">Nomor</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-medium">${escapeHtml(nomorSurat)}</td></tr>
-            <tr><td class="align-top py-0.5">Lampiran</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">-</td></tr>
-            <tr><td class="align-top py-0.5">Perihal</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 text-justify leading-snug">${perihalText}</td></tr>
-          </table>
-        </div>
-        <div class="w-[45%] pl-4 text-left">
-          <div class="mb-3 text-right">Waru, ${tanggalSuratIndo}</div>
-          <div class="leading-normal pl-4">
-            <div>Kepada</div>
-            <div>Yth. Bupati Penajam Paser Utara</div>
-            <div class="pl-4 leading-tight">Up. Kepala Badan Keuangan</div>
-            <div class="pl-4 leading-tight">dan Aset Daerah Kab. PPU</div>
-            <div>di-</div>
-            <div class="pl-6">Tempat</div>
-          </div>
-        </div>
-      </div>
+      ${getHeaderSuratHtml()}
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
@@ -954,26 +897,7 @@ function renderLivePreviewDd() {
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
-      <div class="mt-4 flex justify-between text-[11pt] leading-normal">
-        <div class="w-[55%] pr-2">
-          <table class="w-full border-collapse">
-            <tr><td class="w-20 align-top py-0.5">Nomor</td><td class="w-3 align-top py-0.5">:</td><td class="align-top py-0.5 font-medium">${escapeHtml(nomorSurat)}</td></tr>
-            <tr><td class="align-top py-0.5">Lampiran</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5">-</td></tr>
-            <tr><td class="align-top py-0.5">Perihal</td><td class="align-top py-0.5">:</td><td class="align-top py-0.5 text-justify leading-snug">${perihalText}</td></tr>
-          </table>
-        </div>
-        <div class="w-[45%] pl-4 text-left">
-          <div class="mb-3 text-right">Waru, ${tanggalSuratIndo}</div>
-          <div class="leading-normal pl-4">
-            <div>Kepada</div>
-            <div>Yth. Bupati Penajam Paser Utara</div>
-            <div class="pl-4 leading-tight">Up. Kepala Badan Keuangan</div>
-            <div class="pl-4 leading-tight">dan Aset Daerah Kab. PPU</div>
-            <div>di-</div>
-            <div class="pl-6">Tempat</div>
-          </div>
-        </div>
-      </div>
+      ${getHeaderSuratHtml()}
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
@@ -1095,24 +1019,63 @@ function getKopSuratHtml(withWa = true) {
   `;
 }
 
-function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
+function getHeaderSuratHtml() {
   return `
-    <div class="mt-4 flex justify-end text-[11pt]">
-      <div class="w-64 text-center">
-        <div>Camat Waru,</div>
-        <div class="h-24 flex items-center justify-center my-1">
-          ${metodeTte === 'tte' ? getQrCodeSvg() : '<div class="text-xs text-slate-400 italic">(Tanda Tangan Basah)</div>'}
+    <div class="mt-4 text-[11pt] leading-snug font-sans">
+      <div class="flex justify-between items-start">
+        <div class="w-[55%]">
+          <table class="border-collapse">
+            <tr>
+              <td class="w-20 align-top py-0.5">Nomor</td>
+              <td class="w-3 align-top py-0.5">:</td>
+              <td class="align-top py-0.5 font-medium">\${nomor_naskah}</td>
+            </tr>
+            <tr>
+              <td class="align-top py-0.5">Sifat</td>
+              <td class="align-top py-0.5">:</td>
+              <td class="align-top py-0.5">\${sifat}</td>
+            </tr>
+            <tr>
+              <td class="align-top py-0.5">Lampiran</td>
+              <td class="align-top py-0.5">:</td>
+              <td class="align-top py-0.5 tracking-widest">.........................</td>
+            </tr>
+            <tr>
+              <td class="align-top py-0.5">Hal</td>
+              <td class="align-top py-0.5">:</td>
+              <td class="align-top py-0.5 font-medium text-justify leading-snug">\${hal}</td>
+            </tr>
+          </table>
         </div>
-        <div class="font-bold text-black">${escapeHtml(namaCamat)}</div>
-        <div class="text-[11pt] font-mono text-black">NIP. ${escapeHtml(nipCamat)}</div>
+        <div class="w-[45%] text-right font-medium">
+          Waru, \${tanggal_naskah}
+        </div>
+      </div>
+
+      <div class="mt-4 leading-normal text-left">
+        <div>Yth . \${jabatan_tujuan}</div>
+        <div>di</div>
+        <div>(tempat_kedudukan_tujuan)</div>
       </div>
     </div>
-    <div class="mt-3 text-[11pt] text-black">
-      <div class="font-bold underline mb-0.5">Tembusan :</div>
-      <ol class="list-decimal pl-5 space-y-0.5 leading-tight">
-        <li>Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. Penajam Paser Utara;</li>
-        <li>Arsip.</li>
-      </ol>
+  `;
+}
+
+function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
+  return `
+    <div class="mt-6 flex justify-end text-[11pt] font-sans">
+      <div class="w-64 text-left">
+        <div class="leading-normal">Camat Waru,</div>
+        <div class="my-5 pl-6 font-mono text-[10.5pt] text-neutral-800">
+          \${ttd_pengirim}
+        </div>
+        <div class="leading-normal font-medium">\${nama_pengirim}</div>
+        <div class="leading-normal">NIP. \${nip_pengirim}</div>
+      </div>
+    </div>
+    <div class="mt-4 text-[11pt] text-black leading-normal font-sans">
+      <div class="font-bold mb-1">TEMBUSAN:</div>
+      <div>1. &nbsp;\${tembusan_jabatan};</div>
     </div>
   `;
 }
