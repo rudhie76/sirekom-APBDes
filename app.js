@@ -16,6 +16,9 @@ const AppState = {
   
   // Mode Aplikasi Aktif: 'kecamatan' (default) atau 'desa'
   appMode: localStorage.getItem('sip_active_mode') || 'kecamatan',
+  activeMenu: localStorage.getItem('sip_active_menu') || 'dashboard',
+  kecamatanSubTab: 'verifikasi',
+  isSidebarCollapsed: localStorage.getItem('sip_sidebar_collapsed') === 'true',
   operatorDesaAktif: localStorage.getItem('sip_operator_desa') || 'Api-Api',
   pengajuanDesa: JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]'),
   uploadedFilesDraft: {
@@ -1354,8 +1357,11 @@ function setupHistoryDrawerListeners() {
 function renderHistoryTable(query = '') {
   const tbody = document.getElementById('tbodyRiwayat');
   const badge = document.getElementById('badgeHistoryCount');
-  if (!tbody) return;
   if (badge) badge.textContent = AppState.riwayat.length;
+  const badgeSidebarHistory = document.getElementById('badgeSidebarHistoryCount');
+  if (badgeSidebarHistory) badgeSidebarHistory.textContent = AppState.riwayat.length;
+  renderDashboardSummary();
+  if (!tbody) return;
 
   let filtered = AppState.riwayat;
   if (query) {
@@ -1610,10 +1616,13 @@ function initDesaOperatorFeature() {
   onOperatorDesaChange();
   updateBadgePengajuanDesa();
 
-  // Beralih ke mode yang tersimpan jika sebelumnya di mode desa
-  if (AppState.appMode === 'desa') {
-    switchAppMode('desa');
+  // Pulihkan status sidebar (ciut / luaskan)
+  if (AppState.isSidebarCollapsed) {
+    document.getElementById('appSidebar')?.classList.add('sidebar-collapsed');
   }
+
+  // Arahkan ke menu aktif yang tersimpan (default: Dashboard)
+  navigateToMenu(AppState.activeMenu || 'dashboard');
 }
 
 /**
@@ -1668,48 +1677,325 @@ function initSeedPengajuanDesa() {
 }
 
 /**
- * Switcher Mode Peran: 'kecamatan' (Portal Kecamatan) vs 'desa' (Dashboard Operator Desa)
+ * Switcher Navigasi Menu Samping (Sidebar) Utama:
+ * 1. 'dashboard' (Dasboat)
+ * 2. 'pengajuan_desa' (Pengajuan Desa)
+ * 3. 'verifikasi_rekom' (Verifikasi dan Rekom Kecamatan)
+ */
+window.navigateToMenu = function(menuKey) {
+  AppState.activeMenu = menuKey;
+  localStorage.setItem('sip_active_menu', menuKey);
+
+  // 1. Update style tombol navigasi sidebar
+  const navItems = {
+    'dashboard': document.getElementById('navDashboard'),
+    'pengajuan_desa': document.getElementById('navPengajuanDesa'),
+    'verifikasi_rekom': document.getElementById('navVerifikasiRekom')
+  };
+
+  Object.entries(navItems).forEach(([key, el]) => {
+    if (!el) return;
+    if (key === menuKey) {
+      el.className = 'nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-600 text-white font-bold transition shadow-sm text-xs group text-left';
+    } else {
+      el.className = 'nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left';
+    }
+  });
+
+  // 2. Hide & Show Views
+  const views = {
+    'dashboard': document.getElementById('viewDashboard'),
+    'pengajuan_desa': document.getElementById('viewPengajuanDesa') || document.getElementById('dashboardDesaContainer'),
+    'verifikasi_rekom': document.getElementById('viewVerifikasiRekom')
+  };
+
+  Object.entries(views).forEach(([key, el]) => {
+    if (!el) return;
+    if (key === menuKey) {
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
+  });
+
+  // 3. Topbar updates
+  const titleEl = document.getElementById('topbarPageTitle');
+  const breadcrumbEl = document.getElementById('topbarBreadcrumb');
+  const splitControls = document.getElementById('containerSplitControls');
+  const btnPrintDoc = document.getElementById('btnPrintDoc');
+  const btnSaveToDb = document.getElementById('btnSaveToDb');
+
+  if (menuKey === 'dashboard') {
+    if (titleEl) titleEl.textContent = 'Dashboard & Ringkasan APBDes';
+    if (breadcrumbEl) breadcrumbEl.textContent = 'SIP-REKOM Waru / 1. Dashboard';
+    if (splitControls) splitControls.classList.add('hidden');
+    if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    renderDashboardSummary();
+  } else if (menuKey === 'pengajuan_desa') {
+    if (titleEl) titleEl.textContent = 'Pengajuan Berkas Desa';
+    if (breadcrumbEl) breadcrumbEl.textContent = 'SIP-REKOM Waru / 2. Pengajuan Desa';
+    if (splitControls) splitControls.classList.add('hidden');
+    if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    renderDashboardDesa();
+  } else if (menuKey === 'verifikasi_rekom') {
+    if (titleEl) titleEl.textContent = 'Verifikasi Berkas & Rekomendasi Camat';
+    if (breadcrumbEl) breadcrumbEl.textContent = 'SIP-REKOM Waru / 3. Verifikasi & Rekom Kecamatan';
+    switchKecamatanSubTab(AppState.kecamatanSubTab || 'verifikasi');
+  }
+
+  // Mobile: tutup drawer sidebar otomatis jika di layar kecil
+  if (window.innerWidth < 768) {
+    toggleSidebar(false);
+  }
+};
+
+/**
+ * Backward compatibility: switchAppMode
  */
 window.switchAppMode = function(mode) {
-  AppState.appMode = mode;
-  localStorage.setItem('sip_active_mode', mode);
-
-  const wsKecamatan = document.getElementById('workspaceKecamatan');
-  const dbDesa = document.getElementById('dashboardDesaContainer');
-  const btnKec = document.getElementById('btnRoleKecamatan');
-  const btnDesa = document.getElementById('btnRoleDesa');
-  const btnPengajuan = document.getElementById('btnOpenPengajuanDesa');
-  const containerSplit = document.getElementById('containerSplitControls');
-
   if (mode === 'desa') {
-    if (wsKecamatan) wsKecamatan.classList.add('hidden');
-    if (dbDesa) dbDesa.classList.remove('hidden');
-    if (btnKec) {
-      btnKec.className = 'px-2.5 sm:px-3 py-1 rounded-md text-slate-300 hover:text-white transition flex items-center gap-1.5';
-    }
-    if (btnDesa) {
-      btnDesa.className = 'px-2.5 sm:px-3 py-1 rounded-md bg-emerald-600 text-white transition flex items-center gap-1.5 shadow-sm font-bold';
-    }
-    if (btnPengajuan) btnPengajuan.classList.add('hidden');
-    if (containerSplit) containerSplit.classList.add('hidden');
-
-    renderDashboardDesa();
-    showToast('Beralih ke Dashboard Operator Desa', 'info');
+    navigateToMenu('pengajuan_desa');
   } else {
-    if (wsKecamatan) wsKecamatan.classList.remove('hidden');
-    if (dbDesa) dbDesa.classList.add('hidden');
-    if (btnKec) {
-      btnKec.className = 'px-2.5 sm:px-3 py-1 rounded-md bg-blue-600 text-white transition flex items-center gap-1.5 shadow-sm font-bold';
-    }
-    if (btnDesa) {
-      btnDesa.className = 'px-2.5 sm:px-3 py-1 rounded-md text-slate-300 hover:text-white transition flex items-center gap-1.5';
-    }
-    if (btnPengajuan) btnPengajuan.classList.remove('hidden');
-    if (containerSplit) containerSplit.classList.remove('hidden');
+    navigateToMenu('verifikasi_rekom');
+  }
+};
 
-    updateBadgePengajuanDesa();
+/**
+ * Toggle Hide / Unhide Menu Samping (Sidebar)
+ */
+window.toggleSidebar = function(forceState) {
+  const sidebar = document.getElementById('appSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (!sidebar) return;
+
+  const isMobile = window.innerWidth < 768;
+
+  if (isMobile) {
+    const isCurrentlyOpen = !sidebar.classList.contains('-translate-x-full');
+    const newState = forceState !== undefined ? forceState : !isCurrentlyOpen;
+    if (newState) {
+      sidebar.classList.remove('-translate-x-full');
+      sidebar.classList.add('translate-x-0');
+      overlay?.classList.remove('hidden');
+    } else {
+      sidebar.classList.add('-translate-x-full');
+      sidebar.classList.remove('translate-x-0');
+      overlay?.classList.add('hidden');
+    }
+  } else {
+    const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+    const newCollapsed = forceState !== undefined ? forceState : !isCollapsed;
+
+    if (newCollapsed) {
+      sidebar.classList.add('sidebar-collapsed');
+    } else {
+      sidebar.classList.remove('sidebar-collapsed');
+    }
+    AppState.isSidebarCollapsed = newCollapsed;
+    localStorage.setItem('sip_sidebar_collapsed', newCollapsed);
+  }
+};
+
+/**
+ * Beralih Sub-Tab di Menu 3: Verifikasi Berkas vs Generator Rekomendasi
+ */
+window.switchKecamatanSubTab = function(tabKey) {
+  AppState.kecamatanSubTab = tabKey;
+  const tabBtnVerif = document.getElementById('tabBtnVerifikasi');
+  const tabBtnGen = document.getElementById('tabBtnGenerator');
+  const tabContentVerif = document.getElementById('tabContentVerifikasiDesa');
+  const tabContentGen = document.getElementById('workspaceKecamatan');
+  const splitControls = document.getElementById('containerSplitControls');
+  const btnPrintDoc = document.getElementById('btnPrintDoc');
+  const btnSaveToDb = document.getElementById('btnSaveToDb');
+
+  if (tabKey === 'verifikasi') {
+    if (tabBtnVerif) {
+      tabBtnVerif.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition flex items-center gap-1.5';
+    }
+    if (tabBtnGen) {
+      tabBtnGen.className = 'px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5';
+    }
+    if (tabContentVerif) tabContentVerif.classList.remove('hidden');
+    if (tabContentGen) tabContentGen.classList.add('hidden');
+    if (splitControls) splitControls.classList.add('hidden');
+    if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    renderTabelPengajuanKecamatan();
+  } else {
+    if (tabBtnVerif) {
+      tabBtnVerif.className = 'px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5';
+    }
+    if (tabBtnGen) {
+      tabBtnGen.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center gap-1.5';
+    }
+    if (tabContentVerif) tabContentVerif.classList.add('hidden');
+    if (tabContentGen) tabContentGen.classList.remove('hidden');
+    if (splitControls) splitControls.classList.remove('hidden');
+    if (btnPrintDoc) btnPrintDoc.classList.remove('hidden');
+    if (btnSaveToDb) btnSaveToDb.classList.remove('hidden');
     updateLivePreview();
-    showToast('Beralih ke Portal Kecamatan Waru', 'info');
+  }
+};
+
+/**
+ * Membuka Drawer Riwayat dari Sidebar
+ */
+window.openHistoryDrawer = function() {
+  renderHistoryTable();
+  document.getElementById('drawerHistory')?.classList.remove('hidden');
+};
+
+/**
+ * Membuka Modal Pengaturan dari Sidebar
+ */
+window.openSettingsModal = function() {
+  const input = document.getElementById('inputGasUrl');
+  if (input) input.value = AppState.gasUrl;
+  document.getElementById('modalGasSettings')?.classList.remove('hidden');
+};
+
+/**
+ * Memilih Desa & Langsung Membuka Form Pengajuan
+ */
+window.pilihDesaDanBukaPengajuan = function(namaDesa) {
+  AppState.operatorDesaAktif = namaDesa;
+  localStorage.setItem('sip_operator_desa', namaDesa);
+  const select = document.getElementById('selectDesaOperator');
+  if (select) select.value = namaDesa;
+  onOperatorDesaChange();
+  navigateToMenu('pengajuan_desa');
+  showToast(`Beralih ke form pengajuan Desa ${namaDesa}`, 'info');
+};
+
+/**
+ * Render Data Real-Time di Dashboard (Dasboat) Utama
+ */
+window.renderDashboardSummary = function() {
+  const list = AppState.pengajuanDesa || [];
+  const riwayat = AppState.riwayat || [];
+
+  const totalPengajuan = list.length;
+  const menungguCount = list.filter(item => item.status === 'Menunggu Verifikasi').length;
+  const diverifikasiCount = list.filter(item => item.status === 'Diverifikasi').length;
+  const diterbitkanCount = list.filter(item => item.status === 'Diterbitkan').length;
+
+  const totalRekomTerbit = riwayat.length;
+
+  // Hitung total nominal rupiah
+  let totalNominal = 0;
+  list.forEach(item => {
+    totalNominal += (Number(item.nominal) || 0);
+  });
+  if (totalNominal === 0 && riwayat.length > 0) {
+    riwayat.forEach(r => totalNominal += (Number(r.nominalAngka) || 0));
+  }
+
+  // Update KPI counters
+  const elTotalPengajuan = document.getElementById('dashTotalPengajuan');
+  if (elTotalPengajuan) elTotalPengajuan.textContent = totalPengajuan;
+
+  const elMenunggu = document.getElementById('dashMenungguCount');
+  if (elMenunggu) elMenunggu.textContent = menungguCount;
+
+  const elDiverifikasi = document.getElementById('dashDiverifikasiCount');
+  if (elDiverifikasi) elDiverifikasi.textContent = diverifikasiCount;
+
+  const elDiterbitkan = document.getElementById('dashDiterbitkanCount');
+  if (elDiterbitkan) elDiterbitkan.textContent = diterbitkanCount;
+
+  const elTotalRekom = document.getElementById('dashTotalRekomTerbit');
+  if (elTotalRekom) elTotalRekom.textContent = totalRekomTerbit;
+
+  const elTotalNominal = document.getElementById('dashTotalNominal');
+  if (elTotalNominal) elTotalNominal.textContent = formatRupiah(totalNominal);
+
+  // Status Cloud di dashboard
+  const elCloudStatus = document.getElementById('dashStatusCloudText');
+  if (elCloudStatus) {
+    if (AppState.isConnected && AppState.gasUrl) {
+      elCloudStatus.innerHTML = '<span class="text-emerald-400 font-bold">● Google Sheets & Drive Online</span>';
+    } else {
+      elCloudStatus.innerHTML = '<span class="text-amber-400 font-bold">● Mode Offline / Database Lokal</span>';
+    }
+  }
+
+  // Update status sidebar
+  const elTextSyncSidebar = document.getElementById('textSyncStatusSidebar');
+  if (elTextSyncSidebar) {
+    elTextSyncSidebar.textContent = (AppState.isConnected && AppState.gasUrl) ? 'Sheets & Drive Aktif' : 'Mode Database Lokal';
+  }
+
+  // Render Grid 4 Desa di Dashboard
+  const desaCardsContainer = document.getElementById('dashGridDesa');
+  if (desaCardsContainer && AppState.masterDesa) {
+    desaCardsContainer.innerHTML = AppState.masterDesa.map(desa => {
+      const countDesa = list.filter(item => item.namaDesa === desa.nama).length;
+      return `
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 transition flex flex-col justify-between shadow-2xs">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
+              <div class="font-bold text-slate-900 text-xs">Desa ${escapeHtml(desa.nama)}</div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${countDesa > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                ${countDesa} Berkas
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-600 space-y-1">
+              <div>👤 Kades: <strong class="text-slate-800">${escapeHtml(desa.kades)}</strong></div>
+              <div>💼 Bendahara: <span class="text-slate-700">${escapeHtml(desa.kaurKeuangan)}</span></div>
+              <div class="font-mono text-[10px] text-slate-500">RKD: ${escapeHtml(desa.rekening)}</div>
+            </div>
+          </div>
+          <button onclick="pilihDesaDanBukaPengajuan('${desa.nama}')" class="mt-3 w-full py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 text-[10.5px] font-bold rounded-lg border border-slate-300 hover:border-emerald-300 transition text-center flex items-center justify-center gap-1 shadow-2xs">
+            <span>🏡 Buka Pengajuan Desa</span>
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Render 5 Aktivitas Pengajuan Terkini di Dashboard
+  const tbodyAktivitas = document.getElementById('tbodyDashAktivitas');
+  if (tbodyAktivitas) {
+    const latest5 = list.slice(0, 5);
+    if (latest5.length === 0) {
+      tbodyAktivitas.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-6 text-slate-400 text-xs">
+            Belum ada berkas pengajuan masuk dari desa.
+          </td>
+        </tr>
+      `;
+    } else {
+      tbodyAktivitas.innerHTML = latest5.map((item, idx) => `
+        <tr class="hover:bg-slate-50 border-b border-slate-100 transition text-xs">
+          <td class="py-2.5 px-3 text-center text-slate-400 font-mono text-[11px]">${idx + 1}</td>
+          <td class="py-2.5 px-3">
+            <span class="font-bold text-slate-900">Desa ${escapeHtml(item.namaDesa)}</span>
+            <div class="text-[10px] text-slate-400">${new Date(item.waktuKirim).toLocaleDateString('id-ID')}</div>
+          </td>
+          <td class="py-2.5 px-3">
+            <span class="font-medium text-slate-800">${escapeHtml(getNamaTipe(item.jenisDana))}</span>
+            <div class="text-[10.5px] text-slate-500">${escapeHtml(item.tahap)} TA ${escapeHtml(item.tahunAnggaran)}</div>
+          </td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-800">
+            ${formatRupiah(item.nominal)}
+          </td>
+          <td class="py-2.5 px-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.status === 'Diterbitkan' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              ${escapeHtml(item.status)}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-center">
+            <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold transition shadow-2xs">
+              ⚡ Proses Rekom
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
   }
 };
 
@@ -2068,18 +2354,44 @@ window.hapusPengajuanDesa = function(id) {
 };
 
 /**
- * Update Badge Notifikasi Berkas Masuk di Navbar Kecamatan
+ * Update Badge Notifikasi Berkas Masuk di Sidebar & Sub-Tab & Navbar
  */
 function updateBadgePengajuanDesa() {
-  const badge = document.getElementById('badgePengajuanMasukCount');
-  if (!badge) return;
-  const count = AppState.pengajuanDesa.length;
-  badge.textContent = count;
-  if (count > 0) {
-    badge.classList.remove('hidden');
-  } else {
-    badge.classList.add('hidden');
+  const count = (AppState.pengajuanDesa || []).length;
+  const riwayatCount = (AppState.riwayat || []).length;
+
+  // Badge navbar modal lama (jika ada)
+  const badgeOld = document.getElementById('badgePengajuanMasukCount');
+  if (badgeOld) {
+    badgeOld.textContent = count;
+    if (count > 0) badgeOld.classList.remove('hidden');
+    else badgeOld.classList.add('hidden');
   }
+
+  // Badge di Sidebar (Menu 3: Verifikasi & Rekom)
+  const badgeSidebar = document.getElementById('badgeSidebarPengajuanCount');
+  if (badgeSidebar) {
+    badgeSidebar.textContent = count;
+    if (count > 0) badgeSidebar.classList.remove('hidden');
+    else badgeSidebar.classList.add('hidden');
+  }
+
+  // Badge di Sub-Tab Verifikasi (Menu 3 Tab 1)
+  const badgeTabVerif = document.getElementById('badgeTabVerifikasiCount');
+  if (badgeTabVerif) {
+    badgeTabVerif.textContent = count;
+    if (count > 0) badgeTabVerif.classList.remove('hidden');
+    else badgeTabVerif.classList.add('hidden');
+  }
+
+  // Badge Riwayat di Sidebar
+  const badgeHistory = document.getElementById('badgeSidebarHistoryCount');
+  if (badgeHistory) {
+    badgeHistory.textContent = riwayatCount;
+  }
+
+  // Update ringkasan di dashboard secara real-time
+  renderDashboardSummary();
 }
 
 // =========================================================================================
@@ -2255,9 +2567,10 @@ window.prosesPengajuanKeRekomendasi = function(id) {
   localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
   updateBadgePengajuanDesa();
 
-  // 7. Tutup modal & beralih ke Mode Kecamatan
+  // 7. Tutup modal (jika terbuka) & beralih ke Menu 3 Tab 2 (Generator Rekomendasi)
   closeModalPengajuanKecamatan();
-  switchAppMode('kecamatan');
+  navigateToMenu('verifikasi_rekom');
+  switchKecamatanSubTab('generator');
 
   autoUpdatePerihal();
   autoGenerateNomorSurat();

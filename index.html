@@ -144,102 +144,480 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
+
+    /* Sidebar collapse & mobile transition */
+    #appSidebar.sidebar-collapsed {
+      width: 4.75rem !important; /* 76px */
+    }
+    #appSidebar.sidebar-collapsed .sidebar-text,
+    #appSidebar.sidebar-collapsed .sidebar-badge {
+      display: none !important;
+    }
+    #appSidebar.sidebar-collapsed .nav-item {
+      justify-content: center !important;
+      padding-left: 0.5rem !important;
+      padding-right: 0.5rem !important;
+    }
+    #appSidebar.sidebar-collapsed .sidebar-toggle-icon {
+      transform: rotate(180deg);
+    }
   </style>
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen flex overflow-hidden">
 
   <!-- ================================================================================= -->
-  <!-- HEADER & APP NAVBAR -->
+  <!-- SIDEBAR NAVIGATION MENU (PROFESIONAL DENGAN FITUR HIDE / UNHIDE) -->
   <!-- ================================================================================= -->
-  <header class="bg-slate-900 text-white border-b border-slate-800 shadow-md flex-shrink-0 z-30">
-    <div class="px-4 py-2.5 flex items-center justify-between gap-4">
-      
-      <!-- Brand Daerah -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-slate-800 p-1 flex items-center justify-center border border-slate-700 shadow-inner">
+  <aside id="appSidebar" class="bg-slate-900 text-white w-64 md:w-64 flex flex-col flex-shrink-0 transition-all duration-300 z-40 select-none border-r border-slate-800 shadow-xl fixed md:static inset-y-0 left-0 -translate-x-full md:translate-x-0">
+    
+    <!-- Header Sidebar: Logo & Brand + Tombol Hide/Collapse -->
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <div class="w-10 h-10 rounded-xl bg-slate-800 p-1 flex items-center justify-center border border-slate-700 shadow-inner flex-shrink-0">
           <img src="logo_ppu.png" alt="Logo Kab. Penajam Paser Utara" class="w-8 h-8 object-contain" />
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="font-bold text-sm tracking-wide text-white uppercase">SIP-REKOM APBDes</h1>
-            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-medium">KECAMATAN WARU</span>
+        <div class="sidebar-text truncate">
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-bold text-xs tracking-wider text-white uppercase truncate">SIP-REKOM APBDES</h1>
           </div>
-          <p class="text-[11px] text-slate-400">Pemerintah Kabupaten Penajam Paser Utara | ADD Siltap, ADD Reguler, PBH/DBH & Dana Desa</p>
+          <p class="text-[10px] text-emerald-400 font-bold uppercase truncate">KECAMATAN WARU</p>
+          <p class="text-[9.5px] text-slate-400 truncate">Kab. Penajam Paser Utara</p>
+        </div>
+      </div>
+      <button onclick="toggleSidebar()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Ciutkan / Sembunyikan Menu">
+        <span class="text-xs sidebar-toggle-icon inline-block transition-transform">❮</span>
+      </button>
+    </div>
+
+    <!-- Navigation Menu Items (1. Dasboat, 2. Pengajuan Desa, 3. Verifikasi & Rekom Kecamatan) -->
+    <div class="flex-1 py-4 px-3 space-y-1.5 overflow-y-auto custom-scrollbar">
+      <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 sidebar-text">
+        Menu Navigasi
+      </div>
+
+      <!-- 1. Dasboat (Dashboard) -->
+      <button id="navDashboard" onclick="navigateToMenu('dashboard')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left">
+        <div class="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-blue-600/30 flex items-center justify-center text-sm transition flex-shrink-0">
+          📊
+        </div>
+        <div class="sidebar-text leading-tight truncate">
+          <div class="font-bold text-white text-xs">1. Dashboard</div>
+          <div class="text-[10px] text-slate-400 font-normal">Statistik & Ringkasan</div>
+        </div>
+      </button>
+
+      <!-- 2. Pengajuan Desa -->
+      <button id="navPengajuanDesa" onclick="navigateToMenu('pengajuan_desa')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left">
+        <div class="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-emerald-600/30 flex items-center justify-center text-sm transition flex-shrink-0">
+          🏡
+        </div>
+        <div class="sidebar-text leading-tight truncate flex-1">
+          <div class="font-bold text-white text-xs">2. Pengajuan Desa</div>
+          <div class="text-[10px] text-slate-400 font-normal">Upload SP, Ceklist & Rekom</div>
+        </div>
+      </button>
+
+      <!-- 3. Verifikasi dan Rekom Kecamatan -->
+      <button id="navVerifikasiRekom" onclick="navigateToMenu('verifikasi_rekom')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left relative">
+        <div class="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-indigo-600/30 flex items-center justify-center text-sm transition flex-shrink-0">
+          🏛️
+        </div>
+        <div class="sidebar-text leading-tight truncate flex-1">
+          <div class="font-bold text-white text-xs">3. Verifikasi & Rekom</div>
+          <div class="text-[10px] text-slate-400 font-normal">Kecamatan Waru</div>
+        </div>
+        <span id="badgeSidebarPengajuanCount" class="bg-rose-500 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px] sidebar-badge hidden">0</span>
+      </button>
+
+      <div class="pt-4 px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 sidebar-text">
+        Alat & Basis Data
+      </div>
+
+      <!-- Riwayat Arsip -->
+      <button id="btnSidebarHistory" onclick="openHistoryDrawer()" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-xs font-medium group text-left">
+        <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-xs flex-shrink-0">
+          ⏱
+        </div>
+        <div class="sidebar-text leading-tight truncate flex-1">
+          <div>Riwayat Arsip Surat</div>
+        </div>
+        <span id="badgeSidebarHistoryCount" class="bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.2 rounded-full text-[10px] sidebar-badge">0</span>
+      </button>
+
+      <!-- Konfigurasi Google Sheets & Drive -->
+      <button id="btnSidebarSettings" onclick="openSettingsModal()" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-xs font-medium group text-left">
+        <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-xs flex-shrink-0">
+          📊
+        </div>
+        <div class="sidebar-text leading-tight truncate">
+          <div>Google Sheets & Drive</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- Footer Sidebar -->
+    <div class="p-3 border-t border-slate-800 flex-shrink-0 bg-slate-950/60">
+      <div id="badgeSyncStatusSidebar" class="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-[11px] text-slate-300 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
+        <div class="sidebar-text truncate leading-tight">
+          <div class="font-bold text-white text-[10.5px]">Sistem Terhubung</div>
+          <div id="textSyncStatusSidebar" class="text-[9.5px] text-slate-400">Database Siap</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Backdrop Overlay -->
+  <div id="sidebarOverlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-30 hidden md:hidden"></div>
+
+  <!-- ================================================================================= -->
+  <!-- AREA KONTEN UTAMA (TOPBAR + WORKSPACE) -->
+  <!-- ================================================================================= -->
+  <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+    
+    <!-- Topbar Header Aplikasi -->
+    <header class="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between gap-3 shadow-2xs z-20 flex-shrink-0">
+      <div class="flex items-center gap-3 min-w-0">
+        <!-- Toggle Button Hide/Unhide Sidebar -->
+        <button id="btnToggleSidebar" onclick="toggleSidebar()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center justify-center border border-slate-200" title="Buka / Tutup Menu Samping">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+
+        <div class="min-w-0">
+          <div id="topbarBreadcrumb" class="text-[10.5px] text-slate-400 font-medium truncate">SIP-REKOM Waru / Dashboard</div>
+          <h2 id="topbarPageTitle" class="text-sm font-bold text-slate-900 truncate">Dashboard & Ringkasan APBDes</h2>
         </div>
       </div>
 
-      <!-- Center: Role Switcher & View Mode -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Switcher Mode Peran: Kecamatan vs Operator Desa -->
-        <div class="bg-slate-800 p-0.5 rounded-lg border border-slate-700 flex text-xs font-semibold">
-          <button id="btnRoleKecamatan" onclick="switchAppMode('kecamatan')" class="px-2.5 sm:px-3 py-1 rounded-md bg-blue-600 text-white transition flex items-center gap-1.5 shadow-sm">
-            <span>🏛️ Kecamatan</span>
+      <!-- Topbar Right Actions -->
+      <div class="flex items-center gap-2">
+        <!-- Split View Controls (muncul di tab generator rekomendasi) -->
+        <div id="containerSplitControls" class="hidden bg-slate-100 p-0.5 rounded-lg border border-slate-300 text-xs font-medium text-slate-700">
+          <button id="btnViewSplit" class="px-2.5 py-1 rounded-md bg-white text-slate-900 font-bold shadow-2xs transition flex items-center gap-1.5">
+            <span>Split</span>
           </button>
-          <button id="btnRoleDesa" onclick="switchAppMode('desa')" class="px-2.5 sm:px-3 py-1 rounded-md text-slate-300 hover:text-white transition flex items-center gap-1.5">
-            <span>🏡 Operator Desa</span>
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          </button>
-        </div>
-
-        <div id="badgeSyncStatus" class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300">
-          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-          <span>Mode Database Lokal</span>
-        </div>
-
-        <div id="containerSplitControls" class="hidden md:flex bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-xs font-medium text-slate-300">
-          <button id="btnViewSplit" class="px-2.5 py-1 rounded-md bg-slate-700 text-white transition flex items-center gap-1.5">
-            <span>Split View</span>
-          </button>
-          <button id="btnViewForm" class="px-2.5 py-1 rounded-md hover:text-white transition flex items-center gap-1.5">
+          <button id="btnViewForm" class="px-2.5 py-1 rounded-md hover:text-slate-900 transition flex items-center gap-1.5">
             <span>Form</span>
           </button>
-          <button id="btnViewPreview" class="px-2.5 py-1 rounded-md hover:text-white transition flex items-center gap-1.5">
+          <button id="btnViewPreview" class="px-2.5 py-1 rounded-md hover:text-slate-900 transition flex items-center gap-1.5">
             <span>Preview</span>
           </button>
         </div>
-      </div>
 
-      <!-- Actions -->
-      <div class="flex items-center gap-2">
-        <!-- Tombol Kotak Masuk Berkas Pengajuan Desa (Untuk Kecamatan) -->
-        <button id="btnOpenPengajuanDesa" onclick="openModalPengajuanKecamatan()" class="px-3 py-1.5 rounded-lg bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5" title="Kotak Masuk Berkas Pengajuan Desa (Surat Pengantar, Ceklist, Rekomendasi)">
-          <span class="text-amber-300">📥</span>
-          <span class="hidden sm:inline">Berkas Masuk Desa</span>
-          <span id="badgePengajuanMasukCount" class="bg-rose-500 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
-        </button>
-
-        <button id="btnOpenHistory" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5">
-          <span class="text-amber-400">⏱</span>
-          <span class="hidden sm:inline">Riwayat Arsip</span>
-          <span id="badgeHistoryCount" class="bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
-        </button>
-
-        <button id="btnOpenSettings" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5" title="Konfigurasi Database Google Sheets">
-          <span class="text-emerald-400">📊</span>
-          <span class="hidden md:inline">Google Sheets</span>
-        </button>
-
-        <button id="btnSaveToDb" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+        <button id="btnSaveToDb" class="hidden px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
           <span>💾 Simpan Data</span>
         </button>
 
-        <button id="btnPrintDoc" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+        <button id="btnPrintDoc" class="hidden px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
           <span>🖨️ Cetak / PDF</span>
         </button>
+
+        <button onclick="openDriveFolderKecamatan()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5 shadow-2xs" title="Buka Folder Google Drive SIP-REKOM">
+          <span>📂</span>
+          <span class="hidden sm:inline text-[11px]">Drive</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 flex overflow-hidden relative min-w-0">
+    
+    <!-- =============================================================================== -->
+    <!-- VIEW 1: DASHBOARD (DASBOAT) UTAMA -->
+    <!-- =============================================================================== -->
+    <div id="viewDashboard" class="flex-1 w-full h-full overflow-y-auto bg-slate-100 custom-scrollbar p-4 md:p-6 space-y-6">
+      
+      <!-- Banner Sambutan & Header Eksekutif -->
+      <div class="bg-gradient-to-r from-blue-950 via-indigo-900 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-lg border border-indigo-700/40 flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div class="flex items-start gap-4">
+          <div class="w-12 sm:w-14 h-12 sm:h-14 rounded-2xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0 shadow-inner">
+            🏛️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-blue-500/30 text-blue-200 border border-blue-400/30">Executive Dashboard</span>
+              <span class="text-xs text-blue-300">Kecamatan Waru, Kab. PPU</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-black tracking-tight text-white mt-1">
+              SIP-REKOM APBDes Kecamatan Waru
+            </h2>
+            <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Monitoring terpadu pelayanan rekomendasi pencairan APBDes (ADD Siltap, ADD Reguler, PBH/DBH, dan Dana Desa) untuk desa-desa di Kecamatan Waru.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row md:flex-col gap-2 min-w-[220px]">
+          <div class="bg-slate-800/80 backdrop-blur-xs p-3 rounded-xl border border-slate-700 flex items-center gap-2.5">
+            <span class="text-emerald-400 text-lg">☁️</span>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-semibold">Status Google Cloud</div>
+              <div id="dashStatusCloudText" class="text-xs font-bold text-white">Online & Terhubung</div>
+            </div>
+          </div>
+          <button onclick="openDriveFolderKecamatan()" class="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+            <span>📂 Buka Folder Google Drive</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KARTU STATISTIK UTAMA (KPI CARDS) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- KPI 1: Total Pengajuan Desa Masuk -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md transition space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Berkas Pengajuan Desa</span>
+            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-base font-bold">
+              📥
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span id="dashTotalPengajuan" class="text-3xl font-black text-slate-900 font-mono">0</span>
+            <span class="text-xs text-slate-500">Berkas Masuk</span>
+          </div>
+          <div class="flex items-center gap-1.5 pt-1 border-t border-slate-100 text-[10px] font-bold">
+            <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800"><span id="dashMenungguCount">0</span> Menunggu</span>
+            <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800"><span id="dashDiverifikasiCount">0</span> Verifikasi</span>
+            <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800"><span id="dashDiterbitkanCount">0</span> Terbit</span>
+          </div>
+        </div>
+
+        <!-- KPI 2: Rekomendasi Camat Terbit -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md transition space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Rekomendasi Camat</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-base font-bold">
+              📜
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span id="dashTotalRekomTerbit" class="text-3xl font-black text-emerald-700 font-mono">0</span>
+            <span class="text-xs text-slate-500">Surat Resmi</span>
+          </div>
+          <div class="text-[10.5px] text-slate-500 pt-1 border-t border-slate-100 flex items-center gap-1 font-medium">
+            <span class="text-emerald-600">✓</span>
+            <span>Format SRIKANDI TTE BSrE</span>
+          </div>
+        </div>
+
+        <!-- KPI 3: Akumulasi Dana Terproses -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md transition space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Total Dana APBDes</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-base font-bold">
+              💰
+            </div>
+          </div>
+          <div class="truncate">
+            <span id="dashTotalNominal" class="text-2xl font-black text-slate-900 font-mono tracking-tight">Rp 0</span>
+          </div>
+          <div class="text-[10.5px] text-slate-500 pt-1 border-t border-slate-100 truncate font-medium">
+            Akumulasi rekomendasi pencairan ke RKD
+          </div>
+        </div>
+
+        <!-- KPI 4: Google Drive Folder -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md transition space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Penyimpanan Drive</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-base font-bold">
+              📁
+            </div>
+          </div>
+          <div class="text-xs font-bold text-slate-800 truncate mt-1">
+            SIP-REKOM APBDES
+          </div>
+          <div class="text-[10.5px] text-slate-500 pt-1 border-t border-slate-100 flex items-center justify-between font-medium">
+            <span>Subfolder 4 Desa</span>
+            <a href="javascript:void(0)" onclick="openDriveFolderKecamatan()" class="text-blue-600 hover:underline font-bold">Buka Drive →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PINTASAN AKSI CEPAT (QUICK ACCESS) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div onclick="navigateToMenu('pengajuan_desa')" class="bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
+            🏡
+          </div>
+          <div>
+            <div class="text-xs font-bold">2. Pengajuan Desa</div>
+            <div class="text-[10.5px] text-emerald-100">Upload SP, Ceklist & Rekom</div>
+          </div>
+        </div>
+
+        <div onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('verifikasi');" class="bg-gradient-to-br from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
+            📥
+          </div>
+          <div>
+            <div class="text-xs font-bold">Verifikasi Berkas Masuk</div>
+            <div class="text-[10.5px] text-indigo-100">Unduh & telaah berkas desa</div>
+          </div>
+        </div>
+
+        <div onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('generator');" class="bg-gradient-to-br from-blue-700 to-slate-800 hover:from-blue-600 hover:to-slate-700 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
+            📝
+          </div>
+          <div>
+            <div class="text-xs font-bold">Buat Rekomendasi Camat</div>
+            <div class="text-[10.5px] text-blue-100">Generator & Cetak PDF Sri Kandi</div>
+          </div>
+        </div>
+
+        <div onclick="openHistoryDrawer()" class="bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
+            ⏱
+          </div>
+          <div>
+            <div class="text-xs font-bold">Riwayat Arsip Surat</div>
+            <div class="text-[10.5px] text-slate-300">Cari, cetak ulang & ekspor CSV</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MONITORING 4 DESA DI KECAMATAN WARU -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+              <span>📍 Monitoring 4 Desa di Wilayah Kecamatan Waru</span>
+            </h3>
+            <p class="text-[11px] text-slate-500">Status kelengkapan rekening kas desa (RKD) dan rekapitulasi permohonan</p>
+          </div>
+        </div>
+
+        <div id="dashGridDesa" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Diisi otomatis oleh JavaScript renderDashboardSummary -->
+        </div>
+      </div>
+
+      <!-- TABEL 5 AKTIVITAS PENGAJUAN TERBARU -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+              <span>📋 Aktivitas Pengajuan Berkas Desa Terkini</span>
+            </h3>
+            <p class="text-[11px] text-slate-500">5 berkas pengajuan terakhir yang masuk dari operator desa</p>
+          </div>
+          <button onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('verifikasi');" class="text-xs font-bold text-blue-600 hover:text-blue-800 transition">
+            Lihat Semua Berkas →
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse text-left text-xs">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase">
+                <th class="py-2.5 px-3 text-center w-10">No</th>
+                <th class="py-2.5 px-3">Desa & Tanggal</th>
+                <th class="py-2.5 px-3">Jenis Dana & Tahap</th>
+                <th class="py-2.5 px-3 text-right">Nominal (Rp)</th>
+                <th class="py-2.5 px-3 text-center">Status</th>
+                <th class="py-2.5 px-3 text-center w-32">Aksi Cepat</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDashAktivitas">
+              <!-- Diisi otomatis oleh JavaScript -->
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>
-  </header>
+    <!-- /#viewDashboard -->
 
-  <!-- ================================================================================= -->
-  <!-- MAIN WORKSPACE -->
-  <!-- ================================================================================= -->
-  <main class="flex-1 flex overflow-hidden relative">
-    
     <!-- =============================================================================== -->
-    <!-- 1. WORKSPACE KECAMATAN (GENERATOR REKOMENDASI CAMAT) -->
+    <!-- VIEW 3: VERIFIKASI DAN REKOM KECAMATAN -->
     <!-- =============================================================================== -->
-    <div id="workspaceKecamatan" class="flex-1 flex w-full h-full overflow-hidden">
+    <div id="viewVerifikasiRekom" class="hidden flex-1 flex flex-col w-full h-full overflow-hidden">
+      
+      <!-- Sub-Tab Header Menu 3 -->
+      <div class="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between gap-3 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <button id="tabBtnVerifikasi" onclick="switchKecamatanSubTab('verifikasi')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition flex items-center gap-1.5">
+            <span>📥 1. Kotak Masuk & Verifikasi Berkas Desa</span>
+            <span id="badgeTabVerifikasiCount" class="bg-rose-500 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+          </button>
+          <button id="tabBtnGenerator" onclick="switchKecamatanSubTab('generator')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
+            <span>📝 2. Generator Rekomendasi Camat</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openDriveFolderKecamatan()" class="px-3 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs">
+            <span>📂 Folder Drive</span>
+          </button>
+          <button onclick="sinkronPengajuanKeGoogleSheets()" class="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs">
+            <span>🔄 Tarik Data</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 1: Kotak Masuk & Verifikasi Berkas Desa -->
+      <div id="tabContentVerifikasiDesa" class="flex-1 flex flex-col overflow-hidden bg-slate-50">
+        <!-- Filter Bar -->
+        <div class="p-3.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5">
+              <label class="text-xs font-semibold text-slate-700">Filter Desa:</label>
+              <select id="filterDesaKecamatan" onchange="renderTabelPengajuanKecamatan()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 focus:bg-white">
+                <option value="semua">Semua Desa (4 Desa)</option>
+                <option value="Api-Api">Desa Api-Api</option>
+                <option value="Sesulu">Desa Sesulu</option>
+                <option value="Waru">Desa Waru</option>
+                <option value="Bangun Mulya">Desa Bangun Mulya</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <label class="text-xs font-semibold text-slate-700">Jenis Dana:</label>
+              <select id="filterJenisKecamatan" onchange="renderTabelPengajuanKecamatan()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-800 focus:bg-white">
+                <option value="semua">Semua Jenis Dana</option>
+                <option value="siltap">ADD Siltap & Tunjangan</option>
+                <option value="add_reguler">ADD Reguler</option>
+                <option value="dbh">PBH / DBH</option>
+                <option value="dd">Dana Desa (DD)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="text-xs text-slate-500 font-medium">
+            💡 Klik <b class="text-indigo-700">"⚡ Buat Rekom Camat"</b> untuk memproses berkas masuk langsung ke generator surat.
+          </div>
+        </div>
+
+        <!-- Tabel Berkas Masuk -->
+        <div class="flex-1 overflow-auto custom-scrollbar p-4">
+          <table class="w-full border-collapse text-left text-xs bg-white rounded-xl shadow-2xs border border-slate-200">
+            <thead>
+              <tr class="bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase">
+                <th class="py-2.5 px-3 text-center w-10">No</th>
+                <th class="py-2.5 px-3">Desa & Waktu Masuk</th>
+                <th class="py-2.5 px-3">Jenis Dana & Tahap</th>
+                <th class="py-2.5 px-3">Data Surat Pengantar (SP)</th>
+                <th class="py-2.5 px-3">Data Rekomendasi Desa</th>
+                <th class="py-2.5 px-3 text-right">Nominal (Rp)</th>
+                <th class="py-2.5 px-3 text-center">Unduh Dokumen Asli</th>
+                <th class="py-2.5 px-3 text-center w-36">Tindakan Kecamatan</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyPengajuanKecamatan">
+              <!-- Diisi dinamis oleh JavaScript renderTabelPengajuanKecamatan -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Generator Rekomendasi Camat (Workspace Kecamatan) -->
+      <div id="workspaceKecamatan" class="hidden flex-1 flex w-full h-full overflow-hidden">
       
       <!-- ============================================================================= -->
       <!-- PANEL KIRI: FORMULIR INPUT DINAMIS -->
@@ -563,10 +941,13 @@
     </div>
     <!-- /#workspaceKecamatan -->
 
+    </div>
+    <!-- /#viewVerifikasiRekom -->
+
     <!-- =============================================================================== -->
-    <!-- 2. DASHBOARD OPERATOR DESA -->
+    <!-- VIEW 2: PENGAJUAN DESA (OPERATOR DESA) -->
     <!-- =============================================================================== -->
-    <div id="dashboardDesaContainer" class="hidden flex-1 w-full h-full overflow-y-auto bg-slate-100 custom-scrollbar p-4 md:p-6 space-y-6">
+    <div id="viewPengajuanDesa" class="hidden flex-1 w-full h-full overflow-y-auto bg-slate-100 custom-scrollbar p-4 md:p-6 space-y-6">
       
       <!-- Banner Sambutan & Header Operator Desa -->
       <div class="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-lg border border-emerald-700/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -915,8 +1296,11 @@
       </div>
 
     </div>
+    <!-- /#viewPengajuanDesa -->
 
   </main>
+  </div>
+  <!-- /AREA KONTEN UTAMA -->
 
   <!-- ================================================================================= -->
   <!-- MODAL: GOOGLE SHEETS SETTINGS -->
@@ -1107,6 +1491,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261012_auth_fix"></script>
+  <script src="app.js?v=20261012_sidebar_nav"></script>
 </body>
 </html>
