@@ -94,15 +94,23 @@
         font-family: Arial, Helvetica, sans-serif !important;
         font-size: 11pt !important;
         line-height: 1.35 !important;
-        page-break-after: always;
-        break-after: page;
+      }
+
+      .surat-sheet:not(:last-child) {
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+
+      .surat-sheet:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
       }
 
       .page-break {
-        page-break-before: always !important;
-        break-before: page !important;
+        display: none !important;
         height: 0 !important;
         margin: 0 !important;
+        padding: 0 !important;
       }
 
       @page {
@@ -621,6 +629,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261012_kopwa"></script>
+  <script src="app.js?v=20261012_nopagebreak"></script>
 </body>
 </html>

@@ -554,7 +554,7 @@ function renderLivePreviewSiltap() {
 
   const docHtml = `
     <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
       <div class="mt-4 flex justify-between text-[11pt] leading-normal">
         <div class="w-[55%] pr-2">
@@ -611,8 +611,6 @@ function renderLivePreviewSiltap() {
 
       ${getFooterBsreHtml('1 / 2')}
     </div>
-
-    <div class="page-break my-8 print:my-0"></div>
 
     <!-- HALAMAN 2 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
@@ -676,7 +674,7 @@ function renderLivePreviewAddReguler() {
 
   const docHtml = `
     <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
       <div class="mt-4 flex justify-between text-[11pt] leading-normal">
         <div class="w-[55%] pr-2">
@@ -723,10 +721,8 @@ function renderLivePreviewAddReguler() {
       ${getFooterBsreHtml('1 / 3')}
     </div>
 
-    <div class="page-break my-8 print:my-0"></div>
-
     <!-- HALAMAN 2 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-snug">
         <ol start="12" class="list-decimal pl-6 space-y-1">
           <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
@@ -764,8 +760,6 @@ function renderLivePreviewAddReguler() {
 
       ${getFooterBsreHtml('2 / 3')}
     </div>
-
-    <div class="page-break my-8 print:my-0"></div>
 
     <!-- HALAMAN 3 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman3">
@@ -818,7 +812,7 @@ function renderLivePreviewDbh() {
 
   const docHtml = `
     <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
       <div class="mt-4 flex justify-between text-[11pt] leading-normal">
         <div class="w-[55%] pr-2">
@@ -875,8 +869,6 @@ function renderLivePreviewDbh() {
 
       ${getFooterBsreHtml('1 / 2')}
     </div>
-
-    <div class="page-break my-8 print:my-0"></div>
 
     <!-- HALAMAN 2 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
