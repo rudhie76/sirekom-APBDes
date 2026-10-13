@@ -1646,157 +1646,176 @@ ke dalam Sistem SIP-REKOM APBDes Kecamatan Waru.`;
 };
 
 // =========================================================================================
-// MODUL KARTU LOGIN (PORTAL MASUK RESMI KECAMATAN WARU & OPERATOR DESA)
+// MODUL KARTU LOGIN (PORTAL MASUK TUNGGAL USER & PASSWORD DENGAN FITUR TANDA MATA)
 // =========================================================================================
 
 /**
- * Switcher Tab Peran Login (Kecamatan vs Operator Desa)
+ * Toggle Show / Hide Password dengan Tanda Mata (Eye Icon)
  */
-window.switchLoginRole = function(role) {
-  const btnKec = document.getElementById('btnRoleKecamatan');
-  const btnDesa = document.getElementById('btnRoleDesa');
-  const panelKec = document.getElementById('panelLoginKecamatan');
-  const panelDesa = document.getElementById('panelLoginDesa');
+window.togglePasswordVisibility = function() {
+  const pwdInput = document.getElementById('inputLoginPassword');
+  const eyeOpen = document.getElementById('iconEyeOpen');
+  const eyeClosed = document.getElementById('iconEyeClosed');
+  if (!pwdInput) return;
 
-  if (role === 'kecamatan') {
-    if (btnKec) {
-      btnKec.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 bg-blue-600 text-white shadow-md';
-    }
-    if (btnDesa) {
-      btnDesa.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60';
-    }
-    if (panelKec) panelKec.classList.remove('hidden');
-    if (panelDesa) panelDesa.classList.add('hidden');
+  if (pwdInput.type === 'password') {
+    pwdInput.type = 'text';
+    eyeOpen?.classList.add('hidden');
+    eyeClosed?.classList.remove('hidden');
   } else {
-    if (btnKec) {
-      btnKec.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/60';
-    }
-    if (btnDesa) {
-      btnDesa.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition duration-200 bg-emerald-600 text-white shadow-md';
-    }
-    if (panelKec) panelKec.classList.add('hidden');
-    if (panelDesa) panelDesa.classList.remove('hidden');
-    onLoginDesaChange();
+    pwdInput.type = 'password';
+    eyeOpen?.classList.remove('hidden');
+    eyeClosed?.classList.add('hidden');
   }
 };
 
 /**
- * Menampilkan Info Pejabat Desa saat Dropdown Desa di Kartu Login Berubah
+ * Pintasan Pengisian Cepat Akun (Pilihan Cepat)
  */
-window.onLoginDesaChange = function() {
-  const select = document.getElementById('loginDesaSelect');
-  const cardInfo = document.getElementById('cardLoginInfoDesa');
-  const textBtn = document.getElementById('textBtnLoginDesa');
-  if (!select) return;
-
-  const desaNama = select.value;
-  const desaData = AppState.masterDesa.find(d => d.nama === desaNama);
-
-  if (cardInfo && desaData) {
-    cardInfo.innerHTML = `
-      <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-1.5">
-        <span class="font-bold text-white text-xs">Pemerintah Desa ${escapeHtml(desaData.nama)}</span>
-        <span class="text-[10px] text-emerald-400 font-bold">Terverifikasi</span>
-      </div>
-      <div>👤 Kepala Desa: <strong class="text-slate-200">${escapeHtml(desaData.kades)}</strong></div>
-      <div>💼 Kaur Keuangan: <strong class="text-slate-200">${escapeHtml(desaData.kaurKeuangan)}</strong></div>
-      <div class="font-mono text-[10px] text-slate-400">💳 RKD: ${escapeHtml(desaData.rekening)} (Bankaltimtara)</div>
-    `;
-  }
-
-  if (textBtn) {
-    textBtn.textContent = `Masuk sebagai Operator Desa ${desaNama}`;
-  }
+window.quickFillUser = function(username, defaultPin) {
+  const userInput = document.getElementById('inputLoginUsername');
+  const pwdInput = document.getElementById('inputLoginPassword');
+  if (userInput) userInput.value = username;
+  if (pwdInput) pwdInput.value = defaultPin;
+  hideLoginError();
+  pwdInput?.focus();
 };
 
 /**
- * Eksekusi Login Portal Kecamatan dengan Validasi PIN Berbasis Sheet User
+ * Tampilkan Pesan Error pada Kartu Login
  */
-window.doLoginKecamatan = function() {
-  const jabatan = document.getElementById('loginKecamatanJabatan')?.value || 'Seksi PMD - Tim Fasilitasi & Verifikator';
-  const pinInput = (document.getElementById('loginKecamatanPin')?.value || '').trim();
+window.showLoginError = function(message) {
+  const alertEl = document.getElementById('loginErrorAlert');
+  const msgEl = document.getElementById('loginErrorMessage');
+  if (msgEl) msgEl.textContent = message;
+  if (alertEl) alertEl.classList.remove('hidden');
+};
 
-  // Cari akun kecamatan yang cocok dari data sheet user
-  const matchedUser = (AppState.users || []).find(u => u.role === 'kecamatan' && (u.jabatan === jabatan || jabatan.includes(u.nama)));
-  const expectedPin = matchedUser ? String(matchedUser.pin) : 'pmd2026';
+/**
+ * Sembunyikan Pesan Error pada Kartu Login
+ */
+window.hideLoginError = function() {
+  const alertEl = document.getElementById('loginErrorAlert');
+  if (alertEl) alertEl.classList.add('hidden');
+};
 
-  // Validasi PIN (terima PIN resmi, default pmd2026, atau jika mode cepat)
-  if (pinInput && pinInput !== expectedPin && pinInput !== 'pmd2026' && pinInput !== 'admin') {
-    showToast(`PIN keamanan salah! Masukkan PIN yang terdaftar di Sheet User (Default: ${expectedPin})`, 'error');
-    document.getElementById('loginKecamatanPin')?.focus();
+/**
+ * Eksekusi Login Tunggal (Unified Login) untuk Kecamatan & Desa
+ */
+window.handleUnifiedLogin = function(e) {
+  if (e && e.preventDefault) e.preventDefault();
+
+  const usernameInput = (document.getElementById('inputLoginUsername')?.value || '').trim();
+  const passwordInput = (document.getElementById('inputLoginPassword')?.value || '').trim();
+
+  if (!usernameInput) {
+    showLoginError('Silakan masukkan Username / Pengguna!');
+    document.getElementById('inputLoginUsername')?.focus();
+    return;
+  }
+  if (!passwordInput) {
+    showLoginError('Silakan masukkan Password / PIN Keamanan!');
+    document.getElementById('inputLoginPassword')?.focus();
     return;
   }
 
-  const user = {
-    role: 'kecamatan',
-    roleTitle: 'Tim PMD & Camat',
-    name: 'Kecamatan Waru',
-    detail: jabatan,
+  const uLower = usernameInput.toLowerCase();
+  const users = AppState.users || [];
+
+  // 1. Cari kecocokan username secara langsung
+  let matchedUser = users.find(u => {
+    const un = (u.username || '').toLowerCase();
+    const nm = (u.nama || '').toLowerCase();
+    const inst = (u.instansi || '').toLowerCase();
+    const desa = (u.desa || '').toLowerCase();
+    return un === uLower || nm === uLower || inst === uLower || desa === uLower;
+  });
+
+  // 2. Pencarian fleksibel / alias jika pengguna mengetik nama umum
+  if (!matchedUser) {
+    if (uLower === 'admin' || uLower === 'kecamatan' || uLower === 'pmd' || uLower.includes('kecamatan')) {
+      matchedUser = users.find(u => u.username === 'admin_kecamatan') || users.find(u => u.role === 'kecamatan');
+    } else if (uLower === 'camat' || uLower.includes('camat')) {
+      matchedUser = users.find(u => u.username === 'camat_waru');
+    } else if (uLower.includes('api')) {
+      matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('api'));
+    } else if (uLower.includes('sesulu')) {
+      matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('sesulu'));
+    } else if (uLower.includes('bangun') || uLower.includes('mulya')) {
+      matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('mulya'));
+    }
+  }
+
+  if (!matchedUser) {
+    showLoginError(`Username "${usernameInput}" tidak terdaftar di database Data_User. Silakan periksa kembali atau gunakan tombol Pilih Cepat.`);
+    document.getElementById('inputLoginUsername')?.focus();
+    return;
+  }
+
+  // 3. Verifikasi Password / PIN
+  const expectedPin = String(matchedUser.pin || '').trim();
+  const isKecamatan = matchedUser.role === 'kecamatan';
+
+  const isValidPin = (passwordInput === expectedPin) ||
+    (isKecamatan && (passwordInput === 'pmd2026' || passwordInput === 'admin')) ||
+    (!isKecamatan && (passwordInput === 'desa2026' || passwordInput === '1234'));
+
+  if (!isValidPin) {
+    showLoginError(`Password / PIN salah untuk akun "${matchedUser.nama}". Silakan periksa kembali.`);
+    document.getElementById('inputLoginPassword')?.focus();
+    return;
+  }
+
+  // 4. Sukses Login
+  hideLoginError();
+
+  const userSession = {
+    role: matchedUser.role,
+    roleTitle: isKecamatan ? 'Tim PMD & Camat' : 'Operator Desa',
+    name: matchedUser.nama,
+    desa: matchedUser.desa || null,
+    detail: matchedUser.jabatan || (isKecamatan ? 'Kecamatan Waru' : `Operator Desa ${matchedUser.desa}`),
     loginAt: new Date().toISOString()
   };
 
-  AppState.currentUser = user;
-  localStorage.setItem('sip_auth_user', JSON.stringify(user));
+  AppState.currentUser = userSession;
+  localStorage.setItem('sip_auth_user', JSON.stringify(userSession));
+
+  if (!isKecamatan && matchedUser.desa) {
+    AppState.operatorDesaAktif = matchedUser.desa;
+    localStorage.setItem('sip_operator_desa', matchedUser.desa);
+    const selectOp = document.getElementById('selectDesaOperator');
+    if (selectOp) selectOp.value = matchedUser.desa;
+    onOperatorDesaChange();
+  }
 
   const portal = document.getElementById('loginPortalContainer');
   if (portal) portal.classList.add('hidden');
 
   updateUserProfileUI();
-  navigateToMenu('dashboard');
-  showToast(`Selamat datang! Berhasil masuk sebagai ${jabatan}`, 'success');
+
+  if (isKecamatan) {
+    navigateToMenu('dashboard');
+    showToast(`Selamat datang! Berhasil masuk sebagai ${userSession.name}`, 'success');
+  } else {
+    navigateToMenu('pengajuan_desa');
+    showToast(`Selamat datang! Berhasil masuk sebagai Operator ${userSession.name}`, 'success');
+  }
 };
 
 /**
- * Eksekusi Login Portal Operator Desa dengan Validasi PIN Berbasis Sheet User
+ * Backward compatibility stubs
  */
-window.doLoginDesa = function() {
-  const select = document.getElementById('loginDesaSelect');
-  const desaNama = select ? select.value : 'Api-Api';
-  const pinInput = (document.getElementById('loginDesaPin')?.value || '').trim();
-
-  // Cari akun desa yang cocok dari data sheet user
-  const matchedUser = (AppState.users || []).find(u => u.role === 'desa' && u.desa === desaNama);
-  const expectedPin = matchedUser ? String(matchedUser.pin) : 'desa2026';
-
-  // Validasi PIN
-  if (pinInput && pinInput !== expectedPin && pinInput !== 'desa2026' && pinInput !== '1234') {
-    showToast(`PIN Desa ${desaNama} salah! Masukkan PIN yang terdaftar di Sheet User (Default: ${expectedPin})`, 'error');
-    document.getElementById('loginDesaPin')?.focus();
-    return;
-  }
-
-  const user = {
-    role: 'desa',
-    roleTitle: 'Operator Desa',
-    name: `Desa ${desaNama}`,
-    desa: desaNama,
-    detail: 'Operator & Kaur Keuangan',
-    loginAt: new Date().toISOString()
-  };
-
-  AppState.currentUser = user;
-  AppState.operatorDesaAktif = desaNama;
-  localStorage.setItem('sip_auth_user', JSON.stringify(user));
-  localStorage.setItem('sip_operator_desa', desaNama);
-
-  const portal = document.getElementById('loginPortalContainer');
-  if (portal) portal.classList.add('hidden');
-
-  // Sinkronkan pilihan desa di form pengajuan
-  const selectOp = document.getElementById('selectDesaOperator');
-  if (selectOp) selectOp.value = desaNama;
-  onOperatorDesaChange();
-
-  updateUserProfileUI();
-  navigateToMenu('pengajuan_desa');
-  showToast(`Selamat datang! Masuk sebagai Operator Desa ${desaNama}`, 'success');
-};
+window.switchLoginRole = function() {};
+window.onLoginDesaChange = function() {};
+window.doLoginKecamatan = function() { handleUnifiedLogin(); };
+window.doLoginDesa = function() { handleUnifiedLogin(); };
 
 /**
  * Keluar Akun & Tampilkan Kembali Kartu Login
  */
 window.logoutUser = function() {
-  if (!confirm('Apakah Anda ingin keluar dan kembali ke Kartu Pilihan Login?')) return;
+  if (!confirm('Apakah Anda ingin keluar dan kembali ke Halaman Login?')) return;
 
   AppState.currentUser = null;
   localStorage.removeItem('sip_auth_user');
@@ -1804,8 +1823,16 @@ window.logoutUser = function() {
   const portal = document.getElementById('loginPortalContainer');
   if (portal) portal.classList.remove('hidden');
 
-  onLoginDesaChange();
-  showToast('Anda telah keluar. Silakan pilih kartu login untuk masuk.', 'info');
+  hideLoginError();
+  const pwdInput = document.getElementById('inputLoginPassword');
+  if (pwdInput) {
+    pwdInput.value = '';
+    pwdInput.type = 'password';
+  }
+  document.getElementById('iconEyeOpen')?.classList.remove('hidden');
+  document.getElementById('iconEyeClosed')?.classList.add('hidden');
+
+  showToast('Anda telah keluar. Silakan masukkan username dan password untuk masuk.', 'info');
 };
 
 /**
@@ -1887,7 +1914,7 @@ window.checkAuthSession = function() {
   } else {
     // Pengguna belum login, tampilkan kartu login gate
     portal.classList.remove('hidden');
-    onLoginDesaChange();
+    hideLoginError();
   }
 };
 
