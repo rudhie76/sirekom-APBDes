@@ -349,23 +349,68 @@ function populateDesaSelect() {
   });
 }
 
+// =========================================================================================
+// HELPER FILTER & SINKRONISASI BERKAS PERSYARATAN (REAKTIF KE LIVE PREVIEW)
+// =========================================================================================
+function getRawBerkasList(tipe = AppState.tipeRekomendasi) {
+  if (tipe === 'add_reguler') return AppState.berkasAddReguler;
+  if (tipe === 'dbh') return AppState.berkasDbh;
+  if (tipe === 'dd') return AppState.berkasDd;
+  return AppState.berkasSiltap;
+}
+
+function isBerkasChecked(id) {
+  const el = document.getElementById(`berkas_${id}`);
+  if (el) return Boolean(el.checked);
+  
+  const allLists = [AppState.berkasSiltap, AppState.berkasAddReguler, AppState.berkasDbh, AppState.berkasDd];
+  for (const list of allLists) {
+    const item = list.find(b => b.id === id);
+    if (item) return item.checked !== false;
+  }
+  return true;
+}
+
+function getActiveBerkasList(tipe = AppState.tipeRekomendasi) {
+  const list = getRawBerkasList(tipe);
+  return list.filter(item => {
+    const el = document.getElementById(`berkas_${item.id}`);
+    if (el) {
+      item.checked = Boolean(el.checked);
+      return el.checked;
+    }
+    return item.checked !== false;
+  });
+}
+
+window.handleBerkasCheckboxChange = function(id, isChecked) {
+  const allLists = [AppState.berkasSiltap, AppState.berkasAddReguler, AppState.berkasDbh, AppState.berkasDd];
+  for (const list of allLists) {
+    const item = list.find(b => b.id === id);
+    if (item) {
+      item.checked = Boolean(isChecked);
+      break;
+    }
+  }
+  updateLivePreview();
+};
+
 function renderBerkasChecklist() {
   const container = document.getElementById('containerBerkasChecklist');
   if (!container) return;
   
-  let items = AppState.berkasSiltap;
-  if (AppState.tipeRekomendasi === 'add_reguler') items = AppState.berkasAddReguler;
-  else if (AppState.tipeRekomendasi === 'dbh') items = AppState.berkasDbh;
-  else if (AppState.tipeRekomendasi === 'dd') items = AppState.berkasDd;
+  let items = getRawBerkasList();
 
   container.innerHTML = '';
   items.forEach((item, index) => {
+    const isChecked = item.checked !== false;
     const wrapper = document.createElement('label');
     wrapper.className = 'flex items-start gap-2.5 p-2 bg-slate-50 hover:bg-emerald-50/50 rounded-lg border border-slate-200 cursor-pointer transition text-xs text-slate-700';
     wrapper.innerHTML = `
-      <input type="checkbox" id="berkas_${item.id}" value="${item.teks}" ${item.checked ? 'checked' : ''} 
+      <input type="checkbox" id="berkas_${item.id}" value="${escapeHtml(item.teks)}" ${isChecked ? 'checked' : ''} 
+             onchange="handleBerkasCheckboxChange('${item.id}', this.checked)"
              class="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 berkas-checkbox" />
-      <span class="flex-1 leading-relaxed">${index + 1}. ${item.teks}</span>
+      <span class="flex-1 leading-relaxed">${index + 1}. ${escapeHtml(item.teks)}</span>
     `;
     container.appendChild(wrapper);
   });
@@ -416,6 +461,15 @@ function setupEventListeners() {
 
   document.addEventListener('change', (e) => {
     if (e.target && e.target.classList.contains('berkas-checkbox')) {
+      const id = e.target.id.replace('berkas_', '');
+      const allLists = [AppState.berkasSiltap, AppState.berkasAddReguler, AppState.berkasDbh, AppState.berkasDd];
+      for (const list of allLists) {
+        const item = list.find(b => b.id === id);
+        if (item) {
+          item.checked = Boolean(e.target.checked);
+          break;
+        }
+      }
       updateLivePreview();
     }
   });
@@ -663,7 +717,7 @@ function renderLivePreviewSiltap() {
 
         <div class="my-2 pl-4">
           <ol class="list-decimal pl-4 space-y-0.5">
-            ${AppState.berkasSiltap.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+            ${getActiveBerkasList('siltap').map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
 
@@ -709,6 +763,11 @@ function renderLivePreviewAddReguler() {
 
   const perihalText = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} (${escapeHtml(persen)} %) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
 
+  const activeBerkasAdd = getActiveBerkasList('add_reguler');
+  const splitAddIdx = Math.min(10, activeBerkasAdd.length);
+  const berkasAddHal2 = activeBerkasAdd.slice(0, splitAddIdx);
+  const berkasAddHal3 = activeBerkasAdd.slice(splitAddIdx);
+
   const docHtml = `
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
@@ -745,9 +804,9 @@ function renderLivePreviewAddReguler() {
           <div class="flex-1">
             <ol start="12" class="list-decimal pl-5 space-y-1">
               <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
-              <li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdesRkp)} Tahun 2025 tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
-              <li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
-              <li class="pl-1">Peraturan Kepala Desa Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
+              ${isBerkasChecked('ar4') ? `<li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdesRkp)} Tahun 2025 tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
+              ${isBerkasChecked('ar6') ? `<li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
+              ${isBerkasChecked('ar7') ? `<li class="pl-1">Peraturan Kepala Desa Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>` : ''}
             </ol>
           </div>
         </div>
@@ -774,7 +833,7 @@ function renderLivePreviewAddReguler() {
 
         <div class="my-2 pl-4">
           <ol class="list-decimal pl-5 space-y-0.5">
-            ${AppState.berkasAddReguler.slice(0, 11).map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+            ${berkasAddHal2.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
       </div>
@@ -783,11 +842,13 @@ function renderLivePreviewAddReguler() {
     <!-- HALAMAN 3 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman3">
       <div class="text-[11pt] text-justify leading-snug">
+        ${berkasAddHal3.length > 0 ? `
         <div class="my-2 pl-4">
-          <ol start="12" class="list-decimal pl-5 space-y-0.5">
-            ${AppState.berkasAddReguler.slice(11).map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+          <ol start="${splitAddIdx + 1}" class="list-decimal pl-5 space-y-0.5">
+            ${berkasAddHal3.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
+        ` : ''}
 
         <p class="indent-10 mt-4 leading-normal">
           Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
@@ -882,7 +943,7 @@ function renderLivePreviewDbh() {
 
         <div class="my-2 pl-4">
           <ol class="list-decimal pl-4 space-y-0.5">
-            ${AppState.berkasDbh.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+            ${getActiveBerkasList('dbh').map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
 
@@ -940,10 +1001,7 @@ function renderLivePreviewDd() {
     { id: 'dd10', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).' }
   ];
 
-  const berkasFiltered = berkasDdList.filter(item => {
-    const cb = document.getElementById(`berkas_${item.id}`);
-    return !cb || cb.checked;
-  });
+  const berkasFiltered = berkasDdList.filter(item => isBerkasChecked(item.id));
 
   const docHtml = `
     <!-- HALAMAN 1 -->
@@ -983,8 +1041,8 @@ function renderLivePreviewDd() {
               <li class="pl-1">Peraturan Menteri Keuangan Republik Indonesia Nomor 7 Tahun 2026 tentang Pengelolaan Dana Desa Tahun Anggaran 2026;</li>
               <li class="pl-1">Peraturan Bupati Nomor 16 Tahun 2021 Tentang Perubahan Atas Peraturan Bupati Nomor 7 Tahun 2019 Tentang Pengelolaan Keuangan Desa;</li>
               <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
-              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
-              <li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
+              ${isBerkasChecked('dd4') ? `<li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
+              ${isBerkasChecked('dd5') ? `<li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>` : ''}
             </ol>
           </div>
         </div>
