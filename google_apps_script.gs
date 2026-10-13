@@ -413,19 +413,56 @@ function doGet(e) {
       });
     }
 
-    // 4. Ambil Master Data Desa
+    // 4. Ambil Master Data Desa (Nama Kades, Kaur Keuangan, Rekening, dsb.)
     if (action === "getMasterDesa") {
-      var sheetD = ss.getSheetByName(SHEET_MASTER_DESA);
+      var sheetD = ss.getSheetByName(SHEET_MASTER_DESA) || ss.getSheetByName("Master Desa") || ss.getSheetByName("master_desa");
+      if (!sheetD) {
+        var allSheets = ss.getSheets();
+        for (var s = 0; s < allSheets.length; s++) {
+          var sName = allSheets[s].getName().toLowerCase();
+          if (sName.indexOf("desa") !== -1 && sName.indexOf("pengajuan") === -1 && sName.indexOf("user") === -1) {
+            sheetD = allSheets[s];
+            break;
+          }
+        }
+      }
+
+      if (!sheetD) {
+        return jsonResponse({
+          success: false,
+          error: "Sheet Master_Desa tidak ditemukan di spreadsheet."
+        });
+      }
+
       var dataD = sheetD.getDataRange().getValues();
+      if (!dataD || dataD.length < 2) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
+
       var headersD = dataD[0];
       var resultD = [];
 
       for (var d = 1; d < dataD.length; d++) {
         var rowD = dataD[d];
-        if (!rowD[1]) continue;
+        var hasContent = false;
+        for (var c = 0; c < rowD.length; c++) {
+          if (rowD[c] !== "" && rowD[c] !== null && rowD[c] !== undefined) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (!hasContent) continue;
+
         var itemD = {};
         for (var k = 0; k < headersD.length; k++) {
-          itemD[headersD[k]] = rowD[k];
+          var headerName = String(headersD[k] || "").trim();
+          if (headerName) {
+            itemD[headerName] = rowD[k];
+          }
         }
         resultD.push(itemD);
       }

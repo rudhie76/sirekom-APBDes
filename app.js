@@ -87,7 +87,7 @@ const AppState = {
   tipeRekomendasi: 'siltap',
 
   // Master 3 Desa di Kecamatan Waru (Kecamatan Waru memiliki 3 Desa & 1 Kelurahan Waru)
-  masterDesa: [
+  masterDesa: JSON.parse(localStorage.getItem('sip_master_desa') || 'null') || [
     {
       id: 'DESA-03',
       nama: 'Api-Api',
@@ -1265,17 +1265,19 @@ function setupModalSettingsListeners() {
   document.getElementById('btnCloseSettings')?.addEventListener('click', () => {
     document.getElementById('modalGasSettings')?.classList.add('hidden');
   });
-  document.getElementById('btnSaveGasSettings')?.addEventListener('click', () => {
+  document.getElementById('btnSaveGasSettings')?.addEventListener('click', async () => {
     const url = document.getElementById('inputGasUrl').value.trim();
     AppState.gasUrl = url;
     localStorage.setItem('sip_gas_url', url);
     document.getElementById('modalGasSettings')?.classList.add('hidden');
     showToast('Pengaturan Google Sheets disimpan.', 'success');
-    testGasConnection(true);
+    await testGasConnection(true);
+    await sinkronMasterDesaDariGoogleSheets(false);
   });
-  document.getElementById('btnTestGasConnection')?.addEventListener('click', () => {
+  document.getElementById('btnTestGasConnection')?.addEventListener('click', async () => {
     AppState.gasUrl = document.getElementById('inputGasUrl').value.trim();
-    testGasConnection(false);
+    await testGasConnection(false);
+    await sinkronMasterDesaDariGoogleSheets(true);
   });
   document.getElementById('btnCopyGasScript')?.addEventListener('click', async () => {
     try {
@@ -1378,7 +1380,12 @@ function updateSyncStatusBadge(connected = AppState.isConnected) {
   }
 }
 
-function loadSavedSettings() { if (AppState.gasUrl) testGasConnection(true); }
+function loadSavedSettings() {
+  if (AppState.gasUrl) {
+    testGasConnection(true);
+    sinkronMasterDesaDariGoogleSheets(true);
+  }
+}
 
 function setupHistoryDrawerListeners() {
   document.getElementById('btnOpenHistory')?.addEventListener('click', () => {
@@ -2052,6 +2059,101 @@ window.sinkronDataUserDariGoogleSheets = async function() {
 };
 
 /**
+ * Sinkronisasi Master Data Desa dari Sheet "Master_Desa" Google Sheets
+ * Menarik pembaruan Nama Kepala Desa, Kaur Keuangan, Nomor Rekening RKD, Bank, dsb.
+ */
+window.sinkronMasterDesaDariGoogleSheets = async function(isSilent = true) {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) return;
+
+  try {
+    const url = `${AppState.gasUrl}?action=getMasterDesa&_t=${Date.now()}`;
+    const res = await fetch(url);
+    const result = await res.json();
+
+    if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+      const cleanName = (str) => (str || '').toString().trim().replace(/^desa\s+/i, '').toLowerCase();
+
+      result.data.forEach(row => {
+        // Cari nama desa dari berbagai variasi header
+        const rawNama = row['Nama Desa'] || row['Nama'] || row['Desa'] || row.namaDesa || row.nama || '';
+        const normNama = cleanName(rawNama);
+        if (!normNama) return;
+
+        // Ambil nilai kepala desa dan atribut lainnya dari sheet
+        const rawKades = row['Kepala Desa'] || row['Kades'] || row['Nama Kepala Desa'] || row['Nama Kades'] || row.kades;
+        const rawKaur = row['Kaur Keuangan / Bendahara'] || row['Kaur Keuangan'] || row['Bendahara'] || row['Kaur'] || row.kaurKeuangan;
+        const rawBank = row['Bank Penyalur'] || row['Bank'] || row.bank;
+        const rawRek = row['Nomor Rekening RKD'] || row['Nomor Rekening'] || row['Rekening'] || row['RKD'] || row.rekening;
+        const rawAtasNama = row['Atas Nama Rekening'] || row['Atas Nama'] || row.atasNama;
+        const rawAlamat = row['Alamat Kantor Desa'] || row['Alamat'] || row.alamat;
+        const rawPerkades = row['Nomor Perkades'] || row['No Perkades'] || row.nomorPerkades;
+        const rawThnPerkades = row['Tahun Perkades'] || row.tahunPerkades;
+        const rawPerdes = row['Nomor Perdes'] || row['No Perdes'] || row.nomorPerdes;
+        const rawThnPerdes = row['Tahun Perdes'] || row.tahunPerdes;
+
+        let existing = AppState.masterDesa.find(d => cleanName(d.nama) === normNama);
+
+        if (existing) {
+          if (rawKades) existing.kades = String(rawKades).trim();
+          if (rawKaur) existing.kaurKeuangan = String(rawKaur).trim();
+          if (rawBank) existing.bank = String(rawBank).trim();
+          if (rawRek) existing.rekening = String(rawRek).trim();
+          if (rawAtasNama) existing.atasNama = String(rawAtasNama).trim();
+          if (rawAlamat) existing.alamat = String(rawAlamat).trim();
+          if (rawPerkades) existing.nomorPerkades = String(rawPerkades).trim();
+          if (rawThnPerkades) existing.tahunPerkades = String(rawThnPerkades).trim();
+          if (rawPerdes) existing.nomorPerdes = String(rawPerdes).trim();
+          if (rawThnPerdes) existing.tahunPerdes = String(rawThnPerdes).trim();
+        } else {
+          // Desa baru jika ada baris tambahan
+          const newDesa = {
+            id: row['ID Desa'] || `DESA-${Date.now()}`,
+            nama: rawNama.trim().replace(/^desa\s+/i, ''),
+            kades: rawKades ? String(rawKades).trim() : '',
+            kaurKeuangan: rawKaur ? String(rawKaur).trim() : '',
+            jabatanKaur: `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${rawNama.trim().replace(/^desa\s+/i, '')}`,
+            bank: rawBank ? String(rawBank).trim() : 'PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru',
+            rekening: rawRek ? String(rawRek).trim() : '',
+            atasNama: rawAtasNama ? String(rawAtasNama).trim() : `Pemerintah Desa ${rawNama} (RKD)`,
+            alamat: rawAlamat ? String(rawAlamat).trim() : '',
+            nomorPerdesKewenangan: '2',
+            tahunPerdesKewenangan: '2019',
+            nomorPerdesRkp: '2',
+            tahunPerdesRkp: '2025',
+            nomorPerdes: rawPerdes ? String(rawPerdes).trim() : '7',
+            tahunPerdes: rawThnPerdes ? String(rawThnPerdes).trim() : '2025',
+            nomorPerkades: rawPerkades ? String(rawPerkades).trim() : '4',
+            tahunPerkades: rawThnPerkades ? String(rawThnPerkades).trim() : '2025'
+          };
+          AppState.masterDesa.push(newDesa);
+        }
+      });
+
+      // Simpan ke localStorage agar offline / reload tetap membawa data kades terbaru
+      localStorage.setItem('sip_master_desa', JSON.stringify(AppState.masterDesa));
+
+      // Refresh seluruh tampilan yang bergantung pada data kades & desa
+      populateDesaSelect();
+      populateOperatorDesaSelect();
+      triggerAutoFillDesa();
+      onOperatorDesaChange();
+      renderDashboardSummary();
+      updateLivePreview();
+
+      console.log('Sinkronisasi Master Desa dari Google Sheets Master_Desa berhasil:', AppState.masterDesa);
+      if (!isSilent) {
+        showToast('Data Master Desa (Kades, Kaur, Rekening) berhasil diperbarui dari Google Sheets!', 'success');
+      }
+    }
+  } catch (e) {
+    console.warn('Gagal sinkron data Master Desa dari Google Sheets:', e);
+    if (!isSilent) {
+      showToast('Gagal menarik Master Desa dari Google Sheets. Periksa URL Web App atau koneksi internet.', 'error');
+    }
+  }
+};
+
+/**
  * Pemeriksaan Sesi Login Saat Aplikasi Dibuka
  */
 window.checkAuthSession = function() {
@@ -2059,6 +2161,7 @@ window.checkAuthSession = function() {
   if (!portal) return;
 
   sinkronDataUserDariGoogleSheets();
+  sinkronMasterDesaDariGoogleSheets(true);
 
   if (AppState.currentUser) {
     // Pengguna sudah login sebelumnya
@@ -3577,6 +3680,10 @@ window.sinkronPengajuanKeGoogleSheets = async function() {
     console.error('Error sinkron dari Google Sheets:', err);
     showToast('Gagal menarik data dari Google Sheets. Periksa URL Web App atau koneksi internet.', 'error');
   } finally {
+    try {
+      await sinkronMasterDesaDariGoogleSheets(true);
+      await sinkronDataUserDariGoogleSheets();
+    } catch (_) {}
     updateBadgePengajuanDesa();
     renderTabelPengajuanKecamatan();
     renderTabelPengajuanDesa();
