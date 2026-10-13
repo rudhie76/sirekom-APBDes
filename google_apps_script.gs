@@ -367,17 +367,42 @@ function doGet(e) {
 
     // 2. Ambil Semua Pengajuan Berkas Desa Lengkap dengan Link Drive
     if (action === "getPengajuanDesa") {
-      var sheetP = ss.getSheetByName(SHEET_PENGAJUAN_DESA);
+      var sheetP = ss.getSheetByName(SHEET_PENGAJUAN_DESA) || ss.getSheetByName("Pengajuan Berkas Desa") || ss.getSheetByName("pengajuan_desa");
+      if (!sheetP) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
       var dataP = sheetP.getDataRange().getValues();
+      if (!dataP || dataP.length < 2) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
       var headersP = dataP[0];
       var resultP = [];
 
       for (var r = 1; r < dataP.length; r++) {
         var row = dataP[r];
-        if (!row[0]) continue;
+        var hasContent = false;
+        for (var c = 0; c < row.length; c++) {
+          if (row[c] !== "" && row[c] !== null && row[c] !== undefined) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (!hasContent) continue;
+
         var item = {};
-        for (var c = 0; c < headersP.length; c++) {
-          item[headersP[c]] = row[c];
+        for (var c2 = 0; c2 < headersP.length; c2++) {
+          var hName = String(headersP[c2] || "").trim();
+          if (hName) {
+            item[hName] = row[c2];
+          }
         }
         resultP.push(item);
       }
@@ -391,17 +416,42 @@ function doGet(e) {
 
     // 3. Ambil Riwayat Rekomendasi Camat
     if (action === "getRiwayat") {
-      var sheetR = ss.getSheetByName(SHEET_REKOMENDASI);
+      var sheetR = ss.getSheetByName(SHEET_REKOMENDASI) || ss.getSheetByName("Rekomendasi Pencairan") || ss.getSheetByName("riwayat");
+      if (!sheetR) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
       var dataR = sheetR.getDataRange().getValues();
+      if (!dataR || dataR.length < 2) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
       var headersR = dataR[0];
       var resultR = [];
 
       for (var i = 1; i < dataR.length; i++) {
         var rowR = dataR[i];
-        if (!rowR[0]) continue;
+        var hasContentR = false;
+        for (var j = 0; j < rowR.length; j++) {
+          if (rowR[j] !== "" && rowR[j] !== null && rowR[j] !== undefined) {
+            hasContentR = true;
+            break;
+          }
+        }
+        if (!hasContentR) continue;
+
         var itemR = {};
-        for (var j = 0; j < headersR.length; j++) {
-          itemR[headersR[j]] = rowR[j];
+        for (var j2 = 0; j2 < headersR.length; j2++) {
+          var hNameR = String(headersR[j2] || "").trim();
+          if (hNameR) {
+            itemR[hNameR] = rowR[j2];
+          }
         }
         resultR.push(itemR);
       }

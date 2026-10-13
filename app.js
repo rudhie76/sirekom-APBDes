@@ -1384,6 +1384,8 @@ function loadSavedSettings() {
   if (AppState.gasUrl) {
     testGasConnection(true);
     sinkronMasterDesaDariGoogleSheets(true);
+    sinkronPengajuanKeGoogleSheets();
+    sinkronRiwayatDariGoogleSheets(true);
   }
 }
 
@@ -2220,52 +2222,16 @@ function initDesaOperatorFeature() {
 }
 
 /**
- * Menyiapkan Data Contoh Pengajuan Berkas Desa Jika Belum Ada
+ * Inisialisasi Data Pengajuan Berkas Desa & Bersihkan Data Dummy Lama
  */
 function initSeedPengajuanDesa() {
-  if (!AppState.pengajuanDesa || AppState.pengajuanDesa.length === 0) {
-    AppState.pengajuanDesa = [
-      {
-        id: 'PENG-20260518-01',
-        namaDesa: 'Api-Api',
-        jenisDana: 'add_reguler',
-        tahap: 'Tahap II',
-        tahunAnggaran: '2026',
-        nomorSp: '140/012/D-API/SP/V/2026',
-        tanggalSp: '2026-05-18',
-        nomorRekomDesa: '140/015/REK-DESA/2026',
-        tanggalRekomDesa: '2026-05-19',
-        nominal: 366716750,
-        fileSpId: 'file_sp_apiapi_01',
-        fileSpName: 'Surat_Pengantar_ADD_Tahap_II_ApiApi.pdf',
-        fileCeklistId: 'file_ceklist_apiapi_01',
-        fileCeklistName: 'Ceklist_Kelengkapan_Berkas_ApiApi.pdf',
-        fileRekomDesaId: 'file_rekom_apiapi_01',
-        fileRekomDesaName: 'Rekomendasi_Desa_ApiApi.pdf',
-        waktuKirim: '2026-05-19T09:30:00.000Z',
-        status: 'Menunggu Verifikasi'
-      },
-      {
-        id: 'PENG-20260602-02',
-        namaDesa: 'Sesulu',
-        jenisDana: 'siltap',
-        tahap: 'Bulan Juni',
-        tahunAnggaran: '2026',
-        nomorSp: '140/008/D-SSL/SP/VI/2026',
-        tanggalSp: '2026-06-02',
-        nomorRekomDesa: '140/010/REK-DESA/2026',
-        tanggalRekomDesa: '2026-06-03',
-        nominal: 116550000,
-        fileSpId: 'file_sp_sesulu_02',
-        fileSpName: 'Surat_Pengantar_Siltap_Juni_Sesulu.pdf',
-        fileCeklistId: 'file_ceklist_sesulu_02',
-        fileCeklistName: 'Ceklist_Berkas_Siltap_Sesulu.pdf',
-        fileRekomDesaId: 'file_rekom_sesulu_02',
-        fileRekomDesaName: 'Rekomendasi_Desa_Sesulu.pdf',
-        waktuKirim: '2026-06-03T11:15:00.000Z',
-        status: 'Diverifikasi'
-      }
-    ];
+  if (!AppState.pengajuanDesa) {
+    AppState.pengajuanDesa = [];
+  }
+  // Bersihkan data dummy bawaan awal (Api-Api & Sesulu contoh) agar dasbor bersih sesuai Google Sheets
+  const dummyIds = ['PENG-20260518-01', 'PENG-20260602-02'];
+  if (AppState.pengajuanDesa.some(item => dummyIds.includes(item.id))) {
+    AppState.pengajuanDesa = AppState.pengajuanDesa.filter(item => !dummyIds.includes(item.id));
     localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
   }
 }
@@ -3660,33 +3626,96 @@ window.sinkronPengajuanKeGoogleSheets = async function() {
         catatanKecamatan: row['Catatan Verifikasi / Alasan Pengembalian'] || row['Catatan Verifikasi'] || row['Catatan'] || ''
       }));
 
-      // Gabungkan data cloud dengan lokal tanpa duplikasi berdasarkan ID
-      const existingMap = new Map();
-      cloudList.forEach(item => existingMap.set(item.id, item));
-      (AppState.pengajuanDesa || []).forEach(item => {
-        if (!existingMap.has(item.id)) {
-          existingMap.set(item.id, item);
-        }
-      });
-
-      AppState.pengajuanDesa = Array.from(existingMap.values());
-      // Urutkan waktu terbaru di atas
+      // Google Sheets adalah Sumber Data Utama (Single Source of Truth)
+      // Seluruh data lokal disesuaikan persis dengan baris data di Google Sheets
+      AppState.pengajuanDesa = cloudList;
       AppState.pengajuanDesa.sort((a, b) => new Date(b.waktuKirim) - new Date(a.waktuKirim));
 
       localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
-      showToast(`Berhasil menarik ${cloudList.length} data pengajuan dari Google Sheets!`, 'success');
+      if (cloudList.length === 0) {
+        showToast('Data pengajuan di Google Sheets kosong (0 berkas). Dasbor dan tabel telah dibersihkan.', 'info');
+      } else {
+        showToast(`Berhasil menarik ${cloudList.length} data pengajuan dari Google Sheets!`, 'success');
+      }
     }
   } catch (err) {
     console.error('Error sinkron dari Google Sheets:', err);
     showToast('Gagal menarik data dari Google Sheets. Periksa URL Web App atau koneksi internet.', 'error');
   } finally {
     try {
+      await sinkronRiwayatDariGoogleSheets(true);
       await sinkronMasterDesaDariGoogleSheets(true);
       await sinkronDataUserDariGoogleSheets();
     } catch (_) {}
     updateBadgePengajuanDesa();
     renderTabelPengajuanKecamatan();
     renderTabelPengajuanDesa();
+    renderDashboardSummary();
+  }
+};
+
+/**
+ * Sinkronisasi Riwayat Rekomendasi Camat dari Sheet "Rekomendasi_Pencairan" Google Sheets
+ */
+window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) return;
+  try {
+    const url = `${AppState.gasUrl}?action=getRiwayat&_t=${Date.now()}`;
+    const res = await fetch(url);
+    const result = await res.json();
+    if (result.success && Array.isArray(result.data)) {
+      AppState.riwayat = result.data.map(row => ({
+        id: row['ID Rekomendasi'] || `REK-${Date.now()}`,
+        waktuTerbit: row['Waktu Terbit'] || new Date().toISOString(),
+        nomorSurat: row['Nomor Surat Rekomendasi'] || row['Nomor Surat'] || '',
+        tanggalSurat: row['Tanggal Surat'] ? String(row['Tanggal Surat']).substring(0, 10) : '',
+        namaDesa: row['Nama Desa'] || '',
+        jenisDana: row['Jenis Dana'] || 'add_reguler',
+        tahap: row['Tahap'] || '',
+        tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
+        nominalAngka: Number(row['Nominal (Rp)']) || 0,
+        terbilang: row['Terbilang'] || '',
+        bankPenyalur: row['Bank Penyalur'] || '',
+        nomorRekening: row['Nomor Rekening RKD'] || '',
+        kepalaDesa: row['Kepala Desa'] || '',
+        kaurKeuangan: row['Kaur Keuangan'] || '',
+        namaCamat: row['Nama Camat'] || '',
+        nipCamat: row['NIP Camat'] || '',
+        metodeTte: row['Metode TTE / Format'] || 'tte',
+        status: row['Status Penyaluran'] || 'Diterbitkan'
+      }));
+      localStorage.setItem('sip_riwayat_rekom', JSON.stringify(AppState.riwayat));
+      renderHistoryTable();
+      renderDashboardSummary();
+      console.log('Sinkronisasi riwayat rekomendasi dari Google Sheets berhasil, total:', AppState.riwayat.length);
+    }
+  } catch (e) {
+    console.warn('Gagal sinkron riwayat dari Google Sheets:', e);
+  }
+};
+
+/**
+ * Fitur Bersihkan & Reset Database Lokal (Bila pengguna mengosongkan sheet dan ingin browser langsung 100% bersih)
+ */
+window.kosongkanDatabaseLokal = async function() {
+  if (!confirm('Apakah Anda ingin membersihkan seluruh data pengajuan & riwayat lokal di browser ini agar sesuai persis dengan Google Sheets yang telah Anda kosongkan?')) {
+    return;
+  }
+  AppState.pengajuanDesa = [];
+  AppState.riwayat = [];
+  localStorage.setItem('sip_pengajuan_desa', '[]');
+  localStorage.setItem('sip_riwayat_rekom', '[]');
+  renderDashboardSummary();
+  renderTabelPengajuanKecamatan();
+  renderTabelPengajuanDesa();
+  renderHistoryTable();
+  updateBadgePengajuanDesa();
+
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    showToast('Menyinkronkan ulang dari Google Sheets...', 'info');
+    await sinkronPengajuanKeGoogleSheets();
+  } else {
+    showToast('Database lokal di browser berhasil dibersihkan!', 'success');
   }
 };
 
