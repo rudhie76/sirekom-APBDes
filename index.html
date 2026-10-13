@@ -763,7 +763,7 @@
           </div>
 
           <div class="text-xs text-slate-500 font-medium">
-            💡 Klik <b class="text-indigo-700">"⚡ Buat Rekom Camat"</b> untuk memproses berkas masuk langsung ke generator surat.
+            💡 Jika data OK, klik <b class="text-indigo-700">"⚡ Buat Rekom Camat"</b>. Jika tidak OK, klik <b class="text-rose-600">"↩️ Kembalikan Berkas"</b> dengan catatan untuk desa.
           </div>
         </div>
 
@@ -779,7 +779,7 @@
                 <th class="py-2.5 px-3">Data Rekomendasi Desa</th>
                 <th class="py-2.5 px-3 text-right">Nominal (Rp)</th>
                 <th class="py-2.5 px-3 text-center">Unduh Dokumen Asli</th>
-                <th class="py-2.5 px-3 text-center w-36">Tindakan Kecamatan</th>
+                <th class="py-2.5 px-3 text-center w-48">Tindakan Kecamatan</th>
               </tr>
             </thead>
             <tbody id="tbodyPengajuanKecamatan">
@@ -1163,6 +1163,9 @@
         <!-- KOLOM KIRI: FORMULIR INPUT + 3 UPLOAD DOKUMEN -->
         <div class="lg:col-span-8 space-y-6">
           
+          <!-- Banner Peringatan Berkas Dikembalikan (Muncul jika ada catatan dari Kecamatan) -->
+          <div id="containerBannerRevisiDesa" class="space-y-3 hidden"></div>
+
           <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-6">
             
             <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
@@ -1577,6 +1580,102 @@
   </div>
 
   <!-- ================================================================================= -->
+  <!-- MODAL: KEMBALIKAN BERKAS PENGAJUAN DESA (DENGAN CATATAN OPERATOR KECAMATAN) -->
+  <!-- ================================================================================= -->
+  <div id="modalKembalikanPengajuan" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+      
+      <!-- Header Modal -->
+      <div class="px-5 py-4 bg-gradient-to-r from-rose-700 to-rose-900 text-white flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center text-lg font-bold">
+            ↩️
+          </div>
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wide">Kembalikan Berkas ke Desa</h3>
+            <p class="text-[11px] text-rose-200">Kirim catatan perbaikan ke Operator Desa agar berkas segera disesuaikan</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModalKembalikanPengajuan()" class="text-rose-200 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Isi / Form Modal -->
+      <div class="p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs">
+        
+        <!-- Kartu Ringkasan Pengajuan -->
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-1.5">
+            <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+              <span>🏡</span>
+              <span id="modalKembalikanDesaNama">Desa Api-Api</span>
+            </span>
+            <span id="modalKembalikanJenisDana" class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">ADD Reguler</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+            <div>No. SP: <strong id="modalKembalikanNoSp" class="text-slate-800 font-mono">-</strong></div>
+            <div>Tgl SP: <strong id="modalKembalikanTglSp" class="text-slate-800">-</strong></div>
+            <div>No. Rekom: <strong id="modalKembalikanNoRekom" class="text-slate-800 font-mono">-</strong></div>
+            <div>Nominal: <strong id="modalKembalikanNominal" class="text-emerald-700 font-mono">-</strong></div>
+          </div>
+        </div>
+
+        <input type="hidden" id="modalKembalikanId" value="" />
+
+        <!-- Form Catatan Operator -->
+        <div>
+          <label class="block font-bold text-slate-800 mb-1.5 flex items-center justify-between">
+            <span>Catatan Operator Kecamatan / Alasan Pengembalian <span class="text-rose-500">*</span></span>
+            <span class="text-[10.5px] font-normal text-slate-400">Wajib diisi</span>
+          </label>
+          <textarea 
+            id="inputCatatanKecamatan" 
+            rows="4" 
+            placeholder="Tuliskan dengan jelas bagian yang belum sesuai atau perlu diperbaiki oleh pihak desa..." 
+            class="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 leading-relaxed custom-scrollbar font-medium"
+          ></textarea>
+          <p class="text-[10.5px] text-slate-500 mt-1">
+            Catatan ini akan langsung muncul pada dasbor & tabel riwayat operator desa yang bersangkutan.
+          </p>
+        </div>
+
+        <!-- Tombol Pintasan Catatan Cepat (Quick Fill Chips) -->
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Template Catatan Cepat:</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="appendCatatanTemplate('Tanda tangan atau stempel Kades pada Surat Rekomendasi/SP belum lengkap.')" class="px-2 py-1 rounded-md text-[10.5px] bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 border border-slate-200 transition">
+              + TTD/Stempel Kades Belum Ada
+            </button>
+            <button type="button" onclick="appendCatatanTemplate('Lampiran format Ceklist Kelengkapan Berkas belum diisi/dicentang lengkap.')" class="px-2 py-1 rounded-md text-[10.5px] bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 border border-slate-200 transition">
+              + Ceklist Belum Lengkap
+            </button>
+            <button type="button" onclick="appendCatatanTemplate('Nominal rupiah pada Surat Pengantar tidak sesuai dengan angka pada Rekomendasi.')" class="px-2 py-1 rounded-md text-[10.5px] bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 border border-slate-200 transition">
+              + Nominal Tidak Cocok
+            </button>
+            <button type="button" onclick="appendCatatanTemplate('File dokumen hasil scan terpotong atau buram/tidak terbaca. Mohon scan ulang.')" class="px-2 py-1 rounded-md text-[10.5px] bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 border border-slate-200 transition">
+              + File Scan Buram / Terpotong
+            </button>
+            <button type="button" onclick="appendCatatanTemplate('Nomor rekening kas desa (RKD) atau tahap pencairan belum sesuai.')" class="px-2 py-1 rounded-md text-[10.5px] bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 border border-slate-200 transition">
+              + Rekening/Tahap Keliru
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Modal -->
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+        <button type="button" onclick="closeModalKembalikanPengajuan()" class="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-200 text-xs font-semibold transition">
+          Batal
+        </button>
+        <button type="button" id="btnKonfirmasiKembalikan" onclick="submitKembalikanPengajuan()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition flex items-center gap-1.5 cursor-pointer">
+          <span>↩️ Konfirmasi Kembalikan ke Desa</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================================================================================= -->
   <!-- MODAL: KOTAK MASUK BERKAS PENGAJUAN DESA (UNTUK PIHAK KECAMATAN) -->
   <!-- ================================================================================= -->
   <div id="modalPengajuanDesaKecamatan" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
@@ -1664,6 +1763,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261013_role_access_lock"></script>
+  <script src="app.js?v=20261013_tindakan_kecamatan_revisi"></script>
 </body>
 </html>

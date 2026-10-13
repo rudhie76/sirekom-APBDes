@@ -93,7 +93,8 @@ function initSheets() {
       "Nama File Rekom Desa",
       "Link Google Drive Rekom Desa",
       "Folder Google Drive Desa",
-      "Status Verifikasi"
+      "Status Verifikasi",
+      "Catatan Verifikasi / Alasan Pengembalian"
     ];
     sheetPengajuan.appendRow(headersPengajuan);
 
@@ -604,18 +605,30 @@ function doPost(e) {
     }
 
     // -------------------------------------------------------------------------------------
-    // AKSI 3: UPDATE STATUS PENGAJUAN DESA (MISAL KETIKA DIVERIFIKASI / SELESAI)
+    // AKSI 3: UPDATE STATUS PENGAJUAN DESA (MISAL KETIKA DIVERIFIKASI / DIKEMBALIKAN / DITERBITKAN)
     // -------------------------------------------------------------------------------------
     if (action === "updateStatusPengajuan") {
       var sheetP = ss.getSheetByName(SHEET_PENGAJUAN_DESA);
       var dataP = sheetP.getDataRange().getValues();
       var targetId = payload.id;
       var newStatus = payload.status || "Diverifikasi";
+      var catatan = payload.catatan || "";
       var updated = false;
+
+      // Pastikan header kolom ke-20 tersedia untuk catatan
+      if (dataP[0] && dataP[0].length < 20) {
+        sheetP.getRange(1, 20).setValue("Catatan Verifikasi / Alasan Pengembalian");
+        sheetP.getRange(1, 20).setBackground("#047857");
+        sheetP.getRange(1, 20).setFontColor("#FFFFFF");
+        sheetP.getRange(1, 20).setFontWeight("bold");
+      }
 
       for (var r = 1; r < dataP.length; r++) {
         if (dataP[r][0] === targetId) {
           sheetP.getRange(r + 1, 19).setValue(newStatus); // Kolom 19: Status Verifikasi
+          if (catatan) {
+            sheetP.getRange(r + 1, 20).setValue(catatan); // Kolom 20: Catatan Verifikasi / Alasan Pengembalian
+          }
           updated = true;
           break;
         }
