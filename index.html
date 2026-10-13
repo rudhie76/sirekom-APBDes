@@ -225,36 +225,11 @@
             <input 
               type="text" 
               id="inputLoginUsername" 
-              list="listUsernames" 
-              placeholder="Contoh: admin_kecamatan atau desa_apiapi" 
+              placeholder="Masukkan username akun Anda" 
               autocomplete="username" 
               required
               class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
             />
-            <datalist id="listUsernames">
-              <option value="admin_kecamatan">Kecamatan Waru (Tim PMD)</option>
-              <option value="camat_waru">Camat Waru</option>
-              <option value="desa_apiapi">Desa Api-Api</option>
-              <option value="desa_sesulu">Desa Sesulu</option>
-              <option value="desa_bangunmulya">Desa Bangun Mulya</option>
-            </datalist>
-          </div>
-
-          <!-- Quick Selector Chips / Pintasan Akun -->
-          <div class="mt-2 flex flex-wrap items-center gap-1.5">
-            <span class="text-[10px] text-slate-500 font-medium">Pilih Cepat:</span>
-            <button type="button" onclick="quickFillUser('admin_kecamatan', 'pmd2026')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-950/70 hover:bg-blue-800/60 text-blue-300 border border-blue-800/40 transition cursor-pointer">
-              🏛️ Kecamatan
-            </button>
-            <button type="button" onclick="quickFillUser('desa_apiapi', 'desa2026')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-950/70 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-800/40 transition cursor-pointer">
-              🏡 Api-Api
-            </button>
-            <button type="button" onclick="quickFillUser('desa_sesulu', 'desa2026')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-950/70 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-800/40 transition cursor-pointer">
-              🏡 Sesulu
-            </button>
-            <button type="button" onclick="quickFillUser('desa_bangunmulya', 'desa2026')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-950/70 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-800/40 transition cursor-pointer">
-              🏡 Bangun Mulya
-            </button>
           </div>
         </div>
 
@@ -1673,6 +1648,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261013_unified_login_eye"></script>
+  <script src="app.js?v=20261013_clean_login"></script>
 </body>
 </html>

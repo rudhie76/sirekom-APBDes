@@ -1747,7 +1747,7 @@ window.handleUnifiedLogin = function(e) {
   }
 
   if (!matchedUser) {
-    showLoginError(`Username "${usernameInput}" tidak terdaftar di database Data_User. Silakan periksa kembali atau gunakan tombol Pilih Cepat.`);
+    showLoginError(`Username "${usernameInput}" tidak terdaftar di database Data_User. Silakan periksa kembali.`);
     document.getElementById('inputLoginUsername')?.focus();
     return;
   }
