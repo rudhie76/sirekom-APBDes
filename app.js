@@ -1129,63 +1129,87 @@ function getKopSuratHtml(withWa = true) {
   `;
 }
 
-function getHeaderSuratHtml() {
+function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText) {
+  const nomor = nomorSurat || document.getElementById('inputNomorSurat')?.value || 'R-900/179/PMDK/Kec.Waru/2026';
+  const rawDate = document.getElementById('inputTanggalSurat')?.value || '2026-05-25';
+  const tanggal = tanggalSuratIndo || formatTanggalIndo(rawDate);
+  const hal = perihalText || document.getElementById('inputPerihalSurat')?.value || 'Rekomendasi Pencairan Alokasi Dana Desa';
+
   return `
     <div class="mt-4 text-[11pt] leading-snug font-sans">
       <div class="flex justify-between items-start">
-        <div class="w-[55%]">
+        <div class="w-[58%]">
           <table class="border-collapse">
             <tr>
               <td class="w-20 align-top py-0.5">Nomor</td>
               <td class="w-3 align-top py-0.5">:</td>
-              <td class="align-top py-0.5 font-medium">\${nomor_naskah}</td>
+              <td class="align-top py-0.5 font-medium">${escapeHtml(nomor)}</td>
             </tr>
             <tr>
               <td class="align-top py-0.5">Sifat</td>
               <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5">\${sifat}</td>
+              <td class="align-top py-0.5">Penting</td>
             </tr>
             <tr>
               <td class="align-top py-0.5">Lampiran</td>
               <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5 tracking-widest">.........................</td>
+              <td class="align-top py-0.5 tracking-widest">-</td>
             </tr>
             <tr>
               <td class="align-top py-0.5">Hal</td>
               <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5 font-medium text-justify leading-snug">\${hal}</td>
+              <td class="align-top py-0.5 font-medium text-justify leading-snug">${escapeHtml(hal)}</td>
             </tr>
           </table>
         </div>
-        <div class="w-[45%] text-right font-medium">
-          Waru, \${tanggal_naskah}
+        <div class="w-[42%] text-right font-medium">
+          Waru, ${escapeHtml(tanggal)}
         </div>
       </div>
 
       <div class="mt-4 leading-normal text-left">
-        <div>Yth . \${jabatan_tujuan}</div>
+        <div>Yth . Kepala Badan Keuangan dan Aset Daerah</div>
+        <div class="pl-6">Kabupaten Penajam Paser Utara</div>
         <div>Di -</div>
-        <div class="pl-6">Tempat</div>
+        <div class="pl-6 font-semibold">Tempat</div>
       </div>
     </div>
   `;
 }
 
 function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
+  const isTte = (metodeTte || document.getElementById('selectMetodeTte')?.value) === 'tte';
+  const nama = namaCamat || document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
+  const nip = nipCamat || document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
+
   return `
     <div class="mt-6 flex justify-end text-[11pt] font-sans">
-      <div class="w-64 text-left">
+      <div class="w-72 text-left">
         <div class="leading-normal">Camat Waru,</div>
-        <div class="my-5 pl-6 font-mono text-[10.5pt] text-neutral-800">
-          \${ttd_pengirim}
+        <div class="my-3 pl-2">
+          ${isTte ? `
+            <div class="flex items-center gap-2.5">
+              ${getQrCodeSvg()}
+              <div class="text-[9pt] leading-tight text-slate-700 font-mono">
+                Ditandatangani secara elektronik oleh:<br>
+                <strong>${escapeHtml(nama)}</strong><br>
+                <span class="text-[8pt] text-slate-500">Sertifikasi Balai Sertifikasi Elektronik (BSrE)</span>
+              </div>
+            </div>
+          ` : `
+            <div class="h-16 flex items-center justify-center text-xs text-slate-400 italic">
+              (Tanda Tangan Basah & Cap)
+            </div>
+          `}
         </div>
-        <div class="leading-normal font-medium">\${nama_pengirim}</div>
-        <div class="leading-normal">NIP. \${nip_pengirim}</div>
+        <div class="leading-normal font-bold underline">${escapeHtml(nama)}</div>
+        <div class="leading-normal font-medium">NIP. ${escapeHtml(nip)}</div>
       </div>
     </div>
     <div class="mt-4 text-[11pt] text-black leading-normal font-sans">
       <div class="font-bold mb-1">TEMBUSAN:</div>
-      <div>1. &nbsp;\${tembusan_jabatan};</div>
+      <div>1. Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. Penajam Paser Utara;</div>
+      <div>2. Arsip.</div>
     </div>
   `;
 }
@@ -1229,13 +1253,13 @@ function applyPaperSize() {
     if (size === 'folio') {
       sheet.style.width = '215mm';
       sheet.style.minHeight = '330mm';
-      sheet.style.maxHeight = '330mm';
-      sheet.style.padding = '1cm 1cm 2cm 1.5cm';
+      sheet.style.maxHeight = '';
+      sheet.style.padding = '1.2cm 1.5cm 1.5cm 1.8cm';
     } else {
       sheet.style.width = '210mm';
       sheet.style.minHeight = '297mm';
-      sheet.style.maxHeight = '297mm';
-      sheet.style.padding = '1cm 1cm 2cm 1.5cm';
+      sheet.style.maxHeight = '';
+      sheet.style.padding = '1.2cm 1.5cm 1.5cm 1.8cm';
     }
   });
 }
@@ -1256,7 +1280,20 @@ function resetZoom() {
   if (label) label.textContent = `100%`;
 }
 
-function triggerPrint() { window.print(); }
+function triggerPrint() {
+  const container = document.getElementById('previewDocumentContainer');
+  const oldTransform = container ? container.style.transform : '';
+  if (container) container.style.transform = 'none';
+
+  window.print();
+
+  setTimeout(() => {
+    if (container && oldTransform) {
+      container.style.transform = oldTransform;
+    }
+  }, 500);
+}
+window.triggerPrint = triggerPrint;
 
 // Database Save
 async function saveRecommendationData() {
