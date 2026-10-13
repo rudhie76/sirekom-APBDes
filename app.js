@@ -1285,11 +1285,21 @@ function triggerPrint() {
   const oldTransform = container ? container.style.transform : '';
   if (container) container.style.transform = 'none';
 
+  // Pastikan login portal benar-benar disembunyikan secara eksplisit saat print
+  const loginPortal = document.getElementById('loginPortalContainer');
+  const wasDisplay = loginPortal ? loginPortal.style.display : '';
+  if (loginPortal) {
+    loginPortal.style.setProperty('display', 'none', 'important');
+  }
+
   window.print();
 
   setTimeout(() => {
     if (container && oldTransform) {
       container.style.transform = oldTransform;
+    }
+    if (loginPortal) {
+      loginPortal.style.display = wasDisplay;
     }
   }, 500);
 }
