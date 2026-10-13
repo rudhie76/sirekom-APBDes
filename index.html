@@ -338,13 +338,16 @@
       </button>
 
       <!-- 2. Pengajuan Desa -->
-      <button id="navPengajuanDesa" onclick="navigateToMenu('pengajuan_desa')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left">
+      <button id="navPengajuanDesa" onclick="navigateToMenu('pengajuan_desa')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left relative">
         <div class="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-emerald-600/30 flex items-center justify-center text-sm transition flex-shrink-0">
           🏡
         </div>
         <div class="sidebar-text leading-tight truncate flex-1">
-          <div class="font-bold text-white text-xs">2. Pengajuan Desa</div>
-          <div class="text-[10px] text-slate-400 font-normal">Upload SP, Ceklist & Rekom</div>
+          <div class="font-bold text-white text-xs flex items-center justify-between gap-1">
+            <span>2. Pengajuan Desa</span>
+            <span id="badgeLockNavDesa" class="hidden text-[9.5px] text-amber-400 font-bold bg-amber-950/80 px-1.5 py-0.2 rounded border border-amber-700/50">🔒 Terkunci</span>
+          </div>
+          <div id="subtextNavDesa" class="text-[10px] text-slate-400 font-normal">Upload SP, Ceklist & Rekom</div>
         </div>
       </button>
 
@@ -354,8 +357,11 @@
           🏛️
         </div>
         <div class="sidebar-text leading-tight truncate flex-1">
-          <div class="font-bold text-white text-xs">3. Verifikasi & Rekom</div>
-          <div class="text-[10px] text-slate-400 font-normal">Kecamatan Waru</div>
+          <div class="font-bold text-white text-xs flex items-center justify-between gap-1">
+            <span>3. Verifikasi & Rekom</span>
+            <span id="badgeLockNavKecamatan" class="hidden text-[9.5px] text-amber-400 font-bold bg-amber-950/80 px-1.5 py-0.2 rounded border border-amber-700/50">🔒 Terkunci</span>
+          </div>
+          <div id="subtextNavKecamatan" class="text-[10px] text-slate-400 font-normal">Kecamatan Waru</div>
         </div>
         <span id="badgeSidebarPengajuanCount" class="bg-rose-500 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px] sidebar-badge hidden">0</span>
       </button>
@@ -600,33 +606,42 @@
       <!-- PINTASAN AKSI CEPAT (QUICK ACCESS) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        <div onclick="navigateToMenu('pengajuan_desa')" class="bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
+        <div id="cardQuickPengajuanDesa" onclick="navigateToMenu('pengajuan_desa')" class="bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3 relative">
           <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
             🏡
           </div>
-          <div>
-            <div class="text-xs font-bold">2. Pengajuan Desa</div>
-            <div class="text-[10.5px] text-emerald-100">Upload SP, Ceklist & Rekom</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold flex items-center justify-between gap-1">
+              <span>2. Pengajuan Desa</span>
+              <span id="badgeLockQuickDesa" class="hidden text-[9px] font-bold bg-black/50 text-amber-300 px-1.5 py-0.5 rounded border border-amber-400/40">🔒 Terkunci</span>
+            </div>
+            <div id="subtextQuickDesa" class="text-[10.5px] text-emerald-100">Upload SP, Ceklist & Rekom</div>
           </div>
         </div>
 
-        <div onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('verifikasi');" class="bg-gradient-to-br from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
+        <div id="cardQuickVerifikasi" onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('verifikasi');" class="bg-gradient-to-br from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3 relative">
           <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
             📥
           </div>
-          <div>
-            <div class="text-xs font-bold">Verifikasi Berkas Masuk</div>
-            <div class="text-[10.5px] text-indigo-100">Unduh & telaah berkas desa</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold flex items-center justify-between gap-1">
+              <span>Verifikasi Berkas Masuk</span>
+              <span id="badgeLockQuickVerifikasi" class="hidden text-[9px] font-bold bg-black/50 text-amber-300 px-1.5 py-0.5 rounded border border-amber-400/40">🔒 Terkunci</span>
+            </div>
+            <div id="subtextQuickVerifikasi" class="text-[10.5px] text-indigo-100">Unduh & telaah berkas desa</div>
           </div>
         </div>
 
-        <div onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('generator');" class="bg-gradient-to-br from-blue-700 to-slate-800 hover:from-blue-600 hover:to-slate-700 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
+        <div id="cardQuickGenerator" onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('generator');" class="bg-gradient-to-br from-blue-700 to-slate-800 hover:from-blue-600 hover:to-slate-700 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3 relative">
           <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
             📝
           </div>
-          <div>
-            <div class="text-xs font-bold">Buat Rekomendasi Camat</div>
-            <div class="text-[10.5px] text-blue-100">Generator & Cetak PDF Sri Kandi</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold flex items-center justify-between gap-1">
+              <span>Buat Rekomendasi Camat</span>
+              <span id="badgeLockQuickGenerator" class="hidden text-[9px] font-bold bg-black/50 text-amber-300 px-1.5 py-0.5 rounded border border-amber-400/40">🔒 Terkunci</span>
+            </div>
+            <div id="subtextQuickGenerator" class="text-[10.5px] text-blue-100">Generator & Cetak PDF Sri Kandi</div>
           </div>
         </div>
 
@@ -667,7 +682,7 @@
             </h3>
             <p class="text-[11px] text-slate-500">5 berkas pengajuan terakhir yang masuk dari operator desa</p>
           </div>
-          <button onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('verifikasi');" class="text-xs font-bold text-blue-600 hover:text-blue-800 transition">
+          <button id="btnDashLihatSemuaBerkas" onclick="handleDashboardViewAllClick()" class="text-xs font-bold text-blue-600 hover:text-blue-800 transition">
             Lihat Semua Berkas →
           </button>
         </div>
@@ -1129,8 +1144,9 @@
 
         <!-- Pilihan Desa Aktif -->
         <div class="bg-slate-800/80 backdrop-blur-xs p-3.5 rounded-xl border border-emerald-500/30 flex flex-col gap-1.5 min-w-[240px]">
-          <label class="text-[11px] font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
-            <span>📍 Pilih Desa Anda:</span>
+          <label class="text-[11px] font-bold uppercase tracking-wider text-emerald-300 flex items-center justify-between gap-1.5">
+            <span>📍 Desa Pemohon:</span>
+            <span id="badgeLockSelectDesa" class="hidden text-[9.5px] text-emerald-200 bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-600/40 font-bold">🔒 Terkunci Akun</span>
           </label>
           <select id="selectDesaOperator" onchange="onOperatorDesaChange()" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:ring-2 focus:ring-emerald-400">
             <!-- Diisi dinamis: Desa Api-Api, Desa Sesulu, Desa Bangun Mulya -->
@@ -1648,6 +1664,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261013_clean_login"></script>
+  <script src="app.js?v=20261013_role_access_lock"></script>
 </body>
 </html>

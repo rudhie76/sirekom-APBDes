@@ -1831,8 +1831,158 @@ window.logoutUser = function() {
   }
   document.getElementById('iconEyeOpen')?.classList.remove('hidden');
   document.getElementById('iconEyeClosed')?.classList.add('hidden');
+  applyRoleAccessControl();
 
   showToast('Anda telah keluar. Silakan masukkan username dan password untuk masuk.', 'info');
+};
+
+/**
+ * Terapkan Kontrol Hak Akses Berdasarkan Peran Pengguna (Role-Based Access Control)
+ * - Kecamatan Login: Menu 2 (Pengajuan Desa) TERKUNCI. Menu 1 (Dashboard) & Menu 3 (Verifikasi & Rekom) TERBUKA.
+ * - Desa Login: Menu 3 (Verifikasi & Rekom) TERKUNCI. Menu 1 (Dashboard) & Menu 2 (Pengajuan Desa) TERBUKA.
+ */
+window.applyRoleAccessControl = function() {
+  const user = AppState.currentUser;
+  const isKecamatan = user && user.role === 'kecamatan';
+  const isDesa = user && user.role === 'desa';
+
+  // 1. Sidebar Menu 2 (Pengajuan Desa)
+  const navDesa = document.getElementById('navPengajuanDesa');
+  const badgeLockNavDesa = document.getElementById('badgeLockNavDesa');
+  const subtextNavDesa = document.getElementById('subtextNavDesa');
+
+  if (navDesa) {
+    if (isKecamatan) {
+      navDesa.classList.add('opacity-40', 'cursor-not-allowed');
+      navDesa.classList.remove('hover:bg-slate-800');
+      navDesa.title = 'Akses Terkunci: Menu Pengajuan Berkas khusus untuk Akun Operator Desa';
+      if (badgeLockNavDesa) badgeLockNavDesa.classList.remove('hidden');
+      if (subtextNavDesa) subtextNavDesa.textContent = 'Khusus Operator Desa (Terkunci)';
+    } else {
+      navDesa.classList.remove('opacity-40', 'cursor-not-allowed');
+      navDesa.classList.add('hover:bg-slate-800');
+      navDesa.title = 'Form Pengajuan & Upload Berkas Desa';
+      if (badgeLockNavDesa) badgeLockNavDesa.classList.add('hidden');
+      if (subtextNavDesa) subtextNavDesa.textContent = 'Upload SP, Ceklist & Rekom';
+    }
+  }
+
+  // 2. Sidebar Menu 3 (Verifikasi & Rekom Kecamatan)
+  const navKec = document.getElementById('navVerifikasiRekom');
+  const badgeLockNavKec = document.getElementById('badgeLockNavKecamatan');
+  const subtextNavKec = document.getElementById('subtextNavKecamatan');
+
+  if (navKec) {
+    if (isDesa) {
+      navKec.classList.add('opacity-40', 'cursor-not-allowed');
+      navKec.classList.remove('hover:bg-slate-800');
+      navKec.title = 'Akses Terkunci: Menu Verifikasi & Rekomendasi Camat khusus untuk Pihak Kecamatan Waru';
+      if (badgeLockNavKec) badgeLockNavKec.classList.remove('hidden');
+      if (subtextNavKec) subtextNavKec.textContent = 'Khusus Kecamatan (Terkunci)';
+    } else {
+      navKec.classList.remove('opacity-40', 'cursor-not-allowed');
+      navKec.classList.add('hover:bg-slate-800');
+      navKec.title = 'Verifikasi Berkas & Terbitkan Rekomendasi Camat';
+      if (badgeLockNavKec) badgeLockNavKec.classList.add('hidden');
+      if (subtextNavKec) subtextNavKec.textContent = 'Kecamatan Waru';
+    }
+  }
+
+  // 3. Kartu Aksi Cepat Dashboard: Pengajuan Desa
+  const cardQuickDesa = document.getElementById('cardQuickPengajuanDesa');
+  const badgeLockQuickDesa = document.getElementById('badgeLockQuickDesa');
+  const subtextQuickDesa = document.getElementById('subtextQuickDesa');
+
+  if (cardQuickDesa) {
+    if (isKecamatan) {
+      cardQuickDesa.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+      cardQuickDesa.classList.remove('hover:shadow-md');
+      if (badgeLockQuickDesa) badgeLockQuickDesa.classList.remove('hidden');
+      if (subtextQuickDesa) subtextQuickDesa.textContent = 'Terkunci untuk Akun Kecamatan';
+    } else {
+      cardQuickDesa.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+      cardQuickDesa.classList.add('hover:shadow-md');
+      if (badgeLockQuickDesa) badgeLockQuickDesa.classList.add('hidden');
+      if (subtextQuickDesa) subtextQuickDesa.textContent = 'Upload SP, Ceklist & Rekom';
+    }
+  }
+
+  // 4. Kartu Aksi Cepat Dashboard: Verifikasi & Generator Rekom
+  const cardQuickVerif = document.getElementById('cardQuickVerifikasi');
+  const badgeLockQuickVerif = document.getElementById('badgeLockQuickVerifikasi');
+  const subtextQuickVerif = document.getElementById('subtextQuickVerifikasi');
+
+  const cardQuickGen = document.getElementById('cardQuickGenerator');
+  const badgeLockQuickGen = document.getElementById('badgeLockQuickGenerator');
+  const subtextQuickGen = document.getElementById('subtextQuickGenerator');
+
+  if (cardQuickVerif) {
+    if (isDesa) {
+      cardQuickVerif.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+      cardQuickVerif.classList.remove('hover:shadow-md');
+      if (badgeLockQuickVerif) badgeLockQuickVerif.classList.remove('hidden');
+      if (subtextQuickVerif) subtextQuickVerif.textContent = 'Terkunci untuk Akun Desa';
+    } else {
+      cardQuickVerif.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+      cardQuickVerif.classList.add('hover:shadow-md');
+      if (badgeLockQuickVerif) badgeLockQuickVerif.classList.add('hidden');
+      if (subtextQuickVerif) subtextQuickVerif.textContent = 'Unduh & telaah berkas desa';
+    }
+  }
+
+  if (cardQuickGen) {
+    if (isDesa) {
+      cardQuickGen.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+      cardQuickGen.classList.remove('hover:shadow-md');
+      if (badgeLockQuickGen) badgeLockQuickGen.classList.remove('hidden');
+      if (subtextQuickGen) subtextQuickGen.textContent = 'Kewenangan Camat Waru';
+    } else {
+      cardQuickGen.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+      cardQuickGen.classList.add('hover:shadow-md');
+      if (badgeLockQuickGen) badgeLockQuickGen.classList.add('hidden');
+      if (subtextQuickGen) subtextQuickGen.textContent = 'Generator & Cetak PDF Sri Kandi';
+    }
+  }
+
+  // 5. Tombol Lihat Semua Berkas di Dashboard
+  const btnDashLihat = document.getElementById('btnDashLihatSemuaBerkas');
+  if (btnDashLihat) {
+    if (isDesa) {
+      btnDashLihat.textContent = 'Ke Berkas Desa Anda →';
+    } else {
+      btnDashLihat.textContent = 'Lihat Semua Berkas →';
+    }
+  }
+
+  // 6. Kunci Dropdown Desa jika Akun Desa Login
+  const selectDesaOp = document.getElementById('selectDesaOperator');
+  const badgeLockSelectDesa = document.getElementById('badgeLockSelectDesa');
+  if (selectDesaOp && isDesa && user.desa) {
+    selectDesaOp.value = user.desa;
+    selectDesaOp.disabled = true;
+    selectDesaOp.classList.add('opacity-80', 'cursor-not-allowed');
+    if (badgeLockSelectDesa) {
+      badgeLockSelectDesa.classList.remove('hidden');
+      badgeLockSelectDesa.textContent = `🔒 Terkunci (${user.desa})`;
+    }
+  } else if (selectDesaOp) {
+    selectDesaOp.disabled = false;
+    selectDesaOp.classList.remove('opacity-80', 'cursor-not-allowed');
+    if (badgeLockSelectDesa) badgeLockSelectDesa.classList.add('hidden');
+  }
+};
+
+/**
+ * Handler Tombol "Lihat Semua Berkas" di Dashboard Berdasarkan Role
+ */
+window.handleDashboardViewAllClick = function() {
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa') {
+    navigateToMenu('pengajuan_desa');
+  } else {
+    navigateToMenu('verifikasi_rekom');
+    switchKecamatanSubTab('verifikasi');
+  }
 };
 
 /**
@@ -1864,9 +2014,12 @@ window.updateUserProfileUI = function() {
 
   if (topName) topName.textContent = user.name;
   if (topRole) {
-    topRole.textContent = isKecamatan ? 'Kecamatan Waru' : 'Operator Desa';
+    topRole.textContent = isKecamatan ? 'Kecamatan Waru' : `Desa ${user.desa || 'Waru'}`;
     topRole.className = isKecamatan ? 'text-[9.5px] text-blue-600 font-bold truncate' : 'text-[9.5px] text-emerald-600 font-bold truncate';
   }
+
+  // Terapkan proteksi & status menu terkunci
+  applyRoleAccessControl();
 };
 
 /**
@@ -1911,6 +2064,14 @@ window.checkAuthSession = function() {
     // Pengguna sudah login sebelumnya
     portal.classList.add('hidden');
     updateUserProfileUI();
+    applyRoleAccessControl();
+
+    // Pastikan menu aktif tidak berada di menu yang terkunci
+    if (AppState.currentUser.role === 'kecamatan' && AppState.activeMenu === 'pengajuan_desa') {
+      AppState.activeMenu = 'dashboard';
+    } else if (AppState.currentUser.role === 'desa' && AppState.activeMenu === 'verifikasi_rekom') {
+      AppState.activeMenu = 'pengajuan_desa';
+    }
   } else {
     // Pengguna belum login, tampilkan kartu login gate
     portal.classList.remove('hidden');
@@ -1943,8 +2104,16 @@ function initDesaOperatorFeature() {
     document.getElementById('appSidebar')?.classList.add('sidebar-collapsed');
   }
 
-  // Arahkan ke menu aktif yang tersimpan (default: Dashboard)
-  navigateToMenu(AppState.activeMenu || 'dashboard');
+  // Arahkan ke menu aktif yang diizinkan untuk peran saat ini
+  let targetMenu = AppState.activeMenu || 'dashboard';
+  if (AppState.currentUser) {
+    if (AppState.currentUser.role === 'kecamatan' && targetMenu === 'pengajuan_desa') {
+      targetMenu = 'dashboard';
+    } else if (AppState.currentUser.role === 'desa' && targetMenu === 'verifikasi_rekom') {
+      targetMenu = 'pengajuan_desa';
+    }
+  }
+  navigateToMenu(targetMenu);
 }
 
 /**
@@ -2005,10 +2174,24 @@ function initSeedPengajuanDesa() {
  * 3. 'verifikasi_rekom' (Verifikasi dan Rekom Kecamatan)
  */
 window.navigateToMenu = function(menuKey) {
+  const user = AppState.currentUser;
+  const isKecamatan = user && user.role === 'kecamatan';
+  const isDesa = user && user.role === 'desa';
+
+  // 1. Guard Hak Akses (Role-Based Lock)
+  if (menuKey === 'pengajuan_desa' && isKecamatan) {
+    showToast('⚠️ Akses Terkunci: Menu Pengajuan Desa hanya untuk Akun Operator Desa. Pihak Kecamatan bertugas memverifikasi pada Menu Verifikasi & Rekom.', 'warning');
+    return false;
+  }
+  if (menuKey === 'verifikasi_rekom' && isDesa) {
+    showToast('⚠️ Akses Terkunci: Menu Verifikasi & Rekomendasi Camat adalah kewenangan pihak Kecamatan Waru.', 'warning');
+    return false;
+  }
+
   AppState.activeMenu = menuKey;
   localStorage.setItem('sip_active_menu', menuKey);
 
-  // 1. Update style tombol navigasi sidebar
+  // 2. Update style tombol navigasi sidebar
   const navItems = {
     'dashboard': document.getElementById('navDashboard'),
     'pengajuan_desa': document.getElementById('navPengajuanDesa'),
@@ -2018,11 +2201,14 @@ window.navigateToMenu = function(menuKey) {
   Object.entries(navItems).forEach(([key, el]) => {
     if (!el) return;
     if (key === menuKey) {
-      el.className = 'nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-600 text-white font-bold transition shadow-sm text-xs group text-left';
+      el.className = 'nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-600 text-white font-bold transition shadow-sm text-xs group text-left relative';
     } else {
-      el.className = 'nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left';
+      el.className = 'nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left relative';
     }
   });
+
+  // Terapkan kembali class terkunci ke menu yang tidak diizinkan
+  applyRoleAccessControl();
 
   // 2. Hide & Show Views
   const views = {
@@ -2183,6 +2369,15 @@ window.openSettingsModal = function() {
  * Memilih Desa & Langsung Membuka Form Pengajuan
  */
 window.pilihDesaDanBukaPengajuan = function(namaDesa) {
+  const user = AppState.currentUser;
+  if (user && user.role === 'kecamatan') {
+    showToast('⚠️ Akses Terkunci: Menu Pengajuan Desa hanya untuk Akun Operator Desa. Silakan buka menu Verifikasi & Rekom untuk memeriksa berkas masuk.', 'warning');
+    return;
+  }
+  if (user && user.role === 'desa' && user.desa && user.desa !== namaDesa) {
+    showToast(`⚠️ Akses Terkunci: Anda login sebagai Operator Desa ${user.desa}, tidak dapat membuka pengajuan Desa ${namaDesa}.`, 'warning');
+    return;
+  }
   AppState.operatorDesaAktif = namaDesa;
   localStorage.setItem('sip_operator_desa', namaDesa);
   const select = document.getElementById('selectDesaOperator');
@@ -2190,6 +2385,24 @@ window.pilihDesaDanBukaPengajuan = function(namaDesa) {
   onOperatorDesaChange();
   navigateToMenu('pengajuan_desa');
   showToast(`Beralih ke form pengajuan Desa ${namaDesa}`, 'info');
+};
+
+/**
+ * Membuka Tab Verifikasi Kecamatan & Filter ke Desa Tertentu
+ */
+window.bukaVerifikasiDesaTertentu = function(namaDesa) {
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa') {
+    showToast('⚠️ Akses Terkunci: Menu Verifikasi & Rekomendasi Camat adalah kewenangan pihak Kecamatan Waru.', 'warning');
+    return;
+  }
+  navigateToMenu('verifikasi_rekom');
+  switchKecamatanSubTab('verifikasi');
+  const filterDesa = document.getElementById('filterDesaKecamatan');
+  if (filterDesa) {
+    filterDesa.value = namaDesa;
+    renderTabelPengajuanKecamatan();
+  }
 };
 
 /**
@@ -2253,8 +2466,40 @@ window.renderDashboardSummary = function() {
   // Render Grid 3 Desa di Dashboard (Api-Api, Sesulu, Bangun Mulya)
   const desaCardsContainer = document.getElementById('dashGridDesa');
   if (desaCardsContainer && AppState.masterDesa) {
+    const user = AppState.currentUser;
+    const isKecamatan = user && user.role === 'kecamatan';
+    const isDesa = user && user.role === 'desa';
+
     desaCardsContainer.innerHTML = AppState.masterDesa.map(desa => {
       const countDesa = list.filter(item => item.namaDesa === desa.nama).length;
+      
+      let actionBtnHtml = '';
+      if (isKecamatan) {
+        actionBtnHtml = `
+          <button onclick="bukaVerifikasiDesaTertentu('${desa.nama}')" class="mt-3 w-full py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10.5px] font-bold rounded-lg border border-blue-200 hover:border-blue-300 transition text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
+            <span>📥 Periksa Berkas Masuk (${countDesa})</span>
+          </button>
+        `;
+      } else if (isDesa && user.desa === desa.nama) {
+        actionBtnHtml = `
+          <button onclick="pilihDesaDanBukaPengajuan('${desa.nama}')" class="mt-3 w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10.5px] font-bold rounded-lg transition text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
+            <span>📝 Buka Pengajuan Desa Anda</span>
+          </button>
+        `;
+      } else if (isDesa) {
+        actionBtnHtml = `
+          <button disabled class="mt-3 w-full py-1.5 bg-slate-100 text-slate-400 text-[10.5px] font-semibold rounded-lg border border-slate-200 text-center flex items-center justify-center gap-1 cursor-not-allowed opacity-60" title="Terkunci: Anda login sebagai Desa ${user.desa}">
+            <span>🔒 Khusus Operator ${desa.nama}</span>
+          </button>
+        `;
+      } else {
+        actionBtnHtml = `
+          <button onclick="pilihDesaDanBukaPengajuan('${desa.nama}')" class="mt-3 w-full py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 text-[10.5px] font-bold rounded-lg border border-slate-300 hover:border-emerald-300 transition text-center flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
+            <span>🏡 Buka Pengajuan Desa</span>
+          </button>
+        `;
+      }
+
       return `
         <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 transition flex flex-col justify-between shadow-2xs">
           <div>
@@ -2270,9 +2515,7 @@ window.renderDashboardSummary = function() {
               <div class="font-mono text-[10px] text-slate-500">RKD: ${escapeHtml(desa.rekening)}</div>
             </div>
           </div>
-          <button onclick="pilihDesaDanBukaPengajuan('${desa.nama}')" class="mt-3 w-full py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 text-[10.5px] font-bold rounded-lg border border-slate-300 hover:border-emerald-300 transition text-center flex items-center justify-center gap-1 shadow-2xs">
-            <span>🏡 Buka Pengajuan Desa</span>
-          </button>
+          ${actionBtnHtml}
         </div>
       `;
     }).join('');
