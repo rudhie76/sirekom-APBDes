@@ -1824,8 +1824,6 @@ window.doLoginDesa = function() { handleUnifiedLogin(); };
  * Keluar Akun & Tampilkan Kembali Kartu Login
  */
 window.logoutUser = function() {
-  if (!confirm('Apakah Anda ingin keluar dan kembali ke Halaman Login?')) return;
-
   AppState.currentUser = null;
   localStorage.removeItem('sip_auth_user');
 
@@ -1833,6 +1831,7 @@ window.logoutUser = function() {
   if (portal) portal.classList.remove('hidden');
 
   hideLoginError();
+  const userInput = document.getElementById('inputLoginUsername');
   const pwdInput = document.getElementById('inputLoginPassword');
   if (pwdInput) {
     pwdInput.value = '';
@@ -1841,6 +1840,11 @@ window.logoutUser = function() {
   document.getElementById('iconEyeOpen')?.classList.remove('hidden');
   document.getElementById('iconEyeClosed')?.classList.add('hidden');
   applyRoleAccessControl();
+
+  // Fokuskan kembali ke input username login
+  setTimeout(() => {
+    if (userInput) userInput.focus();
+  }, 100);
 
   showToast('Anda telah keluar. Silakan masukkan username dan password untuk masuk.', 'info');
 };
