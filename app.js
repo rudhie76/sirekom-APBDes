@@ -183,15 +183,16 @@ const AppState = {
     { id: 'ar11', teks: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahun Anggaran sebelumnya;', checked: true },
     { id: 'ar12', teks: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Sebelumnya Tahun Anggaran 2026;', checked: true },
     { id: 'ar13', teks: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran sebelumnya yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;', checked: true },
-    { id: 'ar14', teks: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);', checked: true },
-    { id: 'ar15', teks: 'Gambar Rencana;', checked: true },
-    { id: 'ar16', teks: 'Kerangka Acuan Kerja;', checked: true },
-    { id: 'ar17', teks: 'Rencana Kerja;', checked: true },
-    { id: 'ar18', teks: 'Rencana Penggunaan Dana ADD Tahap I sebesar 25% Tahun Anggaran 2026;', checked: true },
-    { id: 'ar19', teks: 'Fotokopi Keputusan Kepala Desa tentang PPKD;', checked: true },
-    { id: 'ar20', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
-    { id: 'ar21', teks: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;', checked: true },
-    { id: 'ar22', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
+    { id: 'ar14', teks: 'Laporan Realisasi ADD sampai Tahap Sebelumnya Tahun Anggaran 2026 yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;', checked: true },
+    { id: 'ar15', teks: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);', checked: true },
+    { id: 'ar16', teks: 'Gambar Rencana;', checked: true },
+    { id: 'ar17', teks: 'Kerangka Acuan Kerja;', checked: true },
+    { id: 'ar18', teks: 'Rencana Kerja;', checked: true },
+    { id: 'ar19', teks: 'Rencana Penggunaan Dana ADD Tahap I sebesar 25% Tahun Anggaran 2026;', checked: true },
+    { id: 'ar20', teks: 'Fotokopi Keputusan Kepala Desa tentang PPKD;', checked: true },
+    { id: 'ar21', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
+    { id: 'ar22', teks: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;', checked: true },
+    { id: 'ar23', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
   ],
 
   berkasDbh: [
@@ -377,15 +378,16 @@ function getRawBerkasList(tipe = AppState.tipeRekomendasi) {
       ar11: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahun Anggaran sebelumnya;',
       ar12: `Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Sebelumnya Tahun Anggaran ${tahun};`,
       ar13: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran sebelumnya yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;',
-      ar14: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);',
-      ar15: 'Gambar Rencana;',
-      ar16: 'Kerangka Acuan Kerja;',
-      ar17: 'Rencana Kerja;',
-      ar18: `Rencana Penggunaan Dana ADD ${tahap} ${persenText}Tahun Anggaran ${tahun};`,
-      ar19: 'Fotokopi Keputusan Kepala Desa tentang PPKD;',
-      ar20: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;',
-      ar21: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;',
-      ar22: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).'
+      ar14: `Laporan Realisasi ADD sampai Tahap Sebelumnya Tahun Anggaran ${tahun} yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;`,
+      ar15: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);',
+      ar16: 'Gambar Rencana;',
+      ar17: 'Kerangka Acuan Kerja;',
+      ar18: 'Rencana Kerja;',
+      ar19: `Rencana Penggunaan Dana ADD ${tahap} ${persenText}Tahun Anggaran ${tahun};`,
+      ar20: 'Fotokopi Keputusan Kepala Desa tentang PPKD;',
+      ar21: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;',
+      ar22: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;',
+      ar23: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).'
     };
 
     AppState.berkasAddReguler.forEach(item => {
