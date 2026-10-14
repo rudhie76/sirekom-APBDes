@@ -174,18 +174,18 @@ const AppState = {
     { id: 'ar2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
     { id: 'ar3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
     { id: 'ar4', teks: 'Peraturan Desa Tentang Rencana Kerja Pembangunan Desa (RKP Desa) Tahun 2026;', checked: true },
-    { id: 'ar5', teks: 'Peraturan Desa tentang Pertanggungjawaban APBDes Tahun 2025;', checked: true },
+    { id: 'ar5', teks: 'Peraturan Desa tentang Pertanggungjawaban APBDes Tahun Anggaran sebelumnya;', checked: true },
     { id: 'ar6', teks: 'Peraturan Desa tentang APBDesa Tahun Anggaran 2026;', checked: true },
     { id: 'ar7', teks: 'Peraturan Kepala Desa tentang penjabaran APBDesa Tahun Anggaran 2026;', checked: true },
-    { id: 'ar8', teks: 'Laporan Penyelenggaraan Pemerintahan Desa Akhir Tahun Anggaran 2025;', checked: true },
-    { id: 'ar9', teks: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap Terakhir Tahun 2026 yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);', checked: true },
-    { id: 'ar10', teks: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Pertama Tahun Anggaran 2026;', checked: true },
-    { id: 'ar11', teks: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran 2025 yang terdiri atas: a. Laporan Perkembangan pelaksanaan kegiatan; b. Dokumentasi kegiatan;', checked: true },
+    { id: 'ar8', teks: 'Laporan Penyelenggaraan Pemerintahan Desa (LPPD) Akhir Tahun Anggaran sebelumnya;', checked: true },
+    { id: 'ar9', teks: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap Terakhir Tahun sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);', checked: true },
+    { id: 'ar10', teks: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Pertama Tahun Anggaran sebelumnya;', checked: true },
+    { id: 'ar11', teks: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran sebelumnya yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;', checked: true },
     { id: 'ar12', teks: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);', checked: true },
-    { id: 'ar13', teks: 'Gambar Rencana untuk Kegiatan Fisik;', checked: true },
-    { id: 'ar14', teks: 'Kerangka Acuan Kerja untuk Kegiatan Fisik;', checked: true },
+    { id: 'ar13', teks: 'Gambar Rencana;', checked: true },
+    { id: 'ar14', teks: 'Kerangka Acuan Kerja;', checked: true },
     { id: 'ar15', teks: 'Rencana Kerja;', checked: true },
-    { id: 'ar16', teks: 'Rencana Penggunaan Dana ADD Tahap II sebesar 25%;', checked: true },
+    { id: 'ar16', teks: 'Rencana Penggunaan Dana ADD Tahap I sebesar 25% Tahun Anggaran 2026;', checked: true },
     { id: 'ar17', teks: 'Fotokopi Keputusan Kepala Desa tentang PPKD;', checked: true },
     { id: 'ar18', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
     { id: 'ar19', teks: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;', checked: true },
@@ -353,9 +353,61 @@ function populateDesaSelect() {
 // HELPER FILTER & SINKRONISASI BERKAS PERSYARATAN (REAKTIF KE LIVE PREVIEW)
 // =========================================================================================
 function getRawBerkasList(tipe = AppState.tipeRekomendasi) {
-  if (tipe === 'add_reguler') return AppState.berkasAddReguler;
-  if (tipe === 'dbh') return AppState.berkasDbh;
-  if (tipe === 'dd') return AppState.berkasDd;
+  const tahun = document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026';
+  const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap I';
+  const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '25';
+  const persen = String(rawPersen).replace('%', '').trim();
+
+  if (tipe === 'add_reguler') {
+    const templateTexts = {
+      ar1: 'Permohonan Pencairan Dari Kepala Desa;',
+      ar2: 'Rekomendasi Pencairan Dari Camat;',
+      ar3: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;',
+      ar4: `Peraturan Desa Tentang Rencana Kerja Pembangunan Desa (RKP Desa) Tahun ${tahun};`,
+      ar5: 'Peraturan Desa tentang Pertanggungjawaban APBDes Tahun Anggaran sebelumnya;',
+      ar6: `Peraturan Desa tentang APBDesa Tahun Anggaran ${tahun};`,
+      ar7: `Peraturan Kepala Desa tentang penjabaran APBDesa Tahun Anggaran ${tahun};`,
+      ar8: 'Laporan Penyelenggaraan Pemerintahan Desa (LPPD) Akhir Tahun Anggaran sebelumnya;',
+      ar9: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap Terakhir Tahun sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);',
+      ar10: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Pertama Tahun Anggaran sebelumnya;',
+      ar11: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran sebelumnya yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;',
+      ar12: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);',
+      ar13: 'Gambar Rencana;',
+      ar14: 'Kerangka Acuan Kerja;',
+      ar15: 'Rencana Kerja;',
+      ar16: `Rencana Penggunaan Dana ADD ${tahap} sebesar ${persen}% Tahun Anggaran ${tahun};`,
+      ar17: 'Fotokopi Keputusan Kepala Desa tentang PPKD;',
+      ar18: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;',
+      ar19: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;',
+      ar20: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).'
+    };
+
+    AppState.berkasAddReguler.forEach(item => {
+      if (templateTexts[item.id]) {
+        item.teks = templateTexts[item.id];
+      }
+    });
+
+    return AppState.berkasAddReguler;
+  }
+
+  if (tipe === 'dbh') {
+    AppState.berkasDbh.forEach(item => {
+      if (item.id === 'd4') item.teks = `Ceklis Dokumen Pertanggungjawaban Penggunaan DBH-PR ${tahap} Tahun ${tahun} dari Kecamatan;`;
+      if (item.id === 'd5') item.teks = `Laporan Realisasi Penggunaan DBH-PR ${tahap} Tahun ${tahun};`;
+    });
+    return AppState.berkasDbh;
+  }
+
+  if (tipe === 'dd') {
+    AppState.berkasDd.forEach(item => {
+      if (item.id === 'dd4') item.teks = `Peraturan Desa tentang APBDesa Tahun Anggaran ${tahun};`;
+      if (item.id === 'dd5') item.teks = `Peraturan Kepala Desa tentang Penjabaran APBDesa Tahun Anggaran ${tahun};`;
+      if (item.id === 'dd6') item.teks = `Rencana Penggunaan Dana Desa ${tahap} sebesar ${persen}% Tahun Anggaran ${tahun};`;
+    });
+    return AppState.berkasDd;
+  }
+
   return AppState.berkasSiltap;
 }
 
@@ -436,7 +488,7 @@ function setupEventListeners() {
   // Watch inputs
   const watchInputs = [
     'selectNamaDesa', 'inputKepalaDesa', 'inputKaurKeuangan', 'inputJabatanKaur', 'inputNomorRekening',
-    'selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'inputTahunAnggaran', 'inputNominalAngka',
+    'selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'inputTahunAnggaran', 'inputTahunAnggaranReguler', 'inputNominalAngka',
     'inputNomorSurat', 'inputNomorPerdes', 'inputTahunPerdes', 'inputNomorPerkades', 'inputTahunPerkades',
     'inputNomorPerdesKewenangan', 'inputNomorPerdesRkp',
     'inputTanggalSurat', 'inputNamaCamat', 'inputNipCamat', 'selectMetodeTte'
@@ -447,13 +499,36 @@ function setupEventListeners() {
     if (el) {
       el.addEventListener('input', () => {
         if (id === 'inputNominalAngka') handleNominalInput();
-        if (['selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'selectNamaDesa', 'inputTahunAnggaran'].includes(id)) {
+        if (id === 'inputTahunAnggaran') {
+          const elReg = document.getElementById('inputTahunAnggaranReguler');
+          if (elReg && elReg.value !== el.value) elReg.value = el.value;
+        }
+        if (id === 'inputTahunAnggaranReguler') {
+          const elTahun = document.getElementById('inputTahunAnggaran');
+          if (elTahun && elTahun.value !== el.value) elTahun.value = el.value;
+        }
+        if (['selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'selectNamaDesa', 'inputTahunAnggaran', 'inputTahunAnggaranReguler'].includes(id)) {
           autoUpdatePerihal();
+          renderBerkasChecklist();
+          autoGenerateNomorSurat();
         }
         updateLivePreview();
       });
       el.addEventListener('change', () => {
         if (id === 'selectNamaDesa') triggerAutoFillDesa();
+        if (id === 'inputTahunAnggaran') {
+          const elReg = document.getElementById('inputTahunAnggaranReguler');
+          if (elReg && elReg.value !== el.value) elReg.value = el.value;
+        }
+        if (id === 'inputTahunAnggaranReguler') {
+          const elTahun = document.getElementById('inputTahunAnggaran');
+          if (elTahun && elTahun.value !== el.value) elTahun.value = el.value;
+        }
+        if (['selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'selectNamaDesa', 'inputTahunAnggaran', 'inputTahunAnggaranReguler'].includes(id)) {
+          autoUpdatePerihal();
+          renderBerkasChecklist();
+          autoGenerateNomorSurat();
+        }
         updateLivePreview();
       });
     }
@@ -572,7 +647,7 @@ function triggerAutoFillDesa() {
 
 function autoUpdatePerihal() {
   const desa = document.getElementById('selectNamaDesa')?.value || 'Api-Api';
-  const tahun = document.getElementById('inputTahunAnggaran')?.value || '2026';
+  const tahun = document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026';
   const inputPerihal = document.getElementById('inputPerihalSurat');
   if (!inputPerihal) return;
 
@@ -595,7 +670,7 @@ function autoUpdatePerihal() {
 }
 
 function autoGenerateNomorSurat() {
-  const tahun = document.getElementById('inputTahunAnggaran')?.value || '2026';
+  const tahun = document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026';
   const inputNomor = document.getElementById('inputNomorSurat');
   if (!inputNomor) return;
 
@@ -747,7 +822,7 @@ function renderLivePreviewAddReguler() {
   const nomorRekening = document.getElementById('inputNomorRekening')?.value || '1131400345';
   const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
   const persen = document.getElementById('inputPersentaseTahap')?.value || '25';
-  const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
+  const tahunAnggaran = document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026';
   const nomorSurat = document.getElementById('inputNomorSurat')?.value || `R-900/325/PMDK/Kec.Waru/${tahunAnggaran}`;
   const tanggalSuratIndo = formatTanggalIndo(document.getElementById('inputTanggalSurat')?.value || '2026-08-20');
   const nominalAngka = parseCurrencyInput(document.getElementById('inputNominalAngka')?.value || '366716750');
@@ -759,7 +834,9 @@ function renderLivePreviewAddReguler() {
   const perdesKewenangan = document.getElementById('inputNomorPerdesKewenangan')?.value || '2';
   const perdesRkp = document.getElementById('inputNomorPerdesRkp')?.value || '2';
   const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
+  const tahunPerdes = document.getElementById('inputTahunPerdes')?.value || '2025';
   const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
+  const tahunPerkades = document.getElementById('inputTahunPerkades')?.value || '2025';
 
   const perihalText = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} (${escapeHtml(persen)} %) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
 
@@ -804,9 +881,9 @@ function renderLivePreviewAddReguler() {
           <div class="flex-1">
             <ol start="12" class="list-decimal pl-5 space-y-1">
               <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
-              ${isBerkasChecked('ar4') ? `<li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdesRkp)} Tahun 2025 tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
-              ${isBerkasChecked('ar6') ? `<li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
-              ${isBerkasChecked('ar7') ? `<li class="pl-1">Peraturan Kepala Desa Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>` : ''}
+              ${isBerkasChecked('ar4') ? `<li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdesRkp)} Tahun ${escapeHtml(tahunPerdes)} tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
+              ${isBerkasChecked('ar6') ? `<li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdes)} Tahun ${escapeHtml(tahunPerdes)} tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
+              ${isBerkasChecked('ar7') ? `<li class="pl-1">Peraturan Kepala Desa Nomor ${escapeHtml(perkades)} Tahun ${escapeHtml(tahunPerkades)} tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>` : ''}
             </ol>
           </div>
         </div>
