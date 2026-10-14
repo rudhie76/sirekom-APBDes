@@ -1216,8 +1216,10 @@ function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte
         </div>
       </div>
 
-      <div class="mt-8 text-left leading-normal font-sans">
+      <div class="mt-6 text-left leading-normal font-sans">
         <div>Yth . \${jabatan_tujuan}</div>
+        <div>Di -</div>
+        <div class="pl-6 font-semibold underline">Tempat</div>
       </div>
     </div>
   `;
