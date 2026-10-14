@@ -1109,10 +1109,11 @@
           </div>
 
           <div>
-            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Metode Pengesahan</label>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Format Surat & Metode Pengesahan</label>
             <select id="selectMetodeTte" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white">
-              <option value="tte" selected>TTE Elektronik (QR Code Sertifikasi BSrE - BSSN)</option>
+              <option value="srikandi" selected>Format Baku SRIKANDI (Tag: ${nomor_naskah}, ${ttd_pengirim}, dll)</option>
               <option value="manual">Tanda Tangan Basah & Cap Stempel Dinas</option>
+              <option value="tte_lokal">Simulasi Pratinjau TTE (Nama Camat & QR Code Lokal)</option>
             </select>
           </div>
         </div>
@@ -1836,6 +1837,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261014_hide_login_print"></script>
+  <script src="app.js?v=20261014_format_baku_srikandi"></script>
 </body>
 </html>

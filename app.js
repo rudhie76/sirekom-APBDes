@@ -657,7 +657,7 @@ function renderLivePreviewSiltap() {
   const terbilangText = convertTerbilang(nominalAngka);
   const namaCamat = document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
   const nipCamat = document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
-  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'tte';
+  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'srikandi';
   const nomorPerdes = document.getElementById('inputNomorPerdes')?.value || '7';
   const tahunPerdes = document.getElementById('inputTahunPerdes')?.value || '2025';
   const nomorPerkades = document.getElementById('inputNomorPerkades')?.value || '3';
@@ -669,7 +669,7 @@ function renderLivePreviewSiltap() {
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
-      ${getHeaderSuratHtml()}
+      ${getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte)}
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
@@ -755,7 +755,7 @@ function renderLivePreviewAddReguler() {
   const terbilangText = convertTerbilang(nominalAngka);
   const namaCamat = document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
   const nipCamat = document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
-  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'tte';
+  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'srikandi';
   const perdesKewenangan = document.getElementById('inputNomorPerdesKewenangan')?.value || '2';
   const perdesRkp = document.getElementById('inputNomorPerdesRkp')?.value || '2';
   const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
@@ -772,7 +772,7 @@ function renderLivePreviewAddReguler() {
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
-      ${getHeaderSuratHtml()}
+      ${getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte)}
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
@@ -884,7 +884,7 @@ function renderLivePreviewDbh() {
   const terbilangText = convertTerbilang(nominalAngka);
   const namaCamat = document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
   const nipCamat = document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
-  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'tte';
+  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'srikandi';
   const perdesKewenangan = document.getElementById('inputNomorPerdesKewenangan')?.value || '2';
   const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
   const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
@@ -895,7 +895,7 @@ function renderLivePreviewDbh() {
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
-      ${getHeaderSuratHtml()}
+      ${getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte)}
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
@@ -981,7 +981,7 @@ function renderLivePreviewDd() {
   const terbilangText = convertTerbilang(nominalAngka);
   const namaCamat = document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
   const nipCamat = document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
-  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'tte';
+  const metodeTte = document.getElementById('selectMetodeTte')?.value || 'srikandi';
   const perdesKewenangan = document.getElementById('inputNomorPerdesKewenangan')?.value || '2';
   const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
   const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
@@ -1007,7 +1007,7 @@ function renderLivePreviewDd() {
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
       ${getKopSuratHtml(true)}
-      ${getHeaderSuratHtml()}
+      ${getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte)}
 
       <div class="mt-3 text-[11pt] text-justify leading-snug">
         <div class="flex items-start">
@@ -1129,65 +1129,133 @@ function getKopSuratHtml(withWa = true) {
   `;
 }
 
-function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText) {
-  const nomor = nomorSurat || document.getElementById('inputNomorSurat')?.value || 'R-900/179/PMDK/Kec.Waru/2026';
-  const rawDate = document.getElementById('inputTanggalSurat')?.value || '2026-05-25';
-  const tanggal = tanggalSuratIndo || formatTanggalIndo(rawDate);
-  const hal = perihalText || document.getElementById('inputPerihalSurat')?.value || 'Rekomendasi Pencairan Alokasi Dana Desa';
+function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte) {
+  const metode = metodeTte || document.getElementById('selectMetodeTte')?.value || 'srikandi';
 
+  if (metode === 'manual' || metode === 'tte_lokal') {
+    const nomor = nomorSurat || document.getElementById('inputNomorSurat')?.value || 'R-900/179/PMDK/Kec.Waru/2026';
+    const rawDate = document.getElementById('inputTanggalSurat')?.value || '2026-05-25';
+    const tanggal = tanggalSuratIndo || formatTanggalIndo(rawDate);
+    const hal = perihalText || document.getElementById('inputPerihalSurat')?.value || 'Rekomendasi Pencairan Alokasi Dana Desa';
+
+    return `
+      <div class="mt-4 text-[11pt] leading-snug font-sans text-black">
+        <div class="flex justify-between items-start">
+          <div class="w-[58%]">
+            <table class="border-collapse text-[11pt]">
+              <tr>
+                <td class="w-24 align-top py-0.5">Nomor</td>
+                <td class="w-3 align-top py-0.5">:</td>
+                <td class="align-top py-0.5 font-medium">${escapeHtml(nomor)}</td>
+              </tr>
+              <tr>
+                <td class="align-top py-0.5">Sifat</td>
+                <td class="align-top py-0.5">:</td>
+                <td class="align-top py-0.5">Penting</td>
+              </tr>
+              <tr>
+                <td class="align-top py-0.5">Lampiran</td>
+                <td class="align-top py-0.5">:</td>
+                <td class="align-top py-0.5 tracking-widest">-</td>
+              </tr>
+              <tr>
+                <td class="align-top py-0.5">Hal</td>
+                <td class="align-top py-0.5">:</td>
+                <td class="align-top py-0.5 font-medium text-justify leading-snug">${escapeHtml(hal)}</td>
+              </tr>
+            </table>
+          </div>
+          <div class="w-[42%] text-right font-medium">
+            Penajam, ${escapeHtml(tanggal)}
+          </div>
+        </div>
+
+        <div class="mt-6 leading-normal text-left">
+          <div>Yth . Kepala Badan Keuangan dan Aset Daerah</div>
+          <div class="pl-6">Kabupaten Penajam Paser Utara</div>
+          <div>Di -</div>
+          <div class="pl-6 font-semibold">Tempat</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // =========================================================================
+  // FORMAT BAKU SRIKANDI (SESUAI FOTO 1)
+  // Menampilkan tag naskah baku Srikandi agar terbaca saat di-upload di Srikandi
+  // =========================================================================
   return `
-    <div class="mt-4 text-[11pt] leading-snug font-sans">
+    <div class="mt-4 text-[11pt] leading-snug font-sans text-black">
       <div class="flex justify-between items-start">
         <div class="w-[58%]">
-          <table class="border-collapse">
+          <table class="border-collapse text-[11pt]">
             <tr>
-              <td class="w-20 align-top py-0.5">Nomor</td>
+              <td class="w-24 align-top py-0.5">Nomor</td>
               <td class="w-3 align-top py-0.5">:</td>
-              <td class="align-top py-0.5 font-medium">${escapeHtml(nomor)}</td>
+              <td class="align-top py-0.5 font-sans">\${nomor_naskah}</td>
             </tr>
             <tr>
               <td class="align-top py-0.5">Sifat</td>
               <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5">Penting</td>
+              <td class="align-top py-0.5 font-sans">\${sifat}</td>
             </tr>
             <tr>
               <td class="align-top py-0.5">Lampiran</td>
               <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5 tracking-widest">-</td>
+              <td class="align-top py-0.5 font-sans tracking-wider">....................</td>
             </tr>
             <tr>
               <td class="align-top py-0.5">Hal</td>
               <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5 font-medium text-justify leading-snug">${escapeHtml(hal)}</td>
+              <td class="align-top py-0.5 font-sans">\${hal}</td>
             </tr>
           </table>
         </div>
-        <div class="w-[42%] text-right font-medium">
-          Waru, ${escapeHtml(tanggal)}
+        <div class="w-[42%] text-right font-sans">
+          Penajam, \${tanggal_naskah}
         </div>
       </div>
 
-      <div class="mt-4 leading-normal text-left">
-        <div>Yth . Kepala Badan Keuangan dan Aset Daerah</div>
-        <div class="pl-6">Kabupaten Penajam Paser Utara</div>
-        <div>Di -</div>
-        <div class="pl-6 font-semibold">Tempat</div>
+      <div class="mt-8 text-left leading-normal font-sans">
+        <div>Yth . \${jabatan_tujuan}</div>
       </div>
     </div>
   `;
 }
 
 function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
-  const isTte = (metodeTte || document.getElementById('selectMetodeTte')?.value) === 'tte';
+  const metode = metodeTte || document.getElementById('selectMetodeTte')?.value || 'srikandi';
   const nama = namaCamat || document.getElementById('inputNamaCamat')?.value || AppState.camat.nama;
   const nip = nipCamat || document.getElementById('inputNipCamat')?.value || AppState.camat.nip;
 
-  return `
-    <div class="mt-6 flex justify-end text-[11pt] font-sans">
-      <div class="w-72 text-left">
-        <div class="leading-normal">Camat Waru,</div>
-        <div class="my-3 pl-2">
-          ${isTte ? `
+  if (metode === 'manual') {
+    return `
+      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black">
+        <div class="w-72 text-left">
+          <div class="leading-normal">Camat Waru,</div>
+          <div class="my-4 pl-2">
+            <div class="h-16 flex items-center justify-center text-xs text-slate-400 italic">
+              (Tanda Tangan Basah & Cap)
+            </div>
+          </div>
+          <div class="leading-normal font-bold underline">${escapeHtml(nama)}</div>
+          <div class="leading-normal font-medium">NIP. ${escapeHtml(nip)}</div>
+        </div>
+      </div>
+      <div class="mt-8 text-[11pt] text-black leading-normal font-sans">
+        <div class="font-bold mb-1">TEMBUSAN:</div>
+        <div>1. Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. Penajam Paser Utara;</div>
+        <div>2. Arsip.</div>
+      </div>
+    `;
+  }
+
+  if (metode === 'tte_lokal') {
+    return `
+      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black">
+        <div class="w-72 text-left">
+          <div class="leading-normal">Camat Waru,</div>
+          <div class="my-3 pl-2">
             <div class="flex items-center gap-2.5">
               ${getQrCodeSvg()}
               <div class="text-[9pt] leading-tight text-slate-700 font-mono">
@@ -1196,20 +1264,41 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
                 <span class="text-[8pt] text-slate-500">Sertifikasi Balai Sertifikasi Elektronik (BSrE)</span>
               </div>
             </div>
-          ` : `
-            <div class="h-16 flex items-center justify-center text-xs text-slate-400 italic">
-              (Tanda Tangan Basah & Cap)
-            </div>
-          `}
+          </div>
+          <div class="leading-normal font-bold underline">${escapeHtml(nama)}</div>
+          <div class="leading-normal font-medium">NIP. ${escapeHtml(nip)}</div>
         </div>
-        <div class="leading-normal font-bold underline">${escapeHtml(nama)}</div>
-        <div class="leading-normal font-medium">NIP. ${escapeHtml(nip)}</div>
+      </div>
+      <div class="mt-8 text-[11pt] text-black leading-normal font-sans">
+        <div class="font-bold mb-1">TEMBUSAN:</div>
+        <div>1. Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. Penajam Paser Utara;</div>
+        <div>2. Arsip.</div>
+      </div>
+    `;
+  }
+
+  // =========================================================================
+  // FORMAT BAKU SRIKANDI (SESUAI FOTO 2)
+  // Menampilkan Camat Waru,, ${ttd_pengirim}, ${nama_pengirim}, NIP. ${nip_pengirim}
+  // dan TEMBUSAN: (apabila ada) 1. ${tembusan_jabatan}.
+  // =========================================================================
+  return `
+    <div class="mt-8 flex justify-end text-[11pt] font-sans text-black">
+      <div class="w-72 text-left">
+        <div class="leading-normal">Camat Waru,</div>
+        <div class="my-6 py-2 text-center text-slate-800 font-sans tracking-wide">
+          \${ttd_pengirim}
+        </div>
+        <div class="leading-normal font-sans">\${nama_pengirim}</div>
+        <div class="leading-normal font-sans">NIP. \${nip_pengirim}</div>
       </div>
     </div>
-    <div class="mt-4 text-[11pt] text-black leading-normal font-sans">
-      <div class="font-bold mb-1">TEMBUSAN:</div>
-      <div>1. Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. Penajam Paser Utara;</div>
-      <div>2. Arsip.</div>
+    <div class="mt-8 text-[11pt] text-black leading-normal font-sans">
+      <div class="mb-1">TEMBUSAN: (apabila ada)</div>
+      <div class="flex items-start">
+        <span class="w-6 flex-shrink-0">1.</span>
+        <span>\${tembusan_jabatan}.</span>
+      </div>
     </div>
   `;
 }
