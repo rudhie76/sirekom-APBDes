@@ -358,6 +358,7 @@ function getRawBerkasList(tipe = AppState.tipeRekomendasi) {
   const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap I';
   const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '25';
   const persen = String(rawPersen).replace('%', '').trim();
+  const persenText = persen ? `sebesar ${persen}% ` : '';
 
   if (tipe === 'add_reguler') {
     const templateTexts = {
@@ -376,7 +377,7 @@ function getRawBerkasList(tipe = AppState.tipeRekomendasi) {
       ar13: 'Gambar Rencana;',
       ar14: 'Kerangka Acuan Kerja;',
       ar15: 'Rencana Kerja;',
-      ar16: `Rencana Penggunaan Dana ADD ${tahap} sebesar ${persen}% Tahun Anggaran ${tahun};`,
+      ar16: `Rencana Penggunaan Dana ADD ${tahap} ${persenText}Tahun Anggaran ${tahun};`,
       ar17: 'Fotokopi Keputusan Kepala Desa tentang PPKD;',
       ar18: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;',
       ar19: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;',
@@ -404,7 +405,7 @@ function getRawBerkasList(tipe = AppState.tipeRekomendasi) {
     AppState.berkasDd.forEach(item => {
       if (item.id === 'dd4') item.teks = `Peraturan Desa tentang APBDesa Tahun Anggaran ${tahun};`;
       if (item.id === 'dd5') item.teks = `Peraturan Kepala Desa tentang Penjabaran APBDesa Tahun Anggaran ${tahun};`;
-      if (item.id === 'dd6') item.teks = `Rencana Penggunaan Dana Desa ${tahap} sebesar ${persen}% Tahun Anggaran ${tahun};`;
+      if (item.id === 'dd6') item.teks = `Rencana Penggunaan Dana Desa ${tahap} ${persenText}Tahun Anggaran ${tahun};`;
     });
     return AppState.berkasDd;
   }
@@ -661,16 +662,22 @@ function autoUpdatePerihal() {
     inputPerihal.value = `Rekomendasi Pencairan ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${bulan} Desa ${desa} Tahun ${tahun}`;
   } else if (AppState.tipeRekomendasi === 'add_reguler') {
     const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
-    const persen = document.getElementById('inputPersentaseTahap')?.value || '25';
-    inputPerihal.value = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${tahap} (${persen} %) Tahun Anggaran ${tahun} Desa ${desa}`;
+    const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '25';
+    const persen = String(rawPersen).replace('%', '').trim();
+    const persenStr = persen ? `(${persen} %)` : '';
+    inputPerihal.value = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${tahap} ${persenStr} Tahun Anggaran ${tahun} Desa ${desa}`.replace(/\s+/g, ' ').trim();
   } else if (AppState.tipeRekomendasi === 'dbh') {
     const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
-    const persen = document.getElementById('inputPersentaseTahap')?.value || '50';
-    inputPerihal.value = `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${tahap} (${persen}%) Tahun Anggaran ${tahun} Desa ${desa}`;
+    const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '50';
+    const persen = String(rawPersen).replace('%', '').trim();
+    const persenStr = persen ? `(${persen}%)` : '';
+    inputPerihal.value = `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${tahap} ${persenStr} Tahun Anggaran ${tahun} Desa ${desa}`.replace(/\s+/g, ' ').trim();
   } else if (AppState.tipeRekomendasi === 'dd') {
     const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap 1';
-    const persen = document.getElementById('inputPersentaseTahap')?.value || '60';
-    inputPerihal.value = `Rekomendasi Pencairan Dana Desa (DD) ${tahap} ${persen} % Tahun Anggaran ${tahun} Desa ${desa}`;
+    const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '60';
+    const persen = String(rawPersen).replace('%', '').trim();
+    const persenStr = persen ? `${persen} %` : '';
+    inputPerihal.value = `Rekomendasi Pencairan Dana Desa (DD) ${tahap} ${persenStr} Tahun Anggaran ${tahun} Desa ${desa}`.replace(/\s+/g, ' ').trim();
   }
 }
 
@@ -827,7 +834,9 @@ function renderLivePreviewAddReguler() {
   const jabatanKaur = document.getElementById('inputJabatanKaur')?.value || `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${namaDesa}`;
   const nomorRekening = document.getElementById('inputNomorRekening')?.value || '1131400345';
   const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
-  const persen = document.getElementById('inputPersentaseTahap')?.value || '25';
+  const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '25';
+  const persen = String(rawPersen).replace('%', '').trim();
+  const persenStr = persen ? `(${escapeHtml(persen)} %)` : '';
   const tahunAnggaran = document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026';
   const nomorSurat = document.getElementById('inputNomorSurat')?.value || `R-900/325/PMDK/Kec.Waru/${tahunAnggaran}`;
   const tanggalSuratIndo = formatTanggalIndo(document.getElementById('inputTanggalSurat')?.value || '2026-08-20');
@@ -844,7 +853,7 @@ function renderLivePreviewAddReguler() {
   const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
   const tahunPerkades = document.getElementById('inputTahunPerkades')?.value || '2025';
 
-  const perihalText = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} (${escapeHtml(persen)} %) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
+  const perihalText = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`.replace(/\s+/g, ' ').trim();
 
   const activeBerkasAdd = getActiveBerkasList('add_reguler');
   const splitAddIdx = Math.min(10, activeBerkasAdd.length);
@@ -895,7 +904,7 @@ function renderLivePreviewAddReguler() {
         </div>
 
         <p class="indent-10 mt-3 leading-normal">
-          Memperhatikan dasar diatas dan setelah dilakukan verifikasi tentang Dokumen Persyaratan Rekomendasi Penyaluran Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} (${escapeHtml(persen)} %) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
+          Memperhatikan dasar diatas dan setelah dilakukan verifikasi tentang Dokumen Persyaratan Rekomendasi Penyaluran Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
         </p>
 
         <div class="my-2 pl-8">
@@ -907,11 +916,11 @@ function renderLivePreviewAddReguler() {
         </div>
 
         <p class="indent-10 leading-normal">
-          Untuk menerima (mengambil) Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} (${escapeHtml(persen)} %) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar. <strong>${nominalFormatted} (${terbilangText})</strong>.
+          Untuk menerima (mengambil) Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar. <strong>${nominalFormatted} (${terbilangText})</strong>.
         </p>
 
         <p class="indent-10 mt-2 leading-normal">
-          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Penyaluran Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} (${escapeHtml(persen)} %) Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
+          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Penyaluran Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
         </p>
 
         <div class="my-2 pl-4">
@@ -958,7 +967,9 @@ function renderLivePreviewDbh() {
   const jabatanKaur = document.getElementById('inputJabatanKaur')?.value || `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${namaDesa}`;
   const nomorRekening = document.getElementById('inputNomorRekening')?.value || '1131400345';
   const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
-  const persen = document.getElementById('inputPersentaseTahap')?.value || '50';
+  const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '50';
+  const persen = String(rawPersen).replace('%', '').trim();
+  const persenStr = persen ? `(${escapeHtml(persen)}%)` : '';
   const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
   const nomorSurat = document.getElementById('inputNomorSurat')?.value || `R-900/404/PMDK/Kec.Waru/${tahunAnggaran}`;
   const tanggalSuratIndo = formatTanggalIndo(document.getElementById('inputTanggalSurat')?.value || '2026-10-06');
@@ -972,7 +983,7 @@ function renderLivePreviewDbh() {
   const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
   const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
 
-  const perihalText = `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
+  const perihalText = `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`.replace(/\s+/g, ' ').trim();
 
   const docHtml = `
     <!-- HALAMAN 1 -->
@@ -1001,7 +1012,7 @@ function renderLivePreviewDbh() {
 
       <div class="mt-3 text-[11pt] text-justify leading-normal">
         <p class="indent-10">
-          Memperhatikan dasar diatas dan setelah dilakukan verifikasi tentang Dokumen Persyaratan Rekomendasi Penyaluran Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
+          Memperhatikan dasar diatas dan setelah dilakukan verifikasi tentang Dokumen Persyaratan Rekomendasi Penyaluran Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
         </p>
         <div class="my-2 pl-8">
           <table class="border-collapse text-[11pt]">
@@ -1017,11 +1028,11 @@ function renderLivePreviewDbh() {
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-normal">
         <p class="indent-10">
-          Untuk menerima (mengambil) Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
+          Untuk menerima (mengambil) Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
         </p>
 
         <p class="indent-10 mt-2">
-          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Penyaluran Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} (${escapeHtml(persen)}%) Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
+          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Penyaluran Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
         </p>
 
         <div class="my-2 pl-4">
@@ -1055,7 +1066,9 @@ function renderLivePreviewDd() {
   const jabatanKaur = document.getElementById('inputJabatanKaur')?.value || `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${namaDesa}`;
   const nomorRekening = document.getElementById('inputNomorRekening')?.value || '1131400345';
   const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap 1';
-  const persen = document.getElementById('inputPersentaseTahap')?.value || '60';
+  const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '60';
+  const persen = String(rawPersen).replace('%', '').trim();
+  const persenStr = persen ? `${escapeHtml(persen)} %` : '';
   const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
   const nomorSurat = document.getElementById('inputNomorSurat')?.value || `R-900/82/PMDK/Kec.Waru/${tahunAnggaran}`;
   const tanggalSuratIndo = formatTanggalIndo(document.getElementById('inputTanggalSurat')?.value || '2026-03-09');
@@ -1069,7 +1082,7 @@ function renderLivePreviewDd() {
   const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
   const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
 
-  const perihalText = document.getElementById('inputPerihalSurat')?.value || `Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${escapeHtml(persen)} % Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`;
+  const perihalText = document.getElementById('inputPerihalSurat')?.value || `Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`.replace(/\s+/g, ' ').trim();
 
   const berkasDdList = [
     { id: 'dd1', teks: 'Permohonan Pencairan Dari Kepala Desa;' },
@@ -1077,7 +1090,7 @@ function renderLivePreviewDd() {
     { id: 'dd3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;' },
     { id: 'dd4', teks: `Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang APBDesa Tahun Anggaran ${escapeHtml(tahunAnggaran)};` },
     { id: 'dd5', teks: `Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran APBDesa Tahun Anggaran ${escapeHtml(tahunAnggaran)};` },
-    { id: 'dd6', teks: `Rencana Penggunaan Dana Desa ${escapeHtml(tahap)} sebesar ${escapeHtml(persen)}%` },
+    { id: 'dd6', teks: `Rencana Penggunaan Dana Desa ${escapeHtml(tahap)} ${persen ? `sebesar ${escapeHtml(persen)}%` : ''}`.trim() },
     { id: 'dd7', teks: 'Fotocopy Keputusan Kepala Desa tentang PPKD;' },
     { id: 'dd8', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;' },
     { id: 'dd9', teks: 'Foto Copy Rekening Kas Desa;' },
@@ -1131,7 +1144,7 @@ function renderLivePreviewDd() {
         </div>
 
         <p class="indent-10 mt-3 leading-normal">
-          Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${escapeHtml(persen)} % Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
+          Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
         </p>
 
         <div class="my-2 pl-8">
@@ -1143,11 +1156,11 @@ function renderLivePreviewDd() {
         </div>
 
         <p class="indent-10 leading-normal">
-          Untuk menerima (mengambil) Dana Desa (DD) ${escapeHtml(tahap)} ${escapeHtml(persen)} % Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar . <strong>${nominalFormatted} (${terbilangText})</strong>
+          Untuk menerima (mengambil) Dana Desa (DD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar . <strong>${nominalFormatted} (${terbilangText})</strong>
         </p>
 
         <p class="indent-10 mt-2 leading-normal">
-          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${escapeHtml(persen)} % Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
+          Sebagai Bahan Pertimbangan, bersama ini kami lampirkan berkas-berkas Persyaratan Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} antara lain:
         </p>
 
         <div class="my-2 pl-4">
