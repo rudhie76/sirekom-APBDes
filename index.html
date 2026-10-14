@@ -137,6 +137,11 @@
       }
 
       /* Format Lembar Surat Resmi Pemerintah */
+      #previewDocumentContainer .surat-sheet,
+      #previewDocumentContainer.mode-flow .surat-sheet,
+      body.mode-flow-print .surat-sheet,
+      .mode-flow-print .surat-sheet,
+      .surat-sheet.no-page-break,
       .surat-sheet {
         display: block !important;
         box-sizing: border-box !important;
@@ -151,6 +156,11 @@
         background: #ffffff !important;
         color: #000000 !important;
         border: none !important;
+        border-top: none !important;
+        border-bottom: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        outline: none !important;
         box-shadow: none !important;
         font-family: Arial, Helvetica, sans-serif !important;
         font-size: 11pt !important;
@@ -170,6 +180,7 @@
       /* Mode Bebas Lembar Kosong / Mengalir Tanpa Page Break */
       body.mode-flow-print .surat-sheet,
       .mode-flow-print .surat-sheet,
+      #previewDocumentContainer.mode-flow .surat-sheet,
       .surat-sheet.no-page-break {
         page-break-after: auto !important;
         break-after: auto !important;
@@ -177,7 +188,14 @@
         break-before: auto !important;
         page-break-inside: auto !important;
         break-inside: auto !important;
-        margin-bottom: 1rem !important;
+        margin-bottom: 0 !important;
+        border: none !important;
+        border-top: none !important;
+        border-bottom: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        outline: none !important;
+        box-shadow: none !important;
       }
 
       .page-break {
@@ -193,16 +211,18 @@
       }
     }
 
-    /* Mode Tampilan Layar Mengalir (Screen) */
-    #previewDocumentContainer.mode-flow .surat-sheet {
-      margin-bottom: 0 !important;
-      border-bottom: 1px dashed #cbd5e1 !important;
-      box-shadow: none !important;
-      min-height: auto !important;
-    }
-    #previewDocumentContainer.mode-flow .surat-sheet:not(:first-child) {
-      border-top: none !important;
-      padding-top: 1cm !important;
+    /* Mode Tampilan Layar Mengalir (Screen Only - tidak akan pernah tercetak di kertas/PDF) */
+    @media screen {
+      #previewDocumentContainer.mode-flow .surat-sheet {
+        margin-bottom: 0 !important;
+        border-bottom: 1px dashed #cbd5e1 !important;
+        box-shadow: none !important;
+        min-height: auto !important;
+      }
+      #previewDocumentContainer.mode-flow .surat-sheet:not(:first-child) {
+        border-top: none !important;
+        padding-top: 1cm !important;
+      }
     }
 
     .custom-scrollbar::-webkit-scrollbar {
@@ -1922,6 +1942,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261014_kartu_dasar_rekomendasi_edit_ceklis"></script>
+  <script src="app.js?v=20261014_hilangkan_garis_putus_cetak"></script>
 </body>
 </html>

@@ -1863,18 +1863,22 @@ function triggerPrint() {
   // Terapkan mode pemisah halaman aktif
   applyPageBreakMode();
 
-  // Reset sementara inline min-height agar tidak memicu overflow kosong di media print
+  // Reset sementara inline min-height & border agar tidak memicu garis atau overflow kosong di media print
   const sheets = document.querySelectorAll('.surat-sheet');
   const savedStyles = [];
   sheets.forEach((sheet, idx) => {
     savedStyles[idx] = {
       minHeight: sheet.style.minHeight,
       height: sheet.style.height,
-      marginBottom: sheet.style.marginBottom
+      marginBottom: sheet.style.marginBottom,
+      border: sheet.style.border,
+      borderBottom: sheet.style.borderBottom
     };
     sheet.style.minHeight = '0';
     sheet.style.height = 'auto';
     sheet.style.marginBottom = '0';
+    sheet.style.border = 'none';
+    sheet.style.borderBottom = 'none';
   });
 
   window.print();
@@ -1892,6 +1896,8 @@ function triggerPrint() {
         sheet.style.minHeight = savedStyles[idx].minHeight;
         sheet.style.height = savedStyles[idx].height;
         sheet.style.marginBottom = savedStyles[idx].marginBottom;
+        sheet.style.border = savedStyles[idx].border;
+        sheet.style.borderBottom = savedStyles[idx].borderBottom;
       }
     });
   }, 1000);
