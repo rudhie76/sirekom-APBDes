@@ -2226,11 +2226,21 @@ function setViewMode(mode) {
     right.classList.add('w-full');
   }
 
-  ['btnViewSplit', 'btnViewForm', 'btnViewPreview'].forEach(id => {
-    document.getElementById(id)?.classList.remove('bg-slate-700', 'text-white');
+  const btnConfig = [
+    { id: 'btnViewSplit', mode: 'split' },
+    { id: 'btnViewForm', mode: 'form' },
+    { id: 'btnViewPreview', mode: 'preview' }
+  ];
+
+  btnConfig.forEach(item => {
+    const btn = document.getElementById(item.id);
+    if (!btn) return;
+    if (item.mode === mode) {
+      btn.className = 'px-2.5 py-1 rounded-md bg-white text-slate-900 font-bold shadow-2xs transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0';
+    } else {
+      btn.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0';
+    }
   });
-  const act = mode === 'split' ? 'btnViewSplit' : (mode === 'form' ? 'btnViewForm' : 'btnViewPreview');
-  document.getElementById(act)?.classList.add('bg-slate-700', 'text-white');
 }
 
 function showToast(message, type = 'info') {

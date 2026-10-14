@@ -256,6 +256,17 @@
     #appSidebar.sidebar-collapsed .sidebar-toggle-icon {
       transform: rotate(180deg);
     }
+
+    /* Split Controls - bersampingan horizontal (segmented control) */
+    #containerSplitControls {
+      display: inline-flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 2px !important;
+    }
+    #containerSplitControls.hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen flex overflow-hidden">
@@ -542,14 +553,14 @@
       <!-- Topbar Right Actions -->
       <div class="flex items-center gap-2">
         <!-- Split View Controls (muncul di tab generator rekomendasi) -->
-        <div id="containerSplitControls" class="hidden bg-slate-100 p-0.5 rounded-lg border border-slate-300 text-xs font-medium text-slate-700">
-          <button id="btnViewSplit" class="px-2.5 py-1 rounded-md bg-white text-slate-900 font-bold shadow-2xs transition flex items-center gap-1.5">
+        <div id="containerSplitControls" class="hidden inline-flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-300 text-xs font-medium text-slate-700 flex-shrink-0">
+          <button id="btnViewSplit" class="px-2.5 py-1 rounded-md bg-white text-slate-900 font-bold shadow-2xs transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
             <span>Split</span>
           </button>
-          <button id="btnViewForm" class="px-2.5 py-1 rounded-md hover:text-slate-900 transition flex items-center gap-1.5">
+          <button id="btnViewForm" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
             <span>Form</span>
           </button>
-          <button id="btnViewPreview" class="px-2.5 py-1 rounded-md hover:text-slate-900 transition flex items-center gap-1.5">
+          <button id="btnViewPreview" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
             <span>Preview</span>
           </button>
         </div>
@@ -1942,6 +1953,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261014_hilangkan_garis_putus_cetak"></script>
+  <script src="app.js?v=20261014_split_controls_horizontal"></script>
 </body>
 </html>
