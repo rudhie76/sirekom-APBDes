@@ -129,17 +129,25 @@
         border: none !important;
       }
 
+      #previewDocumentContainer {
+        font-size: 0 !important;
+      }
+      #previewDocumentContainer > * {
+        font-size: 11pt !important;
+      }
+
       /* Format Lembar Surat Resmi Pemerintah */
       .surat-sheet {
         display: block !important;
         box-sizing: border-box !important;
-        width: 215mm !important;
-        max-width: 100% !important;
-        min-height: 330mm !important;
+        width: 100% !important;
+        max-width: 215mm !important;
+        min-height: 0 !important;
         height: auto !important;
         max-height: none !important;
         margin: 0 auto !important;
-        padding: 1.2cm 1.5cm 1.5cm 1.8cm !important;
+        margin-bottom: 0 !important;
+        padding: 1cm 1.5cm 1.2cm 1.8cm !important;
         background: #ffffff !important;
         color: #000000 !important;
         border: none !important;
@@ -149,13 +157,27 @@
         line-height: 1.35 !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
-        page-break-after: always !important;
+        page-break-after: page !important;
         break-after: page !important;
       }
 
+      .surat-sheet:last-of-type,
       .surat-sheet:last-child {
         page-break-after: auto !important;
         break-after: auto !important;
+      }
+
+      /* Mode Bebas Lembar Kosong / Mengalir Tanpa Page Break */
+      body.mode-flow-print .surat-sheet,
+      .mode-flow-print .surat-sheet,
+      .surat-sheet.no-page-break {
+        page-break-after: auto !important;
+        break-after: auto !important;
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        margin-bottom: 1rem !important;
       }
 
       .page-break {
@@ -169,6 +191,18 @@
         size: auto;
         margin: 0mm;
       }
+    }
+
+    /* Mode Tampilan Layar Mengalir (Screen) */
+    #previewDocumentContainer.mode-flow .surat-sheet {
+      margin-bottom: 0 !important;
+      border-bottom: 1px dashed #cbd5e1 !important;
+      box-shadow: none !important;
+      min-height: auto !important;
+    }
+    #previewDocumentContainer.mode-flow .surat-sheet:not(:first-child) {
+      border-top: none !important;
+      padding-top: 1cm !important;
     }
 
     .custom-scrollbar::-webkit-scrollbar {
@@ -1143,6 +1177,14 @@
               <option value="a4">A4 (210 x 297 mm)</option>
             </select>
           </div>
+          <span class="text-slate-300">|</span>
+          <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span>Pemisah:</span>
+            <select id="selectPageBreakMode" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Pilih mode halaman untuk hasil cetak">
+              <option value="separated" selected>📄 Per Halaman (Baku Resmi)</option>
+              <option value="flow">📜 Tanpa Page Break (Mengalir)</option>
+            </select>
+          </div>
         </div>
 
         <div class="flex items-center gap-2">
@@ -1837,6 +1879,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261014_rkp_tahun_anggaran"></script>
+  <script src="app.js?v=20261014_fix_blank_page_and_flow"></script>
 </body>
 </html>

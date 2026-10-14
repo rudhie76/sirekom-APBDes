@@ -219,6 +219,7 @@ const AppState = {
 
   currentZoom: 100,
   paperSize: 'folio',
+  pageBreakMode: 'separated',
   viewMode: 'split'
 };
 
@@ -565,10 +566,14 @@ function setupEventListeners() {
   document.getElementById('btnZoomOut')?.addEventListener('click', () => changeZoom(-10));
   document.getElementById('btnZoomReset')?.addEventListener('click', () => resetZoom());
 
-  // Kertas
+  // Kertas & Mode Pemisah Halaman
   document.getElementById('selectPaperSize')?.addEventListener('change', (e) => {
     AppState.paperSize = e.target.value;
     applyPaperSize();
+  });
+  document.getElementById('selectPageBreakMode')?.addEventListener('change', (e) => {
+    AppState.pageBreakMode = e.target.value;
+    applyPageBreakMode();
   });
 
   // Modal Settings & Riwayat Drawer
@@ -712,6 +717,7 @@ function updateLivePreview() {
     renderLivePreviewDd();
   }
   applyPaperSize();
+  applyPageBreakMode();
 }
 
 /**
@@ -1430,7 +1436,29 @@ function applyPaperSize() {
       sheet.style.padding = '1.2cm 1.5cm 1.5cm 1.8cm';
     }
   });
+  applyPageBreakMode();
 }
+
+function applyPageBreakMode() {
+  const mode = AppState.pageBreakMode || 'separated';
+  const container = document.getElementById('previewDocumentContainer');
+  const sheets = document.querySelectorAll('.surat-sheet');
+  const selectMode = document.getElementById('selectPageBreakMode');
+  if (selectMode && selectMode.value !== mode) {
+    selectMode.value = mode;
+  }
+
+  if (mode === 'flow') {
+    document.body.classList.add('mode-flow-print');
+    if (container) container.classList.add('mode-flow');
+    sheets.forEach(s => s.classList.add('no-page-break'));
+  } else {
+    document.body.classList.remove('mode-flow-print');
+    if (container) container.classList.remove('mode-flow');
+    sheets.forEach(s => s.classList.remove('no-page-break'));
+  }
+}
+window.applyPageBreakMode = applyPageBreakMode;
 
 function changeZoom(delta) {
   AppState.currentZoom = Math.max(50, Math.min(150, AppState.currentZoom + delta));
@@ -1460,6 +1488,23 @@ function triggerPrint() {
     loginPortal.style.setProperty('display', 'none', 'important');
   }
 
+  // Terapkan mode pemisah halaman aktif
+  applyPageBreakMode();
+
+  // Reset sementara inline min-height agar tidak memicu overflow kosong di media print
+  const sheets = document.querySelectorAll('.surat-sheet');
+  const savedStyles = [];
+  sheets.forEach((sheet, idx) => {
+    savedStyles[idx] = {
+      minHeight: sheet.style.minHeight,
+      height: sheet.style.height,
+      marginBottom: sheet.style.marginBottom
+    };
+    sheet.style.minHeight = '0';
+    sheet.style.height = 'auto';
+    sheet.style.marginBottom = '0';
+  });
+
   window.print();
 
   setTimeout(() => {
@@ -1469,7 +1514,15 @@ function triggerPrint() {
     if (loginPortal) {
       loginPortal.style.display = wasDisplay;
     }
-  }, 500);
+    // Pulihkan style tampilan layar
+    sheets.forEach((sheet, idx) => {
+      if (savedStyles[idx]) {
+        sheet.style.minHeight = savedStyles[idx].minHeight;
+        sheet.style.height = savedStyles[idx].height;
+        sheet.style.marginBottom = savedStyles[idx].marginBottom;
+      }
+    });
+  }, 1000);
 }
 window.triggerPrint = triggerPrint;
 
