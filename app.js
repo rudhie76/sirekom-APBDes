@@ -9,6 +9,67 @@
  * =========================================================================================
  */
 
+// TEMPLATE DASAR HUKUM BAKU KECAMATAN WARU
+const DEFAULT_DASAR_TEMPLATES = {
+  add_reguler: [
+    { id: 'da1', teks: 'Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;', checked: true },
+    { id: 'da2', teks: 'Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;', checked: true },
+    { id: 'da3', teks: 'Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;', checked: true },
+    { id: 'da4', teks: 'Peraturan Menteri Keuangan Nomor 146 Tahun 2023 tentang Pengalokasian Dana Desa Setiap Desa, Penyaluran, Dan Penggunaan Dana Desa Tahun Anggaran 2024;', checked: true },
+    { id: 'da5', teks: 'Peraturan Menteri Desa Pembangunan Daerah Tertinggal dan Transmigrasi Nomor 7 Tahun 2023 tentang Prioritas Penggunaan Dana Desa (Berita Negara Republik Indonesia Tahun 2023);', checked: true },
+    { id: 'da6', teks: 'Peraturan Daerah Kabupaten Penajam Paser Utara Nomor 1 Tahun 2015 tentang Desa;', checked: true },
+    { id: 'da7', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021 tentang Perubahan Peraturan Bupati Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa;', checked: true },
+    { id: 'da8', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 1 Tahun 2024 tentang Tata Cara Pengalokasian dan Penyaluran Bagian dari Hasil Pajak dan Retribusi Daerah Kepada Desa;', checked: true },
+    { id: 'da9', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 13 Tahun 2023 tentang Perubahan Kedua Atas Peraturan Bupati Penajam Paser Utara Nomor 8 Tahun 2021 tentang Tata Cara Pengalokasian dan Pembagian Alokasi Dana Desa;', checked: true },
+    { id: 'da10', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 08 Tahun 2025 tentang Perubahan Peraturan Bupati Penajam Paser Utara Nomor 13 Tahun 2024 Tentang Besaran Penghasilan Tetap Kepala Desa dan Perangkat Desa serta Tunjangan Badan Permusyawaratan Desa;', checked: true },
+    { id: 'da11', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 14 Tahun 2024 tentang Pengangkatan dan Honorarium Staf Desa di Lingkungan Pemerintah Desa;', checked: true },
+    { id: 'da12', teks: 'Peraturan Desa Sesulu Nomor 2 Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;', checked: true },
+    { id: 'da13', teks: 'Peraturan Desa Nomor 2 Tahun 2025 tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran 2026;', checked: true },
+    { id: 'da14', teks: 'Peraturan Desa Nomor 7 Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran 2026;', checked: true },
+    { id: 'da15', teks: 'Peraturan Kepala Desa Nomor 4 Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran 2026.', checked: true }
+  ],
+  siltap: [
+    { id: 'ds1', teks: 'Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;', checked: true },
+    { id: 'ds2', teks: 'Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah beberapa kali terakhir dengan Peraturan Pemerintah Nomor 11 Tahun 2019;', checked: true },
+    { id: 'ds3', teks: 'Instruksi Menteri Dalam Negeri Nomor 28 Tahun 2022 tentang Pembayaran Penghasilan Tetap Kepala Desa dan Perangkat Desa;', checked: true },
+    { id: 'ds4', teks: 'Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;', checked: true },
+    { id: 'ds5', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa sebagaimana telah diubah dengan Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021;', checked: true },
+    { id: 'ds6', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 14 Tahun 2024 tentang Pengangkatan dan Honorarium Staf Desa di Lingkungan Pemerintah Desa;', checked: true },
+    { id: 'ds7', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 08 Tahun 2025 tentang Perubahan Atas Peraturan Bupati Penajam Paser Utara Nomor 13 Tahun 2024 tentang Besaran Penghasilan Tetap Kepala Desa dan Perangkat Desa, Serta Tunjangan Badan Permusyawaratan Desa;', checked: true },
+    { id: 'ds8', teks: 'Peraturan Desa Sesulu Nomor 7 Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa ( APBDes ) Tahun Anggaran 2026;', checked: true },
+    { id: 'ds9', teks: 'Peraturan Kepala Desa Sesulu Nomor 4 Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran 2026.', checked: true }
+  ],
+  dbh: [
+    { id: 'ddb1', teks: 'Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;', checked: true },
+    { id: 'ddb2', teks: 'Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;', checked: true },
+    { id: 'ddb3', teks: 'Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;', checked: true },
+    { id: 'ddb4', teks: 'Peraturan Daerah Kabupaten Penajam Paser Utara Nomor 1 Tahun 2015 tentang Desa;', checked: true },
+    { id: 'ddb5', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021 tentang Perubahan Peraturan Bupati Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa;', checked: true },
+    { id: 'ddb6', teks: 'Peraturan Bupati Penajam Paser Utara Nomor 1 Tahun 2024 tentang Tata Cara Pengalokasian dan Penyaluran Bagian dari Hasil Pajak dan Retribusi Daerah Kepada Desa;', checked: true },
+    { id: 'ddb7', teks: 'Peraturan Desa Sesulu Nomor 2 Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;', checked: true },
+    { id: 'ddb8', teks: 'Peraturan Desa Sesulu Nomor 7 Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran 2026;', checked: true },
+    { id: 'ddb9', teks: 'Peraturan Kepala Desa Sesulu Nomor 4 Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran 2026.', checked: true }
+  ],
+  dd: [
+    { id: 'ddd1', teks: 'Undang-Undang Nomor 7 Tahun 2022 tentang Pembentukan Kabupaten Penajam Paser Utara (Lembaran Negara Republik Indonesia Tahun 2022 Nomor 20, Tambahan Lembaran Negara Republik Indonesia Nomor 4182);', checked: true },
+    { id: 'ddd2', teks: 'Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;', checked: true },
+    { id: 'ddd3', teks: 'Peraturan Pemerintah Nomor 37 Tahun 2023 tentang Pengelolaan Tranfer ke Daerah (Lembaran Negara Republik Indonsia Tahun 2023 nomor 37);', checked: true },
+    { id: 'ddd4', teks: 'Peraturan Menteri Dalam Negeri Nomor 111 Tahun 2014 tentang Pedoman Teknis Peraturan Di Desa (Berita Negara Republik Indonesia Tahun 2014 Nomor 2091);', checked: true },
+    { id: 'ddd5', teks: 'Peraturan Menteri Dalam Negeri Nomor 114 Tahun 2014 tentang Pedoman Pembangunan Desa (Berita Negara Republik Indonesia Tahun 2014 Nomor 2094);', checked: true },
+    { id: 'ddd6', teks: 'Peraturan Menteri Dalam Negeri Nomor 44 Tahun 2016 tentang Kewenangan Desa (Berita Negara Republik Indonesia Tahun 2016 Nomor 1037);', checked: true },
+    { id: 'ddd7', teks: 'Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa', checked: true },
+    { id: 'ddd8', teks: 'Peraturan Menteri Desa, Pembangunan Daerah Tertinggal, dan Transmigrasi Republik Indonesia Nomor 16 Tahun 2019 tentang Musyawarah Desa (Berita Negara Republik Indonesia Tahun 2019 Nomor 1203);', checked: true },
+    { id: 'ddd9', teks: 'Peraturan Menteri Desa dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 2 Tahun 2024 tentang Petunjuk Operasional Atas Fokus Penggunaan Dana Desa Tahun 2025', checked: true },
+    { id: 'ddd10', teks: 'Peraturan Menteri Desa Dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 16 Tahun 2025 tentang Petunjuk Operasional Atas Fokus Penggunaan Dana Desa Tahun 2026. (Berita Negara Republik Indonesia Tahun 2025 Nomor 1151);', checked: true },
+    { id: 'ddd11', teks: 'Keputusan Menteri Desa dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 3 Tahun 2025 tentang Panduan Penggunaan Dana Desa untuk Ketahanan Pangan dalam mendukung Swasembada Pangan;', checked: true },
+    { id: 'ddd12', teks: 'Peraturan Menteri Keuangan Republik Indonesia Nomor 7 Tahun 2026 tentang Pengelolaan Dana Desa Tahun Anggaran 2026;', checked: true },
+    { id: 'ddd13', teks: 'Peraturan Bupati Nomor 16 Tahun 2021 Tentang Perubahan Atas Peraturan Bupati Nomor 7 Tahun 2019 Tentang Pengelolaan Keuangan Desa;', checked: true },
+    { id: 'ddd14', teks: 'Peraturan Desa Sesulu Nomor 2 Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;', checked: true },
+    { id: 'ddd15', teks: 'Peraturan Desa Sesulu Nomor 7 Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran 2026;', checked: true },
+    { id: 'ddd16', teks: 'Peraturan Kepala Desa Sesulu Nomor 4 Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran 2026.', checked: true }
+  ]
+};
+
 // STATE MANAGEMENT GLOBAL
 const AppState = {
   gasUrl: localStorage.getItem('sip_gas_url') || '',
@@ -220,6 +281,13 @@ const AppState = {
     { id: 'dd10', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
   ],
 
+  // Daftar Dasar Rekomendasi (Dasar Hukum)
+  dasarAddReguler: JSON.parse(JSON.stringify(DEFAULT_DASAR_TEMPLATES.add_reguler)),
+  dasarSiltap: JSON.parse(JSON.stringify(DEFAULT_DASAR_TEMPLATES.siltap)),
+  dasarDbh: JSON.parse(JSON.stringify(DEFAULT_DASAR_TEMPLATES.dbh)),
+  dasarDd: JSON.parse(JSON.stringify(DEFAULT_DASAR_TEMPLATES.dd)),
+  editingDasarId: null,
+
   currentZoom: 100,
   paperSize: 'folio',
   pageBreakMode: 'separated',
@@ -325,6 +393,7 @@ window.pilihTipeRekomendasi = function(tipe) {
 
   handleTipeChange();
   autoUpdatePerihal();
+  renderDasarChecklist();
   renderBerkasChecklist();
   autoGenerateNomorSurat();
   updateLivePreview();
@@ -477,6 +546,269 @@ function renderBerkasChecklist() {
 }
 
 // =========================================================================================
+// PENGELOLAAN DASAR REKOMENDASI (DASAR HUKUM) - EDIT & CEKLIS INTERAKTIF
+// =========================================================================================
+function getRawDasarList(tipe = AppState.tipeRekomendasi) {
+  const namaDesa = document.getElementById('selectNamaDesa')?.value || 'Sesulu';
+  const perdesKewenangan = document.getElementById('inputNomorPerdesKewenangan')?.value || '2';
+  const perdesRkp = document.getElementById('inputNomorPerdesRkp')?.value || '2';
+  const perdes = document.getElementById('inputNomorPerdes')?.value || '7';
+  const tahunPerdes = document.getElementById('inputTahunPerdes')?.value || '2025';
+  const perkades = document.getElementById('inputNomorPerkades')?.value || '4';
+  const tahunPerkades = document.getElementById('inputTahunPerkades')?.value || '2025';
+  const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
+
+  let list;
+  if (tipe === 'add_reguler') list = AppState.dasarAddReguler;
+  else if (tipe === 'siltap') list = AppState.dasarSiltap;
+  else if (tipe === 'dbh') list = AppState.dasarDbh;
+  else if (tipe === 'dd') list = AppState.dasarDd;
+  else list = AppState.dasarAddReguler;
+
+  if (!list) return [];
+
+  // Update variabel dinamis jika item belum pernah diedit manual oleh pengguna
+  list.forEach(item => {
+    if (item.customEdited) return;
+
+    if (tipe === 'add_reguler') {
+      if (item.id === 'da12') item.teks = `Peraturan Desa ${namaDesa} Nomor ${perdesKewenangan} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;`;
+      if (item.id === 'da13') item.teks = `Peraturan Desa Nomor ${perdesRkp} Tahun ${tahunPerdes} tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${tahunAnggaran};`;
+      if (item.id === 'da14') item.teks = `Peraturan Desa Nomor ${perdes} Tahun ${tahunPerdes} tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${tahunAnggaran};`;
+      if (item.id === 'da15') item.teks = `Peraturan Kepala Desa Nomor ${perkades} Tahun ${tahunPerkades} tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${tahunAnggaran}.`;
+    } else if (tipe === 'siltap') {
+      if (item.id === 'ds8') item.teks = `Peraturan Desa ${namaDesa} Nomor ${perdes} Tahun ${tahunPerdes} tentang Anggaran Pendapatan dan Belanja Desa ( APBDes ) Tahun Anggaran ${tahunAnggaran};`;
+      if (item.id === 'ds9') item.teks = `Peraturan Kepala Desa ${namaDesa} Nomor ${perkades} Tahun ${tahunPerkades} tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${tahunAnggaran}.`;
+    } else if (tipe === 'dbh') {
+      if (item.id === 'ddb7') item.teks = `Peraturan Desa ${namaDesa} Nomor ${perdesKewenangan} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;`;
+      if (item.id === 'ddb8') item.teks = `Peraturan Desa ${namaDesa} Nomor ${perdes} Tahun ${tahunPerdes} tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${tahunAnggaran};`;
+      if (item.id === 'ddb9') item.teks = `Peraturan Kepala Desa ${namaDesa} Nomor ${perkades} Tahun ${tahunPerkades} tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${tahunAnggaran}.`;
+    } else if (tipe === 'dd') {
+      if (item.id === 'ddd14') item.teks = `Peraturan Desa ${namaDesa} Nomor ${perdesKewenangan} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;`;
+      if (item.id === 'ddd15') item.teks = `Peraturan Desa ${namaDesa} Nomor ${perdes} Tahun ${tahunPerdes} tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${tahunAnggaran};`;
+      if (item.id === 'ddd16') item.teks = `Peraturan Kepala Desa ${namaDesa} Nomor ${perkades} Tahun ${tahunPerkades} tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${tahunAnggaran}.`;
+    }
+  });
+
+  return list;
+}
+
+function getActiveDasarList(tipe = AppState.tipeRekomendasi) {
+  const list = getRawDasarList(tipe);
+  return list.filter(item => item.checked !== false);
+}
+
+window.handleDasarCheckboxChange = function(id, isChecked) {
+  const allLists = [AppState.dasarSiltap, AppState.dasarAddReguler, AppState.dasarDbh, AppState.dasarDd];
+  for (const list of allLists) {
+    if (!list) continue;
+    const item = list.find(b => b.id === id);
+    if (item) {
+      item.checked = Boolean(isChecked);
+      break;
+    }
+  }
+  renderDasarChecklist();
+  updateLivePreview();
+};
+
+window.startEditDasar = function(id) {
+  AppState.editingDasarId = id;
+  renderDasarChecklist();
+  setTimeout(() => {
+    const el = document.getElementById(`dasar_input_${id}`);
+    if (el) {
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+  }, 50);
+};
+
+window.cancelEditDasar = function(id) {
+  AppState.editingDasarId = null;
+  renderDasarChecklist();
+};
+
+window.saveEditDasar = function(id) {
+  const el = document.getElementById(`dasar_input_${id}`);
+  if (!el) return;
+  const newText = el.value.trim();
+  if (!newText) {
+    showToast('Teks dasar rekomendasi tidak boleh kosong!', 'warning');
+    return;
+  }
+  const allLists = [AppState.dasarSiltap, AppState.dasarAddReguler, AppState.dasarDbh, AppState.dasarDd];
+  for (const list of allLists) {
+    if (!list) continue;
+    const item = list.find(b => b.id === id);
+    if (item) {
+      item.teks = newText;
+      item.customEdited = true;
+      break;
+    }
+  }
+  AppState.editingDasarId = null;
+  renderDasarChecklist();
+  updateLivePreview();
+  showToast('Dasar rekomendasi berhasil diperbarui!', 'success');
+};
+
+window.deleteDasarItem = function(id) {
+  const allLists = [AppState.dasarSiltap, AppState.dasarAddReguler, AppState.dasarDbh, AppState.dasarDd];
+  for (const list of allLists) {
+    if (!list) continue;
+    const idx = list.findIndex(b => b.id === id);
+    if (idx !== -1) {
+      list.splice(idx, 1);
+      break;
+    }
+  }
+  if (AppState.editingDasarId === id) AppState.editingDasarId = null;
+  renderDasarChecklist();
+  updateLivePreview();
+  showToast('Dasar rekomendasi dihapus.', 'info');
+};
+
+window.toggleFormTambahDasar = function(forceState) {
+  const container = document.getElementById('formTambahDasarContainer');
+  if (!container) return;
+  const isHidden = container.classList.contains('hidden');
+  const shouldShow = (typeof forceState === 'boolean') ? forceState : isHidden;
+  if (shouldShow) {
+    container.classList.remove('hidden');
+    setTimeout(() => document.getElementById('inputTeksDasarBaru')?.focus(), 50);
+  } else {
+    container.classList.add('hidden');
+    const input = document.getElementById('inputTeksDasarBaru');
+    if (input) input.value = '';
+  }
+};
+
+window.submitTambahDasar = function() {
+  const input = document.getElementById('inputTeksDasarBaru');
+  if (!input) return;
+  let text = input.value.trim();
+  if (!text) {
+    showToast('Teks dasar rekomendasi tidak boleh kosong!', 'warning');
+    return;
+  }
+  if (!text.endsWith(';') && !text.endsWith('.')) {
+    text += ';';
+  }
+  const tipe = AppState.tipeRekomendasi;
+  let list;
+  if (tipe === 'add_reguler') list = AppState.dasarAddReguler;
+  else if (tipe === 'siltap') list = AppState.dasarSiltap;
+  else if (tipe === 'dbh') list = AppState.dasarDbh;
+  else if (tipe === 'dd') list = AppState.dasarDd;
+  else list = AppState.dasarAddReguler;
+
+  list.push({
+    id: 'custom_d_' + Date.now(),
+    teks: text,
+    checked: true,
+    customEdited: true
+  });
+
+  input.value = '';
+  toggleFormTambahDasar(false);
+  renderDasarChecklist();
+  updateLivePreview();
+  showToast('Dasar rekomendasi baru berhasil ditambahkan!', 'success');
+};
+
+window.resetDasarToDefault = function() {
+  const tipe = AppState.tipeRekomendasi;
+  if (DEFAULT_DASAR_TEMPLATES[tipe]) {
+    const fresh = JSON.parse(JSON.stringify(DEFAULT_DASAR_TEMPLATES[tipe]));
+    if (tipe === 'add_reguler') AppState.dasarAddReguler = fresh;
+    else if (tipe === 'siltap') AppState.dasarSiltap = fresh;
+    else if (tipe === 'dbh') AppState.dasarDbh = fresh;
+    else if (tipe === 'dd') AppState.dasarDd = fresh;
+    AppState.editingDasarId = null;
+    renderDasarChecklist();
+    updateLivePreview();
+    showToast('Dasar rekomendasi dikembalikan ke susunan baku.', 'info');
+  }
+};
+
+function renderDasarChecklist() {
+  const container = document.getElementById('containerDasarChecklist');
+  if (!container) return;
+
+  const items = getRawDasarList();
+  container.innerHTML = '';
+
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p class="text-xs text-slate-400 italic py-2 text-center">Belum ada daftar dasar rekomendasi.</p>';
+    return;
+  }
+
+  items.forEach((item, index) => {
+    const isChecked = item.checked !== false;
+    const isEditing = AppState.editingDasarId === item.id;
+
+    const row = document.createElement('div');
+    row.id = `dasar_item_${item.id}`;
+    row.className = `p-2 rounded-lg border transition text-xs ${
+      isEditing 
+        ? 'bg-amber-50/90 border-amber-300 shadow-xs' 
+        : (isChecked ? 'bg-slate-50 hover:bg-amber-50/40 border-slate-200 text-slate-800' : 'bg-slate-100/70 border-slate-200 text-slate-400')
+    }`;
+
+    if (isEditing) {
+      row.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-900 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              Edit Dasar No. ${index + 1}
+            </span>
+            <span class="text-[10px] text-slate-500 italic">Simpan setelah selesai mengubah</span>
+          </div>
+          <textarea id="dasar_input_${item.id}" rows="3" 
+                    class="w-full bg-white border border-amber-300 rounded-lg p-2 text-xs text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 leading-relaxed font-sans shadow-inner">${escapeHtml(item.teks)}</textarea>
+          <div class="flex items-center justify-between pt-1">
+            <button type="button" onclick="deleteDasarItem('${item.id}')" class="px-2 py-1 text-[11px] text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded transition flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              Hapus
+            </button>
+            <div class="flex gap-1.5">
+              <button type="button" onclick="cancelEditDasar('${item.id}')" class="px-2.5 py-1 text-xs bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg font-medium transition">Batal</button>
+              <button type="button" onclick="saveEditDasar('${item.id}')" class="px-3 py-1 text-xs bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold transition flex items-center gap-1 shadow-xs">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      row.innerHTML = `
+        <div class="flex items-start gap-2.5">
+          <input type="checkbox" id="dasar_check_${item.id}" ${isChecked ? 'checked' : ''}
+                 onchange="handleDasarCheckboxChange('${item.id}', this.checked)"
+                 class="mt-0.5 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer" />
+          <div class="flex-1 cursor-pointer select-none" onclick="document.getElementById('dasar_check_${item.id}').click()">
+            <span class="font-bold text-slate-900 mr-1">${index + 1}.</span>
+            <span class="leading-relaxed ${isChecked ? '' : 'line-through text-slate-400 italic'}">${escapeHtml(item.teks)}</span>
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0 pt-0.5">
+            <button type="button" onclick="startEditDasar('${item.id}')" title="Edit dasar rekomendasi ini"
+                    class="px-2 py-0.5 text-[11px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded flex items-center gap-1 transition">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              Edit
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    container.appendChild(row);
+  });
+}
+
+// =========================================================================================
 // EVENT LISTENERS
 // =========================================================================================
 function setupEventListeners() {
@@ -487,6 +819,7 @@ function setupEventListeners() {
       AppState.tipeRekomendasi = e.target.value;
       handleTipeChange();
       autoUpdatePerihal();
+      renderDasarChecklist();
       renderBerkasChecklist();
       autoGenerateNomorSurat();
       updateLivePreview();
@@ -515,8 +848,9 @@ function setupEventListeners() {
           const elTahun = document.getElementById('inputTahunAnggaran');
           if (elTahun && elTahun.value !== el.value) elTahun.value = el.value;
         }
-        if (['selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'selectNamaDesa', 'inputTahunAnggaran', 'inputTahunAnggaranReguler'].includes(id)) {
+        if (['selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'selectNamaDesa', 'inputTahunAnggaran', 'inputTahunAnggaranReguler', 'inputNomorPerdes', 'inputTahunPerdes', 'inputNomorPerkades', 'inputTahunPerkades', 'inputNomorPerdesKewenangan', 'inputNomorPerdesRkp'].includes(id)) {
           autoUpdatePerihal();
+          renderDasarChecklist();
           renderBerkasChecklist();
           autoGenerateNomorSurat();
         }
@@ -532,8 +866,9 @@ function setupEventListeners() {
           const elTahun = document.getElementById('inputTahunAnggaran');
           if (elTahun && elTahun.value !== el.value) elTahun.value = el.value;
         }
-        if (['selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'selectNamaDesa', 'inputTahunAnggaran', 'inputTahunAnggaranReguler'].includes(id)) {
+        if (['selectBulanGaji', 'selectTahapReguler', 'inputPersentaseTahap', 'selectNamaDesa', 'inputTahunAnggaran', 'inputTahunAnggaranReguler', 'inputNomorPerdes', 'inputTahunPerdes', 'inputNomorPerkades', 'inputTahunPerkades', 'inputNomorPerdesKewenangan', 'inputNomorPerdesRkp'].includes(id)) {
           autoUpdatePerihal();
+          renderDasarChecklist();
           renderBerkasChecklist();
           autoGenerateNomorSurat();
         }
@@ -654,6 +989,7 @@ function triggerAutoFillDesa() {
   }
 
   autoUpdatePerihal();
+  renderDasarChecklist();
   updateLivePreview();
 }
 
@@ -759,6 +1095,8 @@ function renderLivePreviewSiltap() {
 
   const perihalText = `Rekomendasi Pencairan ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${escapeHtml(bulanGaji)} Desa ${escapeHtml(namaDesa)} Tahun ${escapeHtml(tahunAnggaran)}`;
 
+  const activeDasarSiltap = getActiveDasarList('siltap');
+
   const docHtml = `
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
@@ -770,15 +1108,12 @@ function renderLivePreviewSiltap() {
           <div class="w-20">Dasar</div><div class="w-3">:</div>
           <div class="flex-1">
             <ol class="list-decimal pl-4 space-y-1">
-              <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;</li>
-              <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah beberapa kali terakhir dengan Peraturan Pemerintah Nomor 11 Tahun 2019;</li>
-              <li class="pl-1">Instruksi Menteri Dalam Negeri Nomor 28 Tahun 2022 tentang Pembayaran Penghasilan Tetap Kepala Desa dan Perangkat Desa;</li>
-              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa sebagaimana telah diubah dengan Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 14 Tahun 2024 tentang Pengangkatan dan Honorarium Staf Desa di Lingkungan Pemerintah Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 08 Tahun 2025 tentang Perubahan Atas Peraturan Bupati Penajam Paser Utara Nomor 13 Tahun 2024 tentang Besaran Penghasilan Tetap Kepala Desa dan Perangkat Desa, Serta Tunjangan Badan Permusyawaratan Desa;</li>
-              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(nomorPerdes)} Tahun ${escapeHtml(tahunPerdes)} tentang Anggaran Pendapatan dan Belanja Desa ( APBDes ) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
-              <li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(nomorPerkades)} Tahun ${escapeHtml(tahunPerkades)} tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
+              ${activeDasarSiltap.map((item, idx) => {
+                let teks = item.teks;
+                if (idx === activeDasarSiltap.length - 1) teks = teks.trim().replace(/;$/, '.');
+                else teks = teks.trim().replace(/\.$/, ';');
+                return `<li class="pl-1">${escapeHtml(teks)}</li>`;
+              }).join('')}
             </ol>
           </div>
         </div>
@@ -861,6 +1196,11 @@ function renderLivePreviewAddReguler() {
 
   const perihalText = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`.replace(/\s+/g, ' ').trim();
 
+  const activeDasarAdd = getActiveDasarList('add_reguler');
+  const splitDasarIdx = Math.min(11, activeDasarAdd.length);
+  const dasarAddHal1 = activeDasarAdd.slice(0, splitDasarIdx);
+  const dasarAddHal2 = activeDasarAdd.slice(splitDasarIdx);
+
   const activeBerkasAdd = getActiveBerkasList('add_reguler');
   const splitAddIdx = Math.min(10, activeBerkasAdd.length);
   const berkasAddHal2 = activeBerkasAdd.slice(0, splitAddIdx);
@@ -877,17 +1217,15 @@ function renderLivePreviewAddReguler() {
           <div class="w-20 flex-shrink-0">Dasar</div><div class="w-3 flex-shrink-0">:</div>
           <div class="flex-1">
             <ol class="list-decimal pl-5 space-y-1">
-              <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;</li>
-              <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;</li>
-              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
-              <li class="pl-1">Peraturan Menteri Keuangan Nomor 146 Tahun 2023 tentang Pengalokasian Dana Desa Setiap Desa, Penyaluran, Dan Penggunaan Dana Desa Tahun Anggaran 2024;</li>
-              <li class="pl-1">Peraturan Menteri Desa Pembangunan Daerah Tertinggal dan Transmigrasi Nomor 7 Tahun 2023 tentang Prioritas Penggunaan Dana Desa (Berita Negara Republik Indonesia Tahun 2023);</li>
-              <li class="pl-1">Peraturan Daerah Kabupaten Penajam Paser Utara Nomor 1 Tahun 2015 tentang Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021 tentang Perubahan Peraturan Bupati Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 1 Tahun 2024 tentang Tata Cara Pengalokasian dan Penyaluran Bagian dari Hasil Pajak dan Retribusi Daerah Kepada Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 13 Tahun 2023 tentang Perubahan Kedua Atas Peraturan Bupati Penajam Paser Utara Nomor 8 Tahun 2021 tentang Tata Cara Pengalokasian dan Pembagian Alokasi Dana Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 08 Tahun 2025 tentang Perubahan Peraturan Bupati Penajam Paser Utara Nomor 13 Tahun 2024 Tentang Besaran Penghasilan Tetap Kepala Desa dan Perangkat Desa serta Tunjangan Badan Permusyawaratan Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 14 Tahun 2024 tentang Pengangkatan dan Honorarium Staf Desa di Lingkungan Pemerintah Desa;</li>
+              ${dasarAddHal1.map((item, idx) => {
+                let teks = item.teks;
+                if (activeDasarAdd.length <= splitDasarIdx && idx === dasarAddHal1.length - 1) {
+                  teks = teks.trim().replace(/;$/, '.');
+                } else {
+                  teks = teks.trim().replace(/\.$/, ';');
+                }
+                return `<li class="pl-1">${escapeHtml(teks)}</li>`;
+              }).join('')}
             </ol>
           </div>
         </div>
@@ -897,17 +1235,24 @@ function renderLivePreviewAddReguler() {
     <!-- HALAMAN 2 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-snug">
+        ${dasarAddHal2.length > 0 ? `
         <div class="flex items-start">
           <div class="w-20 flex-shrink-0"></div><div class="w-3 flex-shrink-0"></div>
           <div class="flex-1">
-            <ol start="12" class="list-decimal pl-5 space-y-1">
-              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
-              ${isBerkasChecked('ar4') ? `<li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdesRkp)} Tahun ${escapeHtml(tahunPerdes)} tentang Rencana Kerja Pemerintah (RKP) Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
-              ${isBerkasChecked('ar6') ? `<li class="pl-1">Peraturan Desa Nomor ${escapeHtml(perdes)} Tahun ${escapeHtml(tahunPerdes)} tentang Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
-              ${isBerkasChecked('ar7') ? `<li class="pl-1">Peraturan Kepala Desa Nomor ${escapeHtml(perkades)} Tahun ${escapeHtml(tahunPerkades)} tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>` : ''}
+            <ol start="${splitDasarIdx + 1}" class="list-decimal pl-5 space-y-1">
+              ${dasarAddHal2.map((item, idx) => {
+                let teks = item.teks;
+                if (idx === dasarAddHal2.length - 1) {
+                  teks = teks.trim().replace(/;$/, '.');
+                } else {
+                  teks = teks.trim().replace(/\.$/, ';');
+                }
+                return `<li class="pl-1">${escapeHtml(teks)}</li>`;
+              }).join('')}
             </ol>
           </div>
         </div>
+        ` : ''}
 
         <p class="indent-10 mt-3 leading-normal">
           Memperhatikan dasar diatas dan setelah dilakukan verifikasi tentang Dokumen Persyaratan Rekomendasi Penyaluran Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
@@ -991,6 +1336,8 @@ function renderLivePreviewDbh() {
 
   const perihalText = `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`.replace(/\s+/g, ' ').trim();
 
+  const activeDasarDbh = getActiveDasarList('dbh');
+
   const docHtml = `
     <!-- HALAMAN 1 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
@@ -1002,15 +1349,12 @@ function renderLivePreviewDbh() {
           <div class="w-20">Dasar</div><div class="w-3">:</div>
           <div class="flex-1">
             <ol class="list-decimal pl-4 space-y-1">
-              <li class="pl-1">Undang-undang Nomor 3 Tahun 2024 tentang Perubahan Kedua Atas Undang-undang Nomor 6 Tahun 2014 Tentang Desa;</li>
-              <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;</li>
-              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa;</li>
-              <li class="pl-1">Peraturan Daerah Kabupaten Penajam Paser Utara Nomor 1 Tahun 2015 tentang Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 16 Tahun 2021 tentang Perubahan Peraturan Bupati Nomor 7 Tahun 2019 tentang Pengelolaan Keuangan Desa;</li>
-              <li class="pl-1">Peraturan Bupati Penajam Paser Utara Nomor 1 Tahun 2024 tentang Tata Cara Pengalokasian dan Penyaluran Bagian dari Hasil Pajak dan Retribusi Daerah Kepada Desa;</li>
-              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
-              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>
-              <li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>
+              ${activeDasarDbh.map((item, idx) => {
+                let teks = item.teks;
+                if (idx === activeDasarDbh.length - 1) teks = teks.trim().replace(/;$/, '.');
+                else teks = teks.trim().replace(/\.$/, ';');
+                return `<li class="pl-1">${escapeHtml(teks)}</li>`;
+              }).join('')}
             </ol>
           </div>
         </div>
@@ -1090,6 +1434,11 @@ function renderLivePreviewDd() {
 
   const perihalText = document.getElementById('inputPerihalSurat')?.value || `Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`.replace(/\s+/g, ' ').trim();
 
+  const activeDasarDd = getActiveDasarList('dd');
+  const splitDasarDdIdx = Math.min(10, activeDasarDd.length);
+  const dasarDdHal1 = activeDasarDd.slice(0, splitDasarDdIdx);
+  const dasarDdHal2 = activeDasarDd.slice(splitDasarDdIdx);
+
   const berkasDdList = [
     { id: 'dd1', teks: 'Permohonan Pencairan Dari Kepala Desa;' },
     { id: 'dd2', teks: 'Rekomendasi Pencairan Dari Camat;' },
@@ -1116,16 +1465,15 @@ function renderLivePreviewDd() {
           <div class="w-20 flex-shrink-0">Dasar</div><div class="w-3 flex-shrink-0">:</div>
           <div class="flex-1">
             <ol class="list-decimal pl-5 space-y-1">
-              <li class="pl-1">Undang-Undang Nomor 7 Tahun 2022 tentang Pembentukan Kabupaten Penajam Paser Utara (Lembaran Negara Republik Indonesia Tahun 2022 Nomor 20, Tambahan Lembaran Negara Republik Indonesia Nomor 4182);</li>
-              <li class="pl-1">Peraturan Pemerintah Nomor 43 Tahun 2014 tentang Peraturan Pelaksanaan Undang-Undang Nomor 6 Tahun 2014 tentang Desa sebagaimana telah diubah dengan Peraturan Pemerintah Nomor 47 Tahun 2015;</li>
-              <li class="pl-1">Peraturan Pemerintah Nomor 37 Tahun 2023 tentang Pengelolaan Tranfer ke Daerah (Lembaran Negara Republik Indonsia Tahun 2023 nomor 37);</li>
-              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 111 Tahun 2014 tentang Pedoman Teknis Peraturan Di Desa (Berita Negara Republik Indonesia Tahun 2014 Nomor 2091);</li>
-              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 114 Tahun 2014 tentang Pedoman Pembangunan Desa (Berita Negara Republik Indonesia Tahun 2014 Nomor 2094);</li>
-              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 44 Tahun 2016 tentang Kewenangan Desa (Berita Negara Republik Indonesia Tahun 2016 Nomor 1037);</li>
-              <li class="pl-1">Peraturan Menteri Dalam Negeri Nomor 20 Tahun 2018 tentang Pengelolaan Keuangan Desa</li>
-              <li class="pl-1">Peraturan Menteri Desa, Pembangunan Daerah Tertinggal, dan Transmigrasi Republik Indonesia Nomor 16 Tahun 2019 tentang Musyawarah Desa (Berita Negara Republik Indonesia Tahun 2019 Nomor 1203);</li>
-              <li class="pl-1">Peraturan Menteri Desa dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 2 Tahun 2024 tentang Petunjuk Operasional Atas Fokus Penggunaan Dana Desa Tahun 2025</li>
-              <li class="pl-1">Peraturan Menteri Desa Dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 16 Tahun 2025 tentang Petunjuk Operasional Atas Fokus Penggunaan Dana Desa Tahun 2026. (Berita Negara Republik Indonesia Tahun 2025 Nomor 1151);</li>
+              ${dasarDdHal1.map((item, idx) => {
+                let teks = item.teks;
+                if (activeDasarDd.length <= splitDasarDdIdx && idx === dasarDdHal1.length - 1) {
+                  teks = teks.trim().replace(/;$/, '.');
+                } else {
+                  teks = teks.trim().replace(/\.$/, ';');
+                }
+                return `<li class="pl-1">${escapeHtml(teks)}</li>`;
+              }).join('')}
             </ol>
           </div>
         </div>
@@ -1135,19 +1483,24 @@ function renderLivePreviewDd() {
     <!-- HALAMAN 2 -->
     <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-snug">
+        ${dasarDdHal2.length > 0 ? `
         <div class="flex items-start">
           <div class="w-20 flex-shrink-0"></div><div class="w-3 flex-shrink-0"></div>
           <div class="flex-1">
-            <ol start="11" class="list-decimal pl-5 space-y-1">
-              <li class="pl-1">Keputusan Menteri Desa dan Pembangunan Daerah Tertinggal Republik Indonesia Nomor 3 Tahun 2025 tentang Panduan Penggunaan Dana Desa untuk Ketahanan Pangan dalam mendukung Swasembada Pangan;</li>
-              <li class="pl-1">Peraturan Menteri Keuangan Republik Indonesia Nomor 7 Tahun 2026 tentang Pengelolaan Dana Desa Tahun Anggaran 2026;</li>
-              <li class="pl-1">Peraturan Bupati Nomor 16 Tahun 2021 Tentang Perubahan Atas Peraturan Bupati Nomor 7 Tahun 2019 Tentang Pengelolaan Keuangan Desa;</li>
-              <li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdesKewenangan)} Tahun 2019 tentang Daftar Kewenangan Desa Berdasarkan Hak Asal Usul dan Kewenangan Lokal Berskala Desa;</li>
-              ${isBerkasChecked('dd4') ? `<li class="pl-1">Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran ${escapeHtml(tahunAnggaran)};</li>` : ''}
-              ${isBerkasChecked('dd5') ? `<li class="pl-1">Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran Anggaran Pendapatan dan Belanja Desa Tahun Anggaran ${escapeHtml(tahunAnggaran)}.</li>` : ''}
+            <ol start="${splitDasarDdIdx + 1}" class="list-decimal pl-5 space-y-1">
+              ${dasarDdHal2.map((item, idx) => {
+                let teks = item.teks;
+                if (idx === dasarDdHal2.length - 1) {
+                  teks = teks.trim().replace(/;$/, '.');
+                } else {
+                  teks = teks.trim().replace(/\.$/, ';');
+                }
+                return `<li class="pl-1">${escapeHtml(teks)}</li>`;
+              }).join('')}
             </ol>
           </div>
         </div>
+        ` : ''}
 
         <p class="indent-10 mt-3 leading-normal">
           Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
