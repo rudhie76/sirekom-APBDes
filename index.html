@@ -583,7 +583,7 @@
           <span>🖨️ Cetak / PDF</span>
         </button>
 
-        <button onclick="openDriveFolderKecamatan()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5 shadow-2xs" title="Buka Folder Google Drive SIP-REKOM">
+        <button id="btnHeaderDriveKecamatan" onclick="openDriveFolderKecamatan()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5 shadow-2xs" title="Buka Folder Google Drive SIP-REKOM">
           <span>📂</span>
           <span class="hidden sm:inline text-[11px]">Drive</span>
         </button>
@@ -638,7 +638,7 @@
               <div id="dashStatusCloudText" class="text-xs font-bold text-white">Online & Terhubung</div>
             </div>
           </div>
-          <button onclick="openDriveFolderKecamatan()" class="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+          <button id="btnDashBukaDriveKecamatan" onclick="openDriveFolderKecamatan()" class="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
             <span>📂 Buka Folder Google Drive</span>
           </button>
         </div>
@@ -713,7 +713,7 @@
           </div>
           <div class="text-[10.5px] text-slate-500 pt-1 border-t border-slate-100 flex items-center justify-between font-medium">
             <span>Subfolder 3 Desa</span>
-            <a href="javascript:void(0)" onclick="openDriveFolderKecamatan()" class="text-blue-600 hover:underline font-bold">Buka Drive →</a>
+            <a id="linkKpiDriveKecamatan" href="javascript:void(0)" onclick="openDriveFolderKecamatan()" class="text-blue-600 hover:underline font-bold">Buka Drive →</a>
           </div>
         </div>
 
@@ -782,7 +782,7 @@
             </h3>
             <p class="text-[11px] text-slate-500">Status kelengkapan rekening kas desa (RKD) dan rekapitulasi permohonan</p>
           </div>
-          <div class="flex items-center gap-2">
+          <div id="containerAksiMonitoringDesa" class="flex items-center gap-2">
             <button onclick="sinkronPengajuanKeGoogleSheets()" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Sinkronkan data pengajuan & riwayat sesuai Google Sheets">
               <span>🔄 Sinkron Data</span>
             </button>
@@ -2607,6 +2607,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261015_embedded_gas_url"></script>
+  <script src="app.js?v=20261015_hide_admin_tools_desa"></script>
 </body>
 </html>

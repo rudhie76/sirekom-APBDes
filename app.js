@@ -2726,6 +2726,28 @@ window.applyRoleAccessControl = function() {
     selectDesaOp.classList.remove('opacity-80', 'cursor-not-allowed');
     if (badgeLockSelectDesa) badgeLockSelectDesa.classList.add('hidden');
   }
+
+  // 7. Sembunyikan Akses Google Sheets & Drive serta Alat Database dari Akun Desa (Khusus Kecamatan)
+  const btnSidebarSettings = document.getElementById('btnSidebarSettings');
+  const containerAksiMonitoring = document.getElementById('containerAksiMonitoringDesa');
+  const btnDashDrive = document.getElementById('btnDashBukaDriveKecamatan');
+  const btnHeaderDrive = document.getElementById('btnHeaderDriveKecamatan');
+  const linkKpiDrive = document.getElementById('linkKpiDriveKecamatan');
+
+  if (isDesa) {
+    if (btnSidebarSettings) btnSidebarSettings.classList.add('hidden');
+    if (containerAksiMonitoring) containerAksiMonitoring.classList.add('hidden');
+    if (btnDashDrive) btnDashDrive.classList.add('hidden');
+    if (btnHeaderDrive) btnHeaderDrive.classList.add('hidden');
+    if (linkKpiDrive) linkKpiDrive.classList.add('hidden');
+  } else {
+    // Akun Kecamatan / Admin
+    if (btnSidebarSettings) btnSidebarSettings.classList.remove('hidden');
+    if (containerAksiMonitoring) containerAksiMonitoring.classList.remove('hidden');
+    if (btnDashDrive) btnDashDrive.classList.remove('hidden');
+    if (btnHeaderDrive) btnHeaderDrive.classList.remove('hidden');
+    if (linkKpiDrive) linkKpiDrive.classList.remove('hidden');
+  }
 };
 
 /**
@@ -3189,6 +3211,11 @@ window.openHistoryDrawer = function() {
  * Membuka Modal Pengaturan dari Sidebar
  */
 window.openSettingsModal = function() {
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa') {
+    showToast('⚠️ Akses Terkunci: Pengaturan Google Sheets & Drive hanya dapat diakses oleh Admin Kecamatan.', 'warning');
+    return;
+  }
   const input = document.getElementById('inputGasUrl');
   if (input) input.value = AppState.gasUrl;
   document.getElementById('modalGasSettings')?.classList.remove('hidden');
@@ -3383,13 +3410,23 @@ window.renderDashboardSummary = function() {
             </span>
           </td>
           <td class="py-2.5 px-3 text-center">
-            <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold transition shadow-2xs">
-              ⚡ Proses Rekom
-            </button>
+            ${(AppState.currentUser && AppState.currentUser.role === 'desa') ? `
+              <button onclick="navigateToMenu('pengajuan_desa')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-[10px] font-bold transition border border-emerald-200">
+                📄 Status
+              </button>
+            ` : `
+              <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold transition shadow-2xs">
+                ⚡ Proses Rekom
+              </button>
+            `}
           </td>
         </tr>
       `).join('');
     }
+  }
+
+  if (typeof applyRoleAccessControl === 'function') {
+    applyRoleAccessControl();
   }
 };
 
@@ -4151,6 +4188,11 @@ window.downloadDokumenPengajuan = function(fileId, defaultName, driveUrl = null)
  * Membuka Folder Google Drive Kecamatan / Desa
  */
 window.openDriveFolderKecamatan = async function() {
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa') {
+    showToast('⚠️ Akses Terkunci: Folder Google Drive utama hanya dapat diakses oleh pihak Kecamatan.', 'warning');
+    return;
+  }
   if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) {
     alert('URL Google Apps Script belum disetel di Konfigurasi Google Sheets.\n\nSilakan masukkan URL Web App Google Apps Script terlebih dahulu agar folder Google Drive otomatis terbuka.');
     return;
@@ -4280,6 +4322,11 @@ window.submitKembalikanPengajuan = function() {
  * Mengambil Data Pengajuan Desa dan Memasukkannya Langsung ke Form & Surat Rekomendasi Kecamatan (DATA OK)
  */
 window.prosesPengajuanKeRekomendasi = function(id) {
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa') {
+    showToast('⚠️ Akses Terkunci: Pembuatan & Penerbitan Surat Rekomendasi Camat adalah kewenangan pihak Kecamatan Waru.', 'warning');
+    return;
+  }
   const item = AppState.pengajuanDesa.find(p => p.id === id);
   if (!item) return;
 
@@ -4470,6 +4517,11 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
  * Fitur Bersihkan & Reset Database Lokal (Bila pengguna mengosongkan sheet dan ingin browser langsung 100% bersih)
  */
 window.kosongkanDatabaseLokal = async function() {
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa') {
+    showToast('⚠️ Akses Ditolak: Hanya pihak Kecamatan yang berwenang membersihkan database.', 'error');
+    return;
+  }
   if (!confirm('Apakah Anda ingin membersihkan seluruh data pengajuan & riwayat lokal di browser ini agar sesuai persis dengan Google Sheets yang telah Anda kosongkan?')) {
     return;
   }
