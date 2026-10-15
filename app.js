@@ -70,9 +70,23 @@ const DEFAULT_DASAR_TEMPLATES = {
   ]
 };
 
+// URL Web App Google Apps Script Bawaan Sistem (Otomatis Aktif untuk Semua Komputer & Desa)
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxWdawMLe1ap8wgPIvJMVKgGqIPanvlHxRSSKnZh1cSJNCzfOSmcao6KoMnhzI1gshK/exec';
+const CURRENT_GAS_BUILD_ID = '20261015_live_sync_v1';
+
 // STATE MANAGEMENT GLOBAL
 const AppState = {
-  gasUrl: localStorage.getItem('sip_gas_url') || '',
+  gasUrl: (function() {
+    const savedVersion = localStorage.getItem('sip_gas_version');
+    const savedUrl = localStorage.getItem('sip_gas_url');
+    // Jika versi build belum terpasang atau URL kosong, langsung gunakan DEFAULT_GAS_URL
+    if (savedVersion !== CURRENT_GAS_BUILD_ID || !savedUrl || !savedUrl.startsWith('http')) {
+      localStorage.setItem('sip_gas_url', DEFAULT_GAS_URL);
+      localStorage.setItem('sip_gas_version', CURRENT_GAS_BUILD_ID);
+      return DEFAULT_GAS_URL;
+    }
+    return savedUrl;
+  })(),
   isConnected: false,
   
   // Mode Aplikasi Aktif: 'kecamatan' (default) atau 'desa'
@@ -1973,6 +1987,13 @@ function setupModalSettingsListeners() {
   document.getElementById('btnOpenSettings')?.addEventListener('click', () => {
     document.getElementById('inputGasUrl').value = AppState.gasUrl;
     document.getElementById('modalGasSettings')?.classList.remove('hidden');
+  });
+  document.getElementById('btnResetDefaultGasUrl')?.addEventListener('click', () => {
+    const input = document.getElementById('inputGasUrl');
+    if (input) {
+      input.value = DEFAULT_GAS_URL;
+      showToast('URL Google Apps Script direset ke bawaan sistem.', 'info');
+    }
   });
   document.getElementById('btnCloseSettings')?.addEventListener('click', () => {
     document.getElementById('modalGasSettings')?.classList.add('hidden');

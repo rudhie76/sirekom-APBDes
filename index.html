@@ -2099,11 +2099,19 @@
 
       <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs text-slate-700">
         <div>
-          <label class="block font-bold text-slate-800 mb-1">
-            Google Apps Script Web App URL <span class="text-rose-500">*</span>
-          </label>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-bold text-slate-800">
+              Google Apps Script Web App URL <span class="text-rose-500">*</span>
+            </label>
+            <button type="button" id="btnResetDefaultGasUrl" class="text-[11px] text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer">
+              Gunakan URL Bawaan Sistem
+            </button>
+          </div>
           <input type="url" id="inputGasUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
                  class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white" />
+          <p class="text-[11px] text-slate-500 mt-1">
+            ✨ <strong>Otomatis Terhubung:</strong> URL Web App bawaan sistem sudah terpasang permanen. Laptop/komputer desa lain langsung terhubung tanpa perlu menyalin link manual.
+          </p>
         </div>
 
         <div class="flex items-center gap-2">
@@ -2599,6 +2607,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261015_profile_rekening_sync_fix"></script>
+  <script src="app.js?v=20261015_embedded_gas_url"></script>
 </body>
 </html>
