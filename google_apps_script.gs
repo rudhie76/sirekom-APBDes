@@ -959,7 +959,17 @@ function doPost(e) {
     // AKSI 6: SIMPAN / UPDATE MASTER DATA DESA
     // -------------------------------------------------------------------------------------
     if (action === "simpanMasterDesa") {
-      var sheetDesa = ss.getSheetByName(SHEET_MASTER_DESA);
+      var sheetDesa = ss.getSheetByName(SHEET_MASTER_DESA) || ss.getSheetByName("Master Desa") || ss.getSheetByName("master_desa");
+      if (!sheetDesa) {
+        var allSheets = ss.getSheets();
+        for (var s = 0; s < allSheets.length; s++) {
+          var sName = allSheets[s].getName().toLowerCase();
+          if (sName.indexOf("desa") !== -1 && sName.indexOf("pengajuan") === -1 && sName.indexOf("user") === -1 && sName.indexOf("kirim") === -1) {
+            sheetDesa = allSheets[s];
+            break;
+          }
+        }
+      }
       if (!sheetDesa) {
         initSheets();
         sheetDesa = ss.getSheetByName(SHEET_MASTER_DESA);
@@ -970,7 +980,7 @@ function doPost(e) {
       var kades = payload.kades || payload.kepalaDesa || "";
       var kaur = payload.kaurKeuangan || "";
       var bank = payload.bank || "PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru";
-      var rekening = payload.rekening || "";
+      var rekening = payload.rekening !== undefined && payload.rekening !== null ? String(payload.rekening).trim() : "";
       var atasNama = payload.atasNama || ("Pemerintah Desa " + namaDesa + " (RKD)");
       var alamat = payload.alamat || "";
       var kontak = payload.kontak || "";
@@ -982,82 +992,118 @@ function doPost(e) {
       var dataD = sheetDesa.getDataRange().getValues();
       var headersD = dataD[0] || [];
 
-      // Mapping kolom yang ada
-      var colMap = {};
-      for (var h = 0; h < headersD.length; h++) {
-        colMap[headersD[h].toString().trim()] = h + 1;
-      }
-
-      function ensureColumn(headerName) {
-        if (!colMap[headerName]) {
-          var newCol = sheetDesa.getLastColumn() + 1;
-          sheetDesa.getRange(1, newCol).setValue(headerName);
-          sheetDesa.getRange(1, newCol).setBackground("#0F172A");
-          sheetDesa.getRange(1, newCol).setFontColor("#FFFFFF");
-          sheetDesa.getRange(1, newCol).setFontWeight("bold");
-          colMap[headerName] = newCol;
+      // Fungsi fleksibel pencarian kolom berdasarkan variasi nama header
+      function findCol(aliases) {
+        for (var a = 0; a < aliases.length; a++) {
+          var alias = aliases[a].toLowerCase().replace(/[^a-z0-9]/g, '');
+          for (var c = 0; c < headersD.length; c++) {
+            var hClean = String(headersD[c] || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (hClean === alias || hClean.indexOf(alias) !== -1 || alias.indexOf(hClean) !== -1) {
+              return c + 1; // 1-based index
+            }
+          }
         }
-        return colMap[headerName];
+        return null;
       }
 
-      ensureColumn("Nomor Perkades");
-      ensureColumn("Tahun Perkades");
-      ensureColumn("Nomor Perdes");
-      ensureColumn("Tahun Perdes");
+      function getOrAddCol(defaultHeader, aliases) {
+        var col = findCol(aliases);
+        if (!col) {
+          col = sheetDesa.getLastColumn() + 1;
+          sheetDesa.getRange(1, col).setValue(defaultHeader);
+          sheetDesa.getRange(1, col).setBackground("#0F172A");
+          sheetDesa.getRange(1, col).setFontColor("#FFFFFF");
+          sheetDesa.getRange(1, col).setFontWeight("bold");
+          headersD[col - 1] = defaultHeader;
+        }
+        return col;
+      }
 
-      // Cari baris desa berdasarkan Nama Desa atau ID Desa
+      var colId = getOrAddCol("ID Desa", ["ID Desa", "ID", "Kode Desa"]);
+      var colNama = getOrAddCol("Nama Desa", ["Nama Desa", "Desa", "Nama"]);
+      var colKades = getOrAddCol("Kepala Desa", ["Kepala Desa", "Kades", "Nama Kepala Desa", "Nama Kades"]);
+      var colKaur = getOrAddCol("Kaur Keuangan / Bendahara", ["Kaur Keuangan / Bendahara", "Kaur Keuangan", "Bendahara", "Kaur"]);
+      var colBank = getOrAddCol("Bank Penyalur", ["Bank Penyalur", "Bank", "Nama Bank"]);
+      var colRek = getOrAddCol("Nomor Rekening RKD", ["Nomor Rekening RKD", "Nomor Rekening", "Rekening RKD", "Rekening", "RKD", "No Rekening", "No. Rekening"]);
+      var colAtasNama = getOrAddCol("Atas Nama Rekening", ["Atas Nama Rekening", "Atas Nama", "Nama Rekening", "Pemilik Rekening"]);
+      var colAlamat = getOrAddCol("Alamat Kantor Desa", ["Alamat Kantor Desa", "Alamat", "Alamat Kantor"]);
+      var colKontak = getOrAddCol("Kontak / HP", ["Kontak / HP", "Kontak", "HP", "No HP", "No. HP", "Telepon"]);
+      var colNoPerkades = getOrAddCol("Nomor Perkades", ["Nomor Perkades", "No Perkades", "Perkades"]);
+      var colThnPerkades = getOrAddCol("Tahun Perkades", ["Tahun Perkades", "Thn Perkades"]);
+      var colNoPerdes = getOrAddCol("Nomor Perdes", ["Nomor Perdes", "No Perdes", "Perdes"]);
+      var colThnPerdes = getOrAddCol("Tahun Perdes", ["Tahun Perdes", "Thn Perdes"]);
+
+      // Cari baris desa: cek kolom nama, kolom id, atau cari kecocokan di setiap sel baris
       var cleanN = function(str) { return (str || "").toString().trim().replace(/^desa\s+/i, '').toLowerCase(); };
       var targetNorm = cleanN(namaDesa);
       var rowIndex = -1;
 
       for (var r = 1; r < dataD.length; r++) {
-        var rowId = String(dataD[r][0] || "").trim().toLowerCase();
-        var rowNama = cleanN(String(dataD[r][1] || ""));
-        if (rowNama === targetNorm || rowId === idDesa.toLowerCase()) {
+        var rowId = String(dataD[r][colId - 1] || "").trim().toLowerCase();
+        var rowNama = cleanN(String(dataD[r][colNama - 1] || ""));
+        var rowMatched = (rowNama === targetNorm || rowId === idDesa.toLowerCase());
+
+        if (!rowMatched) {
+          for (var c2 = 0; c2 < dataD[r].length; c2++) {
+            if (cleanN(String(dataD[r][c2] || "")) === targetNorm) {
+              rowMatched = true;
+              break;
+            }
+          }
+        }
+
+        if (rowMatched) {
           rowIndex = r + 1;
           break;
         }
       }
 
       if (rowIndex > 0) {
-        if (colMap["ID Desa"]) sheetDesa.getRange(rowIndex, colMap["ID Desa"]).setValue(idDesa);
-        if (colMap["Nama Desa"]) sheetDesa.getRange(rowIndex, colMap["Nama Desa"]).setValue(namaDesa);
-        if (colMap["Kepala Desa"]) sheetDesa.getRange(rowIndex, colMap["Kepala Desa"]).setValue(kades);
-        if (colMap["Kaur Keuangan / Bendahara"]) sheetDesa.getRange(rowIndex, colMap["Kaur Keuangan / Bendahara"]).setValue(kaur);
-        if (colMap["Bank Penyalur"]) sheetDesa.getRange(rowIndex, colMap["Bank Penyalur"]).setValue(bank);
-        if (colMap["Nomor Rekening RKD"]) sheetDesa.getRange(rowIndex, colMap["Nomor Rekening RKD"]).setValue(rekening);
-        if (colMap["Atas Nama Rekening"]) sheetDesa.getRange(rowIndex, colMap["Atas Nama Rekening"]).setValue(atasNama);
-        if (colMap["Alamat Kantor Desa"]) sheetDesa.getRange(rowIndex, colMap["Alamat Kantor Desa"]).setValue(alamat);
-        if (colMap["Kontak / HP"]) sheetDesa.getRange(rowIndex, colMap["Kontak / HP"]).setValue(kontak);
-        if (colMap["Nomor Perkades"]) sheetDesa.getRange(rowIndex, colMap["Nomor Perkades"]).setValue(noPerkades);
-        if (colMap["Tahun Perkades"]) sheetDesa.getRange(rowIndex, colMap["Tahun Perkades"]).setValue(thnPerkades);
-        if (colMap["Nomor Perdes"]) sheetDesa.getRange(rowIndex, colMap["Nomor Perdes"]).setValue(noPerdes);
-        if (colMap["Tahun Perdes"]) sheetDesa.getRange(rowIndex, colMap["Tahun Perdes"]).setValue(thnPerdes);
+        if (colId) sheetDesa.getRange(rowIndex, colId).setValue(idDesa);
+        if (colNama) sheetDesa.getRange(rowIndex, colNama).setValue(namaDesa);
+        if (colKades) sheetDesa.getRange(rowIndex, colKades).setValue(kades);
+        if (colKaur) sheetDesa.getRange(rowIndex, colKaur).setValue(kaur);
+        if (colBank) sheetDesa.getRange(rowIndex, colBank).setValue(bank);
+        if (colRek) {
+          // Format sebagai teks agar angka rekening tidak terpotong atau terkonversi
+          sheetDesa.getRange(rowIndex, colRek).setNumberFormat("@").setValue(String(rekening).trim());
+        }
+        if (colAtasNama) sheetDesa.getRange(rowIndex, colAtasNama).setValue(atasNama);
+        if (colAlamat) sheetDesa.getRange(rowIndex, colAlamat).setValue(alamat);
+        if (colKontak) sheetDesa.getRange(rowIndex, colKontak).setNumberFormat("@").setValue(String(kontak).trim());
+        if (colNoPerkades) sheetDesa.getRange(rowIndex, colNoPerkades).setValue(noPerkades);
+        if (colThnPerkades) sheetDesa.getRange(rowIndex, colThnPerkades).setValue(thnPerkades);
+        if (colNoPerdes) sheetDesa.getRange(rowIndex, colNoPerdes).setValue(noPerdes);
+        if (colThnPerdes) sheetDesa.getRange(rowIndex, colThnPerdes).setValue(thnPerdes);
       } else {
         var newRow = [];
         var totalCols = sheetDesa.getLastColumn();
-        for (var c = 1; c <= totalCols; c++) {
+        for (var c3 = 1; c3 <= totalCols; c3++) {
           newRow.push("");
         }
-        if (colMap["ID Desa"]) newRow[colMap["ID Desa"] - 1] = idDesa;
-        if (colMap["Nama Desa"]) newRow[colMap["Nama Desa"] - 1] = namaDesa;
-        if (colMap["Kepala Desa"]) newRow[colMap["Kepala Desa"] - 1] = kades;
-        if (colMap["Kaur Keuangan / Bendahara"]) newRow[colMap["Kaur Keuangan / Bendahara"] - 1] = kaur;
-        if (colMap["Bank Penyalur"]) newRow[colMap["Bank Penyalur"] - 1] = bank;
-        if (colMap["Nomor Rekening RKD"]) newRow[colMap["Nomor Rekening RKD"] - 1] = rekening;
-        if (colMap["Atas Nama Rekening"]) newRow[colMap["Atas Nama Rekening"] - 1] = atasNama;
-        if (colMap["Alamat Kantor Desa"]) newRow[colMap["Alamat Kantor Desa"] - 1] = alamat;
-        if (colMap["Kontak / HP"]) newRow[colMap["Kontak / HP"] - 1] = kontak;
-        if (colMap["Nomor Perkades"]) newRow[colMap["Nomor Perkades"] - 1] = noPerkades;
-        if (colMap["Tahun Perkades"]) newRow[colMap["Tahun Perkades"] - 1] = thnPerkades;
-        if (colMap["Nomor Perdes"]) newRow[colMap["Nomor Perdes"] - 1] = noPerdes;
-        if (colMap["Tahun Perdes"]) newRow[colMap["Tahun Perdes"] - 1] = thnPerdes;
+        if (colId) newRow[colId - 1] = idDesa;
+        if (colNama) newRow[colNama - 1] = namaDesa;
+        if (colKades) newRow[colKades - 1] = kades;
+        if (colKaur) newRow[colKaur - 1] = kaur;
+        if (colBank) newRow[colBank - 1] = bank;
+        if (colRek) newRow[colRek - 1] = "'" + String(rekening).trim();
+        if (colAtasNama) newRow[colAtasNama - 1] = atasNama;
+        if (colAlamat) newRow[colAlamat - 1] = alamat;
+        if (colKontak) newRow[colKontak - 1] = "'" + String(kontak).trim();
+        if (colNoPerkades) newRow[colNoPerkades - 1] = noPerkades;
+        if (colThnPerkades) newRow[colThnPerkades - 1] = thnPerkades;
+        if (colNoPerdes) newRow[colNoPerdes - 1] = noPerdes;
+        if (colThnPerdes) newRow[colThnPerdes - 1] = thnPerdes;
         sheetDesa.appendRow(newRow);
+        rowIndex = sheetDesa.getLastRow();
       }
 
       return jsonResponse({
         success: true,
-        message: "Data Master Desa " + namaDesa + " berhasil diperbarui di Google Sheets!"
+        message: "Data Master Desa " + namaDesa + " berhasil diperbarui di sheet '" + sheetDesa.getName() + "' baris ke-" + rowIndex + "!",
+        updatedSheet: sheetDesa.getName(),
+        updatedRow: rowIndex,
+        updatedRekening: rekening
       });
     }
 

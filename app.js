@@ -2816,7 +2816,7 @@ window.sinkronMasterDesaDariGoogleSheets = async function(isSilent = true) {
         const rawKades = row['Kepala Desa'] || row['Kades'] || row['Nama Kepala Desa'] || row['Nama Kades'] || row.kades;
         const rawKaur = row['Kaur Keuangan / Bendahara'] || row['Kaur Keuangan'] || row['Bendahara'] || row['Kaur'] || row.kaurKeuangan;
         const rawBank = row['Bank Penyalur'] || row['Bank'] || row.bank;
-        const rawRek = row['Nomor Rekening RKD'] || row['Nomor Rekening'] || row['Rekening'] || row['RKD'] || row.rekening;
+        const rawRek = row['Nomor Rekening RKD'] || row['Nomor Rekening'] || row['Rekening RKD'] || row['Rekening'] || row['RKD'] || row['No Rekening'] || row['No. Rekening'] || row.rekening;
         const rawAtasNama = row['Atas Nama Rekening'] || row['Atas Nama'] || row.atasNama;
         const rawAlamat = row['Alamat Kantor Desa'] || row['Alamat'] || row.alamat;
         const rawPerkades = row['Nomor Perkades'] || row['No Perkades'] || row.nomorPerkades;
@@ -5392,14 +5392,16 @@ window.simpanDataProfileDesa = async function(event) {
       });
       const resJson = await res.json();
       if (resJson.success) {
-        showToast(`Data Master Desa ${namaDesa} berhasil disimpan dan dicatat ke Google Sheets!`, 'success');
+        showToast(`Data Master Desa ${namaDesa} (Rekening: ${desa.rekening}) berhasil disimpan & diperbarui di Google Sheets (${resJson.updatedSheet || 'Master_Desa'})!`, 'success');
+      } else {
+        showToast(`Google Sheets: ${resJson.message || resJson.error || 'Gagal update spreadsheet'}. Pastikan Deploy Versi Baru Apps Script telah dilakukan.`, 'warning');
       }
     } catch (gasErr) {
       console.warn('Gagal sinkron Master Desa ke Google Sheets:', gasErr);
-      showToast(`Data Master Desa ${namaDesa} tersimpan di penyimpanan lokal.`, 'info');
+      showToast(`Data Master Desa ${namaDesa} tersimpan di lokal (Gagal koneksi Google Sheets: ${gasErr.message || gasErr}).`, 'warning');
     }
   } else {
-    showToast(`Data Master Desa ${namaDesa} berhasil disimpan di database lokal!`, 'success');
+    showToast(`Data Master Desa ${namaDesa} berhasil disimpan di database lokal! (Catatan: URL Google Sheets belum disetel)`, 'info');
   }
 
   if (btnSubmit) {
