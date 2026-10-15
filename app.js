@@ -215,7 +215,7 @@ const AppState = {
   ],
 
   // Pejabat Camat Waru
-  camat: {
+  camat: JSON.parse(localStorage.getItem('sip_master_camat') || 'null') || {
     nama: 'Ahmad Yani, SSTP',
     pangkat: 'Pembina (IV/a)',
     nip: '198610082006021001',
@@ -5075,5 +5075,282 @@ window.openDriveFolderSubKecamatan = async function() {
   } catch (e) {
     window.open('https://drive.google.com/', '_blank');
   }
+};
+
+// =====================================================================================
+// MODUL PROFIL & DATA MASTER DESA (ALAT & BASIS DATA)
+// =====================================================================================
+
+let activeProfileTab = 'Api-Api';
+
+window.bukaModalProfileDesa = function(targetDesa) {
+  const modal = document.getElementById('modalProfileDesa');
+  if (!modal) return;
+
+  // Tentukan default tab: jika targetDesa ada gunakan itu, jika login sebagai desa gunakan desanya, fallback ke activeProfileTab atau 'Api-Api'
+  let desaToOpen = targetDesa;
+  if (!desaToOpen) {
+    if (AppState.currentUser && AppState.currentUser.role === 'desa' && AppState.currentUser.desa) {
+      desaToOpen = AppState.currentUser.desa;
+    } else {
+      desaToOpen = activeProfileTab || 'Api-Api';
+    }
+  }
+
+  pilihTabProfileDesa(desaToOpen);
+  modal.classList.remove('hidden');
+};
+
+window.tutupModalProfileDesa = function() {
+  const modal = document.getElementById('modalProfileDesa');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.pilihTabProfileDesa = function(tabKey) {
+  activeProfileTab = tabKey;
+
+  const tabBtns = {
+    'Api-Api': document.getElementById('tabBtnProfileApiApi'),
+    'Sesulu': document.getElementById('tabBtnProfileSesulu'),
+    'Bangun Mulya': document.getElementById('tabBtnProfileBangunMulya'),
+    'Camat': document.getElementById('tabBtnProfileCamat')
+  };
+
+  // Reset semua styling tab
+  Object.keys(tabBtns).forEach(key => {
+    const btn = tabBtns[key];
+    if (!btn) return;
+    if (key === tabKey) {
+      btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-blue-600 text-white shadow-2xs cursor-pointer';
+    } else {
+      btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-slate-700 hover:bg-slate-200 border border-slate-300 cursor-pointer';
+    }
+  });
+
+  const formDesa = document.getElementById('formProfileDesaEditor');
+  const formCamat = document.getElementById('formProfileCamatEditor');
+
+  if (tabKey === 'Camat') {
+    if (formDesa) formDesa.classList.add('hidden');
+    if (formCamat) formCamat.classList.remove('hidden');
+
+    const camat = AppState.camat || {};
+    const elNama = document.getElementById('profCamatNama');
+    const elPangkat = document.getElementById('profCamatPangkat');
+    const elNip = document.getElementById('profCamatNip');
+    const elJabatan = document.getElementById('profCamatJabatan');
+
+    if (elNama) elNama.value = camat.nama || 'Ahmad Yani, SSTP';
+    if (elPangkat) elPangkat.value = camat.pangkat || 'Pembina (IV/a)';
+    if (elNip) elNip.value = camat.nip || '198610082006021001';
+    if (elJabatan) elJabatan.value = camat.jabatan || 'Camat Waru';
+    return;
+  }
+
+  // Tab Desa (Api-Api, Sesulu, Bangun Mulya)
+  if (formDesa) formDesa.classList.remove('hidden');
+  if (formCamat) formCamat.classList.add('hidden');
+
+  const desa = (AppState.masterDesa || []).find(d => d.nama === tabKey) || {
+    id: `DESA-${tabKey}`,
+    nama: tabKey,
+    kades: '',
+    kaurKeuangan: '',
+    jabatanKaur: `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${tabKey}`,
+    bank: 'PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru',
+    rekening: '',
+    atasNama: `Pemerintah Desa ${tabKey} (RKD)`,
+    alamat: `Desa ${tabKey}, Kec. Waru`,
+    nomorPerkades: '4',
+    tahunPerkades: '2025',
+    nomorPerdes: '7',
+    tahunPerdes: '2025',
+    nomorPerdesRkp: '2',
+    tahunPerdesRkp: '2025',
+    nomorPerdesKewenangan: '2',
+    tahunPerdesKewenangan: '2019'
+  };
+
+  const elId = document.getElementById('profDesaId');
+  const elNama = document.getElementById('profDesaNama');
+  const elLabelNama = document.getElementById('profLabelNamaDesa');
+  const elBadgeId = document.getElementById('profBadgeIdDesa');
+
+  if (elId) elId.value = desa.id || '';
+  if (elNama) elNama.value = desa.nama || tabKey;
+  if (elLabelNama) elLabelNama.textContent = `Desa ${desa.nama || tabKey}`;
+  if (elBadgeId) elBadgeId.textContent = desa.id || `DESA-${tabKey}`;
+
+  const elKades = document.getElementById('profKades');
+  const elKaur = document.getElementById('profKaur');
+  const elJabatanKaur = document.getElementById('profJabatanKaur');
+  const elKontak = document.getElementById('profKontak');
+  const elBank = document.getElementById('profBank');
+  const elRekening = document.getElementById('profRekening');
+  const elAtasNama = document.getElementById('profAtasNama');
+  const elAlamat = document.getElementById('profAlamat');
+
+  const elNoPerkades = document.getElementById('profNomorPerkades');
+  const elThnPerkades = document.getElementById('profTahunPerkades');
+  const elNoPerdes = document.getElementById('profNomorPerdes');
+  const elThnPerdes = document.getElementById('profTahunPerdes');
+  const elNoPerdesRkp = document.getElementById('profNomorPerdesRkp');
+  const elThnPerdesRkp = document.getElementById('profTahunPerdesRkp');
+  const elNoPerdesKew = document.getElementById('profNomorPerdesKewenangan');
+  const elThnPerdesKew = document.getElementById('profTahunPerdesKewenangan');
+
+  if (elKades) elKades.value = desa.kades || '';
+  if (elKaur) elKaur.value = desa.kaurKeuangan || '';
+  if (elJabatanKaur) elJabatanKaur.value = desa.jabatanKaur || `Kaur Keuangan selaku Pelaksana Fungsi Kebendaharaan Desa ${tabKey}`;
+  if (elKontak) elKontak.value = desa.kontak || '';
+  if (elBank) elBank.value = desa.bank || 'PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru';
+  if (elRekening) elRekening.value = desa.rekening || '';
+  if (elAtasNama) elAtasNama.value = desa.atasNama || `Pemerintah Desa ${tabKey} (RKD)`;
+  if (elAlamat) elAlamat.value = desa.alamat || '';
+
+  if (elNoPerkades) elNoPerkades.value = desa.nomorPerkades || '4';
+  if (elThnPerkades) elThnPerkades.value = desa.tahunPerkades || '2025';
+  if (elNoPerdes) elNoPerdes.value = desa.nomorPerdes || '7';
+  if (elThnPerdes) elThnPerdes.value = desa.tahunPerdes || '2025';
+  if (elNoPerdesRkp) elNoPerdesRkp.value = desa.nomorPerdesRkp || '2';
+  if (elThnPerdesRkp) elThnPerdesRkp.value = desa.tahunPerdesRkp || '2025';
+  if (elNoPerdesKew) elNoPerdesKew.value = desa.nomorPerdesKewenangan || '2';
+  if (elThnPerdesKew) elThnPerdesKew.value = desa.tahunPerdesKewenangan || '2019';
+};
+
+window.simpanDataProfileDesa = async function(event) {
+  if (event) event.preventDefault();
+
+  const namaDesa = document.getElementById('profDesaNama')?.value || activeProfileTab;
+  let desa = (AppState.masterDesa || []).find(d => d.nama === namaDesa);
+
+  if (!desa) {
+    desa = { id: `DESA-${Date.now()}`, nama: namaDesa };
+    AppState.masterDesa.push(desa);
+  }
+
+  const kadesVal = document.getElementById('profKades')?.value?.trim() || '';
+  const kaurVal = document.getElementById('profKaur')?.value?.trim() || '';
+  const jabatanKaurVal = document.getElementById('profJabatanKaur')?.value?.trim() || '';
+  const kontakVal = document.getElementById('profKontak')?.value?.trim() || '';
+  const bankVal = document.getElementById('profBank')?.value?.trim() || '';
+  const rekeningVal = document.getElementById('profRekening')?.value?.trim() || '';
+  const atasNamaVal = document.getElementById('profAtasNama')?.value?.trim() || '';
+  const alamatVal = document.getElementById('profAlamat')?.value?.trim() || '';
+
+  const noPerkadesVal = document.getElementById('profNomorPerkades')?.value?.trim() || '';
+  const thnPerkadesVal = document.getElementById('profTahunPerkades')?.value?.trim() || '';
+  const noPerdesVal = document.getElementById('profNomorPerdes')?.value?.trim() || '';
+  const thnPerdesVal = document.getElementById('profTahunPerdes')?.value?.trim() || '';
+  const noPerdesRkpVal = document.getElementById('profNomorPerdesRkp')?.value?.trim() || '';
+  const thnPerdesRkpVal = document.getElementById('profTahunPerdesRkp')?.value?.trim() || '';
+  const noPerdesKewVal = document.getElementById('profNomorPerdesKewenangan')?.value?.trim() || '';
+  const thnPerdesKewVal = document.getElementById('profTahunPerdesKewenangan')?.value?.trim() || '';
+
+  desa.kades = kadesVal;
+  desa.kaurKeuangan = kaurVal;
+  desa.jabatanKaur = jabatanKaurVal;
+  desa.kontak = kontakVal;
+  desa.bank = bankVal;
+  desa.rekening = rekeningVal;
+  desa.atasNama = atasNamaVal;
+  desa.alamat = alamatVal;
+
+  desa.nomorPerkades = noPerkadesVal;
+  desa.tahunPerkades = thnPerkadesVal;
+  desa.nomorPerdes = noPerdesVal;
+  desa.tahunPerdes = thnPerdesVal;
+  desa.nomorPerdesRkp = noPerdesRkpVal;
+  desa.tahunPerdesRkp = thnPerdesRkpVal;
+  desa.nomorPerdesKewenangan = noPerdesKewVal;
+  desa.tahunPerdesKewenangan = thnPerdesKewVal;
+
+  localStorage.setItem('sip_master_desa', JSON.stringify(AppState.masterDesa));
+
+  // Perbarui UI secara langsung
+  populateDesaSelect();
+  populateOperatorDesaSelect();
+  triggerAutoFillDesa();
+  onOperatorDesaChange();
+  renderDashboardSummary();
+  updateLivePreview();
+
+  const btnSubmit = document.getElementById('btnSubmitProfileDesa');
+  const origBtnText = btnSubmit ? btnSubmit.innerHTML : '';
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<span>⏳ Menyimpan ke Google Sheets...</span>';
+  }
+
+  // Sinkronkan ke Google Sheets Sheet Master_Desa
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    try {
+      const payloadGas = {
+        action: 'simpanMasterDesa',
+        id: desa.id,
+        namaDesa: desa.nama,
+        kades: desa.kades,
+        kaurKeuangan: desa.kaurKeuangan,
+        bank: desa.bank,
+        rekening: desa.rekening,
+        atasNama: desa.atasNama,
+        alamat: desa.alamat,
+        kontak: desa.kontak,
+        nomorPerkades: desa.nomorPerkades,
+        tahunPerkades: desa.tahunPerkades,
+        nomorPerdes: desa.nomorPerdes,
+        tahunPerdes: desa.tahunPerdes
+      };
+
+      const res = await fetch(AppState.gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payloadGas)
+      });
+      const resJson = await res.json();
+      if (resJson.success) {
+        showToast(`Data Master Desa ${namaDesa} berhasil disimpan dan dicatat ke Google Sheets!`, 'success');
+      }
+    } catch (gasErr) {
+      console.warn('Gagal sinkron Master Desa ke Google Sheets:', gasErr);
+      showToast(`Data Master Desa ${namaDesa} tersimpan di penyimpanan lokal.`, 'info');
+    }
+  } else {
+    showToast(`Data Master Desa ${namaDesa} berhasil disimpan di database lokal!`, 'success');
+  }
+
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = origBtnText;
+  }
+
+  tutupModalProfileDesa();
+};
+
+window.simpanDataProfileCamat = async function(event) {
+  if (event) event.preventDefault();
+
+  const nama = document.getElementById('profCamatNama')?.value?.trim() || '';
+  const pangkat = document.getElementById('profCamatPangkat')?.value?.trim() || '';
+  const nip = document.getElementById('profCamatNip')?.value?.trim() || '';
+  const jabatan = document.getElementById('profCamatJabatan')?.value?.trim() || 'Camat Waru';
+
+  AppState.camat = {
+    nama: nama,
+    pangkat: pangkat,
+    nip: nip,
+    jabatan: jabatan
+  };
+
+  localStorage.setItem('sip_master_camat', JSON.stringify(AppState.camat));
+
+  const elNamaCamat = document.getElementById('inputNamaCamat');
+  const elNipCamat = document.getElementById('inputNipCamat');
+  if (elNamaCamat) elNamaCamat.value = nama;
+  if (elNipCamat) elNipCamat.value = nip;
+
+  updateLivePreview();
+  showToast('Data Pejabat Camat Waru berhasil diperbarui!', 'success');
+  tutupModalProfileDesa();
 };
 
