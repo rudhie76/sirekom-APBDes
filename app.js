@@ -70,6 +70,67 @@ const DEFAULT_DASAR_TEMPLATES = {
   ]
 };
 
+// TEMPLATE LAMPIRAN BERKAS PERSYARATAN BAKU KECAMATAN WARU
+const DEFAULT_BERKAS_TEMPLATES = {
+  siltap: [
+    { id: 's1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
+    { id: 's2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
+    { id: 's3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
+    { id: 's4', teks: 'Surat Pengantar, Surat permintaan Pembayaran (SPP) dan Pernyataan Tanggung Jawab Belanja Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif RT dan Honorarium Staf Desa;', checked: true },
+    { id: 's5', teks: 'Daftar Tanda Terima Belanja Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif RT dan Honorarium Staf Desa;', checked: true },
+    { id: 's6', teks: 'Cek Giro; dan', checked: true },
+    { id: 's7', teks: 'Fotocopy NPWP Desa.', checked: true }
+  ],
+  add_reguler: [
+    { id: 'ar1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
+    { id: 'ar2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
+    { id: 'ar3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
+    { id: 'ar4', teks: 'Peraturan Desa Tentang Rencana Kerja Pembangunan Desa (RKP Desa) Tahun Anggaran 2026;', checked: true },
+    { id: 'ar5', teks: 'Peraturan Desa tentang Pertanggungjawaban APBDes Tahun Anggaran sebelumnya;', checked: true },
+    { id: 'ar6', teks: 'Peraturan Desa tentang APBDesa Tahun Anggaran 2026;', checked: true },
+    { id: 'ar7', teks: 'Peraturan Kepala Desa tentang penjabaran APBDesa Tahun Anggaran 2026;', checked: true },
+    { id: 'ar8', teks: 'Laporan Penyelenggaraan Pemerintahan Desa (LPPD) Akhir Tahun Anggaran sebelumnya;', checked: true },
+    { id: 'ar9', teks: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap Terakhir Tahun sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);', checked: true },
+    { id: 'ar10', teks: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);', checked: true },
+    { id: 'ar11', teks: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahun Anggaran sebelumnya;', checked: true },
+    { id: 'ar12', teks: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Sebelumnya Tahun Anggaran 2026;', checked: true },
+    { id: 'ar13', teks: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran sebelumnya yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;', checked: true },
+    { id: 'ar14', teks: 'Laporan Realisasi ADD Tahap Sebelumnya Tahun Anggaran 2026 yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;', checked: true },
+    { id: 'ar15', teks: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);', checked: true },
+    { id: 'ar16', teks: 'Gambar Rencana;', checked: true },
+    { id: 'ar17', teks: 'Kerangka Acuan Kerja;', checked: true },
+    { id: 'ar18', teks: 'Rencana Kerja;', checked: true },
+    { id: 'ar19', teks: 'Rencana Penggunaan Dana ADD Tahap I sebesar 25% Tahun Anggaran 2026;', checked: true },
+    { id: 'ar20', teks: 'Fotokopi Keputusan Kepala Desa tentang PPKD;', checked: true },
+    { id: 'ar21', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
+    { id: 'ar22', teks: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;', checked: true },
+    { id: 'ar23', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
+  ],
+  dbh: [
+    { id: 'd1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
+    { id: 'd2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
+    { id: 'd3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
+    { id: 'd4', teks: 'Ceklis Dokumen Pertanggungjawaban Penggunaan DBH-PR Tahap I Tahun 2026 dari Kecamatan;', checked: true },
+    { id: 'd5', teks: 'Laporan Realisasi Penggunaan DBH-PR Tahap I Tahun 2026;', checked: true },
+    { id: 'd6', teks: 'Fotocopi Keputusan Kepala Desa tentang PPKD;', checked: true },
+    { id: 'd7', teks: 'Fotocopi Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
+    { id: 'd8', teks: 'Foto Copy Rekening Kas Desa;', checked: true },
+    { id: 'd9', teks: 'Foto Copy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
+  ],
+  dd: [
+    { id: 'dd1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
+    { id: 'dd2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
+    { id: 'dd3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
+    { id: 'dd4', teks: 'Peraturan Desa tentang APBDesa Tahun Anggaran 2026;', checked: true },
+    { id: 'dd5', teks: 'Peraturan Kepala Desa tentang Penjabaran APBDesa Tahun Anggaran 2026;', checked: true },
+    { id: 'dd6', teks: 'Rencana Penggunaan Dana Desa Tahap I sebesar 60%', checked: true },
+    { id: 'dd7', teks: 'Fotocopy Keputusan Kepala Desa tentang PPKD;', checked: true },
+    { id: 'dd8', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
+    { id: 'dd9', teks: 'Foto Copy Rekening Kas Desa;', checked: true },
+    { id: 'dd10', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
+  ]
+};
+
 // URL Web App Google Apps Script Bawaan Sistem (Otomatis Aktif untuk Semua Komputer & Desa)
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxWdawMLe1ap8wgPIvJMVKgGqIPanvlHxRSSKnZh1cSJNCzfOSmcao6KoMnhzI1gshK/exec';
 const CURRENT_GAS_BUILD_ID = '20261015_live_sync_v1';
@@ -240,66 +301,11 @@ const AppState = {
   riwayat: JSON.parse(localStorage.getItem('sip_riwayat_rekom') || '[]'),
 
   // Daftar Lampiran Berkas Sesuai Masing-masing Format
-  berkasSiltap: [
-    { id: 's1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
-    { id: 's2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
-    { id: 's3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
-    { id: 's4', teks: 'Surat Pengantar, Surat permintaan Pembayaran (SPP) dan Pernyataan Tanggung Jawab Belanja Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif RT dan Honorarium Staf Desa;', checked: true },
-    { id: 's5', teks: 'Daftar Tanda Terima Belanja Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif RT dan Honorarium Staf Desa;', checked: true },
-    { id: 's6', teks: 'Cek Giro; dan', checked: true },
-    { id: 's7', teks: 'Fotocopy NPWP Desa.', checked: true }
-  ],
-
-  berkasAddReguler: [
-    { id: 'ar1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
-    { id: 'ar2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
-    { id: 'ar3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
-    { id: 'ar4', teks: 'Peraturan Desa Tentang Rencana Kerja Pembangunan Desa (RKP Desa) Tahun Anggaran 2026;', checked: true },
-    { id: 'ar5', teks: 'Peraturan Desa tentang Pertanggungjawaban APBDes Tahun Anggaran sebelumnya;', checked: true },
-    { id: 'ar6', teks: 'Peraturan Desa tentang APBDesa Tahun Anggaran 2026;', checked: true },
-    { id: 'ar7', teks: 'Peraturan Kepala Desa tentang penjabaran APBDesa Tahun Anggaran 2026;', checked: true },
-    { id: 'ar8', teks: 'Laporan Penyelenggaraan Pemerintahan Desa (LPPD) Akhir Tahun Anggaran sebelumnya;', checked: true },
-    { id: 'ar9', teks: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap Terakhir Tahun sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);', checked: true },
-    { id: 'ar10', teks: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);', checked: true },
-    { id: 'ar11', teks: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahun Anggaran sebelumnya;', checked: true },
-    { id: 'ar12', teks: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Sebelumnya Tahun Anggaran 2026;', checked: true },
-    { id: 'ar13', teks: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran sebelumnya yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;', checked: true },
-    { id: 'ar14', teks: 'Laporan Realisasi ADD Tahap Sebelumnya Tahun Anggaran 2026 yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;', checked: true },
-    { id: 'ar15', teks: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);', checked: true },
-    { id: 'ar16', teks: 'Gambar Rencana;', checked: true },
-    { id: 'ar17', teks: 'Kerangka Acuan Kerja;', checked: true },
-    { id: 'ar18', teks: 'Rencana Kerja;', checked: true },
-    { id: 'ar19', teks: 'Rencana Penggunaan Dana ADD Tahap I sebesar 25% Tahun Anggaran 2026;', checked: true },
-    { id: 'ar20', teks: 'Fotokopi Keputusan Kepala Desa tentang PPKD;', checked: true },
-    { id: 'ar21', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
-    { id: 'ar22', teks: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;', checked: true },
-    { id: 'ar23', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
-  ],
-
-  berkasDbh: [
-    { id: 'd1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
-    { id: 'd2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
-    { id: 'd3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
-    { id: 'd4', teks: 'Ceklis Dokumen Pertanggungjawaban Penggunaan DBH-PR Tahap I Tahun 2026 dari Kecamatan;', checked: true },
-    { id: 'd5', teks: 'Laporan Realisasi Penggunaan DBH-PR Tahap I Tahun 2026;', checked: true },
-    { id: 'd6', teks: 'Fotocopi Keputusan Kepala Desa tentang PPKD;', checked: true },
-    { id: 'd7', teks: 'Fotocopi Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
-    { id: 'd8', teks: 'Foto Copy Rekening Kas Desa;', checked: true },
-    { id: 'd9', teks: 'Foto Copy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
-  ],
-
-  berkasDd: [
-    { id: 'dd1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
-    { id: 'dd2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
-    { id: 'dd3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;', checked: true },
-    { id: 'dd4', teks: 'Peraturan Desa tentang APBDesa Tahun Anggaran 2026;', checked: true },
-    { id: 'dd5', teks: 'Peraturan Kepala Desa tentang Penjabaran APBDesa Tahun Anggaran 2026;', checked: true },
-    { id: 'dd6', teks: 'Rencana Penggunaan Dana Desa Tahap I sebesar 60%', checked: true },
-    { id: 'dd7', teks: 'Fotocopy Keputusan Kepala Desa tentang PPKD;', checked: true },
-    { id: 'dd8', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;', checked: true },
-    { id: 'dd9', teks: 'Foto Copy Rekening Kas Desa;', checked: true },
-    { id: 'dd10', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
-  ],
+  berkasSiltap: JSON.parse(JSON.stringify(DEFAULT_BERKAS_TEMPLATES.siltap)),
+  berkasAddReguler: JSON.parse(JSON.stringify(DEFAULT_BERKAS_TEMPLATES.add_reguler)),
+  berkasDbh: JSON.parse(JSON.stringify(DEFAULT_BERKAS_TEMPLATES.dbh)),
+  berkasDd: JSON.parse(JSON.stringify(DEFAULT_BERKAS_TEMPLATES.dd)),
+  editingBerkasId: null,
 
   // Daftar Dasar Rekomendasi (Dasar Hukum)
   dasarAddReguler: JSON.parse(JSON.stringify(DEFAULT_DASAR_TEMPLATES.add_reguler)),
@@ -454,68 +460,65 @@ function getRawBerkasList(tipe = AppState.tipeRekomendasi) {
   const persen = String(rawPersen).replace('%', '').trim();
   const persenText = persen ? `sebesar ${persen}% ` : '';
 
-  if (tipe === 'add_reguler') {
-    const templateTexts = {
-      ar1: 'Permohonan Pencairan Dari Kepala Desa;',
-      ar2: 'Rekomendasi Pencairan Dari Camat;',
-      ar3: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;',
-      ar4: `Peraturan Desa Tentang Rencana Kerja Pembangunan Desa (RKP Desa) Tahun Anggaran ${tahun};`,
-      ar5: 'Peraturan Desa tentang Pertanggungjawaban APBDes Tahun Anggaran sebelumnya;',
-      ar6: `Peraturan Desa tentang APBDesa Tahun Anggaran ${tahun};`,
-      ar7: `Peraturan Kepala Desa tentang penjabaran APBDesa Tahun Anggaran ${tahun};`,
-      ar8: 'Laporan Penyelenggaraan Pemerintahan Desa (LPPD) Akhir Tahun Anggaran sebelumnya;',
-      ar9: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap Terakhir Tahun sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);',
-      ar10: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);',
-      ar11: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahun Anggaran sebelumnya;',
-      ar12: `Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Sebelumnya Tahun Anggaran ${tahun};`,
-      ar13: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran sebelumnya yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;',
-      ar14: `Laporan Realisasi ADD Tahap Sebelumnya Tahun Anggaran ${tahun} yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;`,
-      ar15: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);',
-      ar16: 'Gambar Rencana;',
-      ar17: 'Kerangka Acuan Kerja;',
-      ar18: 'Rencana Kerja;',
-      ar19: `Rencana Penggunaan Dana ADD ${tahap} ${persenText}Tahun Anggaran ${tahun};`,
-      ar20: 'Fotokopi Keputusan Kepala Desa tentang PPKD;',
-      ar21: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;',
-      ar22: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;',
-      ar23: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).'
-    };
+  let list;
+  if (tipe === 'add_reguler') list = AppState.berkasAddReguler;
+  else if (tipe === 'siltap') list = AppState.berkasSiltap;
+  else if (tipe === 'dbh') list = AppState.berkasDbh;
+  else if (tipe === 'dd') list = AppState.berkasDd;
+  else list = AppState.berkasSiltap;
 
-    AppState.berkasAddReguler.forEach(item => {
+  if (!list) return [];
+
+  // Update variabel dinamis jika item belum pernah diedit manual oleh pengguna
+  list.forEach(item => {
+    if (item.customEdited) return;
+
+    if (tipe === 'add_reguler') {
+      const templateTexts = {
+        ar1: 'Permohonan Pencairan Dari Kepala Desa;',
+        ar2: 'Rekomendasi Pencairan Dari Camat;',
+        ar3: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;',
+        ar4: `Peraturan Desa Tentang Rencana Kerja Pembangunan Desa (RKP Desa) Tahun Anggaran ${tahun};`,
+        ar5: 'Peraturan Desa tentang Pertanggungjawaban APBDes Tahun Anggaran sebelumnya;',
+        ar6: `Peraturan Desa tentang APBDesa Tahun Anggaran ${tahun};`,
+        ar7: `Peraturan Kepala Desa tentang penjabaran APBDesa Tahun Anggaran ${tahun};`,
+        ar8: 'Laporan Penyelenggaraan Pemerintahan Desa (LPPD) Akhir Tahun Anggaran sebelumnya;',
+        ar9: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap Terakhir Tahun sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);',
+        ar10: 'Surat Permintaan Pembayaran beserta dokumen pertanggungjawaban sampai Tahap sebelumnya yang telah diverifikasi Tim Fasilitasi ADD Tingkat Kecamatan yang dibuktikan dengan Ceklist kelengkapan Surat Pertanggungjawaban (SPJ);',
+        ar11: 'Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahun Anggaran sebelumnya;',
+        ar12: `Laporan Realisasi Penyerapan Keuangan dan Capaian Keluaran ADD Tahap Sebelumnya Tahun Anggaran ${tahun};`,
+        ar13: 'Laporan Realisasi ADD sampai Tahap Akhir Tahun Anggaran sebelumnya yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;',
+        ar14: `Laporan Realisasi ADD Tahap Sebelumnya Tahun Anggaran ${tahun} yang terdiri atas: a. Laporan Perkembangan Pelaksanaan Kegiatan, b. Dokumentasi kegiatan, c. Back Up Data Kuantitas Sesuai Tahapan, d. Laporan Harian, e. Berita Acara Pemeriksaan, f. Rencana Anggaran Pelaksanaan, g. Buku Kas Pembantu Kegiatan, h. Gambar Purna;`,
+        ar15: 'Rencana Anggaran Biaya (Semua Belanja yang bersifat fisik dalam APBDes yang akan dilaksanakan);',
+        ar16: 'Gambar Rencana;',
+        ar17: 'Kerangka Acuan Kerja;',
+        ar18: 'Rencana Kerja;',
+        ar19: `Rencana Penggunaan Dana ADD ${tahap} ${persenText}Tahun Anggaran ${tahun};`,
+        ar20: 'Fotokopi Keputusan Kepala Desa tentang PPKD;',
+        ar21: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;',
+        ar22: 'Foto Copy Rekening Kas Desa dan Rekening Koran Terakhir;',
+        ar23: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).'
+      };
       if (templateTexts[item.id]) {
         item.teks = templateTexts[item.id];
       }
-    });
-
-    return AppState.berkasAddReguler;
-  }
-
-  if (tipe === 'dbh') {
-    AppState.berkasDbh.forEach(item => {
+    } else if (tipe === 'dbh') {
       if (item.id === 'd4') item.teks = `Ceklis Dokumen Pertanggungjawaban Penggunaan DBH-PR ${tahap} Tahun ${tahun} dari Kecamatan;`;
       if (item.id === 'd5') item.teks = `Laporan Realisasi Penggunaan DBH-PR ${tahap} Tahun ${tahun};`;
-    });
-    return AppState.berkasDbh;
-  }
-
-  if (tipe === 'dd') {
-    AppState.berkasDd.forEach(item => {
+    } else if (tipe === 'dd') {
       if (item.id === 'dd4') item.teks = `Peraturan Desa tentang APBDesa Tahun Anggaran ${tahun};`;
       if (item.id === 'dd5') item.teks = `Peraturan Kepala Desa tentang Penjabaran APBDesa Tahun Anggaran ${tahun};`;
       if (item.id === 'dd6') item.teks = `Rencana Penggunaan Dana Desa ${tahap} ${persenText}Tahun Anggaran ${tahun};`;
-    });
-    return AppState.berkasDd;
-  }
+    }
+  });
 
-  return AppState.berkasSiltap;
+  return list;
 }
 
 function isBerkasChecked(id) {
-  const el = document.getElementById(`berkas_${id}`);
-  if (el) return Boolean(el.checked);
-  
   const allLists = [AppState.berkasSiltap, AppState.berkasAddReguler, AppState.berkasDbh, AppState.berkasDd];
   for (const list of allLists) {
+    if (!list) continue;
     const item = list.find(b => b.id === id);
     if (item) return item.checked !== false;
   }
@@ -524,46 +527,216 @@ function isBerkasChecked(id) {
 
 function getActiveBerkasList(tipe = AppState.tipeRekomendasi) {
   const list = getRawBerkasList(tipe);
-  return list.filter(item => {
-    const el = document.getElementById(`berkas_${item.id}`);
-    if (el) {
-      item.checked = Boolean(el.checked);
-      return el.checked;
-    }
-    return item.checked !== false;
-  });
+  return list.filter(item => item.checked !== false);
 }
 
 window.handleBerkasCheckboxChange = function(id, isChecked) {
   const allLists = [AppState.berkasSiltap, AppState.berkasAddReguler, AppState.berkasDbh, AppState.berkasDd];
   for (const list of allLists) {
+    if (!list) continue;
     const item = list.find(b => b.id === id);
     if (item) {
       item.checked = Boolean(isChecked);
       break;
     }
   }
+  renderBerkasChecklist();
   updateLivePreview();
+};
+
+window.startEditBerkas = function(id) {
+  AppState.editingBerkasId = id;
+  renderBerkasChecklist();
+  setTimeout(() => {
+    const el = document.getElementById(`berkas_input_${id}`);
+    if (el) {
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+  }, 50);
+};
+
+window.cancelEditBerkas = function(id) {
+  AppState.editingBerkasId = null;
+  renderBerkasChecklist();
+};
+
+window.saveEditBerkas = function(id) {
+  const el = document.getElementById(`berkas_input_${id}`);
+  if (!el) return;
+  const newText = el.value.trim();
+  if (!newText) {
+    showToast('Teks lampiran berkas tidak boleh kosong!', 'warning');
+    return;
+  }
+  const allLists = [AppState.berkasSiltap, AppState.berkasAddReguler, AppState.berkasDbh, AppState.berkasDd];
+  for (const list of allLists) {
+    if (!list) continue;
+    const item = list.find(b => b.id === id);
+    if (item) {
+      item.teks = newText;
+      item.customEdited = true;
+      break;
+    }
+  }
+  AppState.editingBerkasId = null;
+  renderBerkasChecklist();
+  updateLivePreview();
+  showToast('Lampiran berkas berhasil diperbarui!', 'success');
+};
+
+window.deleteBerkasItem = function(id) {
+  const allLists = [AppState.berkasSiltap, AppState.berkasAddReguler, AppState.berkasDbh, AppState.berkasDd];
+  for (const list of allLists) {
+    if (!list) continue;
+    const idx = list.findIndex(b => b.id === id);
+    if (idx !== -1) {
+      list.splice(idx, 1);
+      break;
+    }
+  }
+  if (AppState.editingBerkasId === id) AppState.editingBerkasId = null;
+  renderBerkasChecklist();
+  updateLivePreview();
+  showToast('Lampiran berkas dihapus.', 'info');
+};
+
+window.toggleFormTambahBerkas = function(forceState) {
+  const container = document.getElementById('formTambahBerkasContainer');
+  if (!container) return;
+  const isHidden = container.classList.contains('hidden');
+  const shouldShow = (typeof forceState === 'boolean') ? forceState : isHidden;
+  if (shouldShow) {
+    container.classList.remove('hidden');
+    setTimeout(() => document.getElementById('inputTeksBerkasBaru')?.focus(), 50);
+  } else {
+    container.classList.add('hidden');
+    const input = document.getElementById('inputTeksBerkasBaru');
+    if (input) input.value = '';
+  }
+};
+
+window.submitTambahBerkas = function() {
+  const input = document.getElementById('inputTeksBerkasBaru');
+  if (!input) return;
+  let text = input.value.trim();
+  if (!text) {
+    showToast('Teks lampiran berkas tidak boleh kosong!', 'warning');
+    return;
+  }
+  if (!text.endsWith(';') && !text.endsWith('.')) {
+    text += ';';
+  }
+  const tipe = AppState.tipeRekomendasi;
+  let list;
+  if (tipe === 'add_reguler') list = AppState.berkasAddReguler;
+  else if (tipe === 'siltap') list = AppState.berkasSiltap;
+  else if (tipe === 'dbh') list = AppState.berkasDbh;
+  else if (tipe === 'dd') list = AppState.berkasDd;
+  else list = AppState.berkasSiltap;
+
+  list.push({
+    id: 'custom_b_' + Date.now(),
+    teks: text,
+    checked: true,
+    customEdited: true
+  });
+
+  input.value = '';
+  toggleFormTambahBerkas(false);
+  renderBerkasChecklist();
+  updateLivePreview();
+  showToast('Lampiran berkas baru berhasil ditambahkan!', 'success');
+};
+
+window.resetBerkasToDefault = function() {
+  const tipe = AppState.tipeRekomendasi;
+  if (DEFAULT_BERKAS_TEMPLATES[tipe]) {
+    const fresh = JSON.parse(JSON.stringify(DEFAULT_BERKAS_TEMPLATES[tipe]));
+    if (tipe === 'add_reguler') AppState.berkasAddReguler = fresh;
+    else if (tipe === 'siltap') AppState.berkasSiltap = fresh;
+    else if (tipe === 'dbh') AppState.berkasDbh = fresh;
+    else if (tipe === 'dd') AppState.berkasDd = fresh;
+    AppState.editingBerkasId = null;
+    renderBerkasChecklist();
+    updateLivePreview();
+    showToast('Lampiran berkas dikembalikan ke susunan baku.', 'info');
+  }
 };
 
 function renderBerkasChecklist() {
   const container = document.getElementById('containerBerkasChecklist');
   if (!container) return;
-  
-  let items = getRawBerkasList();
 
+  const items = getRawBerkasList();
   container.innerHTML = '';
+
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p class="text-xs text-slate-400 italic py-2 text-center">Belum ada daftar lampiran berkas.</p>';
+    return;
+  }
+
   items.forEach((item, index) => {
     const isChecked = item.checked !== false;
-    const wrapper = document.createElement('label');
-    wrapper.className = 'flex items-start gap-2.5 p-2 bg-slate-50 hover:bg-emerald-50/50 rounded-lg border border-slate-200 cursor-pointer transition text-xs text-slate-700';
-    wrapper.innerHTML = `
-      <input type="checkbox" id="berkas_${item.id}" value="${escapeHtml(item.teks)}" ${isChecked ? 'checked' : ''} 
-             onchange="handleBerkasCheckboxChange('${item.id}', this.checked)"
-             class="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 berkas-checkbox" />
-      <span class="flex-1 leading-relaxed">${index + 1}. ${escapeHtml(item.teks)}</span>
-    `;
-    container.appendChild(wrapper);
+    const isEditing = AppState.editingBerkasId === item.id;
+
+    const row = document.createElement('div');
+    row.id = `berkas_item_${item.id}`;
+    row.className = `p-2 rounded-lg border transition text-xs ${
+      isEditing 
+        ? 'bg-teal-50/90 border-teal-300 shadow-xs' 
+        : (isChecked ? 'bg-slate-50 hover:bg-teal-50/40 border-slate-200 text-slate-800' : 'bg-slate-100/70 border-slate-200 text-slate-400')
+    }`;
+
+    if (isEditing) {
+      row.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-teal-900 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              Edit Berkas No. ${index + 1}
+            </span>
+            <span class="text-[10px] text-slate-500 italic">Simpan setelah selesai mengubah</span>
+          </div>
+          <textarea id="berkas_input_${item.id}" rows="3" 
+                    class="w-full bg-white border border-teal-300 rounded-lg p-2 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 leading-relaxed font-sans shadow-inner">${escapeHtml(item.teks)}</textarea>
+          <div class="flex items-center justify-between pt-1">
+            <button type="button" onclick="deleteBerkasItem('${item.id}')" class="px-2 py-1 text-[11px] text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded transition flex items-center gap-1 cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              Hapus
+            </button>
+            <div class="flex gap-1.5">
+              <button type="button" onclick="cancelEditBerkas('${item.id}')" class="px-2.5 py-1 text-xs bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg font-medium transition cursor-pointer">Batal</button>
+              <button type="button" onclick="saveEditBerkas('${item.id}')" class="px-3 py-1 text-xs bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold transition flex items-center gap-1 shadow-xs cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      row.innerHTML = `
+        <div class="flex items-start gap-2.5">
+          <input type="checkbox" id="berkas_${item.id}" ${isChecked ? 'checked' : ''}
+                 onchange="handleBerkasCheckboxChange('${item.id}', this.checked)"
+                 class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer berkas-checkbox" />
+          <div class="flex-1 cursor-pointer select-none" onclick="document.getElementById('berkas_${item.id}').click()">
+            <span class="font-bold text-slate-900 mr-1">${index + 1}.</span>
+            <span class="leading-relaxed ${isChecked ? '' : 'line-through text-slate-400 italic'}">${escapeHtml(item.teks)}</span>
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0 pt-0.5">
+            <button type="button" onclick="startEditBerkas('${item.id}')" title="Edit berkas lampiran ini"
+                    class="px-2 py-0.5 text-[11px] font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded flex items-center gap-1 transition cursor-pointer">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              Edit
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    container.appendChild(row);
   });
 }
 
@@ -957,6 +1130,11 @@ function handleTipeChange() {
 
   if (secSiltap) secSiltap.classList.toggle('hidden', !isSiltap);
   if (secTahap) secTahap.classList.toggle('hidden', isSiltap);
+
+  AppState.editingDasarId = null;
+  AppState.editingBerkasId = null;
+  toggleFormTambahDasar(false);
+  toggleFormTambahBerkas(false);
 
   // Set default sample nominal per tipe
   const nominalInput = document.getElementById('inputNominalAngka');
@@ -1461,20 +1639,7 @@ function renderLivePreviewDd() {
   const dasarDdHal1 = activeDasarDd.slice(0, splitDasarDdIdx);
   const dasarDdHal2 = activeDasarDd.slice(splitDasarDdIdx);
 
-  const berkasDdList = [
-    { id: 'dd1', teks: 'Permohonan Pencairan Dari Kepala Desa;' },
-    { id: 'dd2', teks: 'Rekomendasi Pencairan Dari Camat;' },
-    { id: 'dd3', teks: 'Ceklist Kelengkapan Berkas Pengajuan dari Tim Fasilitasi Tingkat Kecamatan;' },
-    { id: 'dd4', teks: `Peraturan Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perdes)} Tahun 2025 tentang APBDesa Tahun Anggaran ${escapeHtml(tahunAnggaran)};` },
-    { id: 'dd5', teks: `Peraturan Kepala Desa ${escapeHtml(namaDesa)} Nomor ${escapeHtml(perkades)} Tahun 2025 tentang Penjabaran APBDesa Tahun Anggaran ${escapeHtml(tahunAnggaran)};` },
-    { id: 'dd6', teks: `Rencana Penggunaan Dana Desa ${escapeHtml(tahap)} ${persen ? `sebesar ${escapeHtml(persen)}%` : ''}`.trim() },
-    { id: 'dd7', teks: 'Fotocopy Keputusan Kepala Desa tentang PPKD;' },
-    { id: 'dd8', teks: 'Fotocopy Keputusan Kepala Desa tentang Penunjukan Pejabat Pelaksana Kebendaharaan;' },
-    { id: 'dd9', teks: 'Foto Copy Rekening Kas Desa;' },
-    { id: 'dd10', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).' }
-  ];
-
-  const berkasFiltered = berkasDdList.filter(item => isBerkasChecked(item.id));
+  const berkasFiltered = getActiveBerkasList('dd');
 
   const docHtml = `
     <!-- HALAMAN 1 -->

@@ -1198,15 +1198,42 @@
         </div>
 
         <!-- KARTU 5: CHECKLIST PERSYARATAN BERKAS -->
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3" id="cardBerkasRekomendasi">
           <div class="flex items-center justify-between border-b border-slate-100 pb-2">
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">5</div>
-              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Lampiran Berkas Persyaratan</h3>
+              <div>
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Lampiran Berkas Persyaratan</h3>
+                <p class="text-[10px] text-slate-500">Centang atau edit berkas lampiran persyaratan</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="toggleFormTambahBerkas()" 
+                      class="px-2 py-1 text-[11px] font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg flex items-center gap-1 transition cursor-pointer" title="Tambah berkas lampiran persyaratan baru">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah
+              </button>
+              <button type="button" onclick="resetBerkasToDefault()" 
+                      class="px-2 py-1 text-[11px] font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg flex items-center gap-1 transition cursor-pointer" title="Kembalikan ke susunan berkas baku bawaan">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Reset
+              </button>
             </div>
           </div>
 
-          <div id="containerBerkasChecklist" class="space-y-2">
+          <!-- Form Tambah Berkas Baru (Hidden by default) -->
+          <div id="formTambahBerkasContainer" class="hidden p-3 bg-teal-50/70 border border-teal-200 rounded-xl space-y-2">
+            <label class="block text-[11px] font-bold text-teal-900">Teks Berkas Lampiran Baru:</label>
+            <textarea id="inputTeksBerkasBaru" rows="2" placeholder="Contoh: Laporan Realisasi Penyerapan Dana Desa Tahap I..." 
+                      class="w-full bg-white border border-teal-300 rounded-lg p-2 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500"></textarea>
+            <div class="flex justify-end gap-1.5">
+              <button type="button" onclick="toggleFormTambahBerkas(false)" class="px-2.5 py-1 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition cursor-pointer">Batal</button>
+              <button type="button" onclick="submitTambahBerkas()" class="px-3 py-1 text-xs bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold transition cursor-pointer">Tambahkan</button>
+            </div>
+          </div>
+
+          <!-- Container Daftar Berkas Checklist -->
+          <div id="containerBerkasChecklist" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
             <!-- Diisi otomatis oleh JavaScript -->
           </div>
         </div>
@@ -2607,6 +2634,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261015_hide_admin_tools_desa"></script>
+  <script src="app.js?v=20261015_berkas_edit_tambah"></script>
 </body>
 </html>
