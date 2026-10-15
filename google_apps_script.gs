@@ -30,10 +30,11 @@
  */
 
 // Konstanta Nama Sheet
-var SHEET_PENGAJUAN_DESA = "Pengajuan_Berkas_Desa";
-var SHEET_REKOMENDASI    = "Riwayat_Rekomendasi";
-var SHEET_MASTER_DESA    = "Master_Desa";
-var SHEET_USER           = "Data_User";
+var SHEET_PENGAJUAN_DESA  = "Pengajuan_Berkas_Desa";
+var SHEET_REKOMENDASI     = "Riwayat_Rekomendasi";
+var SHEET_MASTER_DESA     = "Master_Desa";
+var SHEET_USER            = "Data_User";
+var SHEET_KIRIM_REKOM_DESA = "Kirim_Rekom_Desa";
 
 // Nama Folder Induk di Google Drive
 var NAMA_FOLDER_UTAMA_DRIVE = "SIP-REKOM APBDES KECAMATAN WARU";
@@ -242,6 +243,41 @@ function initSheets() {
       sheetUser.appendRow(defaultUsers[u]);
     }
   }
+
+  // 5. Sheet Kirim Rekom Ke Desa (Arsip Berkas Rekomendasi Resmi Kecamatan Siap BKAD)
+  var sheetKirimDesa = ss.getSheetByName(SHEET_KIRIM_REKOM_DESA);
+  if (!sheetKirimDesa) {
+    sheetKirimDesa = ss.insertSheet(SHEET_KIRIM_REKOM_DESA);
+    var headersKirim = [
+      "ID Kirim Rekom",
+      "Waktu Kirim (WITA)",
+      "Nama Desa",
+      "Jenis Dana",
+      "Tahap / Bulan",
+      "Tahun Anggaran",
+      "Nominal (Rp)",
+      "Nomor Rekomendasi",
+      "Tanggal Rekomendasi",
+      "Nomor SP Kecamatan",
+      "Tanggal SP Kecamatan",
+      "Nama File Rekom TTD",
+      "Link Google Drive Rekom TTD",
+      "Nama File SP Kecamatan",
+      "Link Google Drive SP Kecamatan",
+      "Nama File Ceklist Kecamatan",
+      "Link Google Drive Ceklist Kecamatan",
+      "Folder Google Drive Kecamatan",
+      "Status",
+      "Catatan untuk Desa"
+    ];
+    sheetKirimDesa.appendRow(headersKirim);
+
+    var headerRangeK = sheetKirimDesa.getRange(1, 1, 1, headersKirim.length);
+    headerRangeK.setBackground("#1E3A8A"); // Navy Dark
+    headerRangeK.setFontColor("#FFFFFF");
+    headerRangeK.setFontWeight("bold");
+    sheetKirimDesa.setFrozenRows(1);
+  }
 }
 
 /**
@@ -337,6 +373,7 @@ function doGet(e) {
     if (action === "ping") {
       var driveStatus = "OK";
       var driveUrl = "-";
+      var driveKecamatanUrl = "-";
       var driveFolderName = NAMA_FOLDER_UTAMA_DRIVE;
       var driveMessage = "Google Drive Aktif";
 
@@ -344,6 +381,8 @@ function doGet(e) {
         var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
         driveUrl = mainFolder.getUrl();
         driveFolderName = mainFolder.getName();
+        var subFolderKec = getOrCreateFolder("kecamatan", mainFolder);
+        driveKecamatanUrl = subFolderKec.getUrl();
       } catch (driveErr) {
         driveStatus = "PERLU_IZIN";
         driveMessage = "Izin Google Drive belum diaktifkan. Jalankan fungsi 'AKTIFKAN_IZIN_DAN_TEST' di Apps Script: " + driveErr.toString();
@@ -360,6 +399,7 @@ function doGet(e) {
         driveStatus: driveStatus,
         driveFolderName: driveFolderName,
         driveFolderUrl: driveUrl,
+        driveKecamatanFolderUrl: driveKecamatanUrl,
         driveMessage: driveMessage,
         timestamp: Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss")
       });
@@ -548,6 +588,55 @@ function doGet(e) {
       });
     }
 
+    // 6. Ambil Data Kirim Rekomendasi ke Desa Lengkap dengan Link Drive
+    if (action === "getKirimRekomDesa") {
+      var sheetK = ss.getSheetByName(SHEET_KIRIM_REKOM_DESA) || ss.getSheetByName("Kirim_Rekom_Desa") || ss.getSheetByName("kirim_rekom_desa");
+      if (!sheetK) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
+      var dataK = sheetK.getDataRange().getValues();
+      if (!dataK || dataK.length < 2) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
+      var headersK = dataK[0];
+      var resultK = [];
+
+      for (var r = 1; r < dataK.length; r++) {
+        var row = dataK[r];
+        var hasContent = false;
+        for (var c = 0; c < row.length; c++) {
+          if (row[c] !== "" && row[c] !== null && row[c] !== undefined) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (!hasContent) continue;
+
+        var item = {};
+        for (var c2 = 0; c2 < headersK.length; c2++) {
+          var hName = String(headersK[c2] || "").trim();
+          if (hName) {
+            item[hName] = row[c2];
+          }
+        }
+        resultK.push(item);
+      }
+
+      return jsonResponse({
+        success: true,
+        data: resultK,
+        count: resultK.length
+      });
+    }
+
     return jsonResponse({
       success: false,
       message: "Action GET tidak dikenali: " + action
@@ -724,6 +813,132 @@ function doPost(e) {
       return jsonResponse({
         success: updated,
         message: updated ? "Status berhasil diperbarui." : "ID pengajuan tidak ditemukan."
+      });
+    }
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 4: SIMPAN / KIRIM REKOM KE DESA (UPLOAD 3 BERKAS KE SUBFOLDER KECAMATAN & CATAT SHEET)
+    // -------------------------------------------------------------------------------------
+    if (action === "simpanKirimRekomDesa") {
+      var sheetKirim = ss.getSheetByName(SHEET_KIRIM_REKOM_DESA);
+      if (!sheetKirim) {
+        initSheets();
+        sheetKirim = ss.getSheetByName(SHEET_KIRIM_REKOM_DESA);
+      }
+      var namaDesa = payload.namaDesa || "Desa";
+      var id = payload.id || ("KRM-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
+      var timestamp = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
+
+      var subFolderUrl = "-";
+      var rekomTtdResult = { name: "-", url: "-", id: "-" };
+      var spKecResult = { name: "-", url: "-", id: "-" };
+      var ceklistKecResult = { name: "-", url: "-", id: "-" };
+
+      try {
+        // 1. Buat / Ambil Folder Induk & Subfolder "kecamatan" di Google Drive
+        var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
+        var subFolderKecamatan = getOrCreateFolder("kecamatan", mainFolder);
+        subFolderUrl = subFolderKecamatan.getUrl();
+
+        // 2. Simpan Ketiga Berkas ke Google Drive dalam subfolder kecamatan
+        if (payload.fileRekomTtd && (payload.fileRekomTtd.base64 || payload.fileRekomTtd.dataUrl)) {
+          rekomTtdResult = saveFileToDrive(payload.fileRekomTtd, subFolderKecamatan, "Rekom_TTD_" + namaDesa.replace(/\s+/g, '_'));
+        } else if (payload.existingRekomTtd) {
+          rekomTtdResult = payload.existingRekomTtd;
+        }
+
+        if (payload.fileSpKecamatan && (payload.fileSpKecamatan.base64 || payload.fileSpKecamatan.dataUrl)) {
+          spKecResult = saveFileToDrive(payload.fileSpKecamatan, subFolderKecamatan, "SP_Kecamatan_" + namaDesa.replace(/\s+/g, '_'));
+        } else if (payload.existingSpKecamatan) {
+          spKecResult = payload.existingSpKecamatan;
+        }
+
+        if (payload.fileCeklistKecamatan && (payload.fileCeklistKecamatan.base64 || payload.fileCeklistKecamatan.dataUrl)) {
+          ceklistKecResult = saveFileToDrive(payload.fileCeklistKecamatan, subFolderKecamatan, "Ceklist_Kecamatan_" + namaDesa.replace(/\s+/g, '_'));
+        } else if (payload.existingCeklistKecamatan) {
+          ceklistKecResult = payload.existingCeklistKecamatan;
+        }
+      } catch (driveErr) {
+        Logger.log("Peringatan DriveApp kecamatan: " + driveErr.toString());
+      }
+
+      var rowData = [
+        id,
+        timestamp,
+        namaDesa,
+        payload.jenisDana || "-",
+        payload.tahap || "-",
+        payload.tahunAnggaran || "-",
+        payload.nominal || 0,
+        payload.nomorRekom || "-",
+        payload.tanggalRekom || "-",
+        payload.nomorSpKec || "-",
+        payload.tanggalSpKec || "-",
+        rekomTtdResult.name,
+        rekomTtdResult.url,
+        spKecResult.name,
+        spKecResult.url,
+        ceklistKecResult.name,
+        ceklistKecResult.url,
+        subFolderUrl,
+        payload.status || "Siap Kirim ke BKAD",
+        payload.catatan || "-"
+      ];
+
+      // Cek apakah mode update
+      var dataK = sheetKirim.getDataRange().getValues();
+      var rowIndexToUpdate = -1;
+      for (var r = 1; r < dataK.length; r++) {
+        if (String(dataK[r][0]) === String(id)) {
+          rowIndexToUpdate = r + 1;
+          break;
+        }
+      }
+
+      if (rowIndexToUpdate > 0) {
+        sheetKirim.getRange(rowIndexToUpdate, 1, 1, rowData.length).setValues([rowData]);
+      } else {
+        sheetKirim.appendRow(rowData);
+      }
+
+      return jsonResponse({
+        success: true,
+        message: subFolderUrl !== "-"
+          ? "Berkas berhasil diunggah ke subfolder 'kecamatan' Google Drive dan dicatat di sheet Kirim_Rekom_Desa!"
+          : "Data berhasil dicatat di sheet Kirim_Rekom_Desa.",
+        id: id,
+        driveFolderUrl: subFolderUrl,
+        driveFiles: {
+          rekomTtd: rekomTtdResult,
+          spKecamatan: spKecResult,
+          ceklistKecamatan: ceklistKecResult
+        }
+      });
+    }
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 5: HAPUS KIRIM REKOM KE DESA
+    // -------------------------------------------------------------------------------------
+    if (action === "hapusKirimRekomDesa") {
+      var sheetK = ss.getSheetByName(SHEET_KIRIM_REKOM_DESA);
+      if (!sheetK) {
+        return jsonResponse({ success: false, message: "Sheet tidak ditemukan." });
+      }
+      var dataK = sheetK.getDataRange().getValues();
+      var targetId = payload.id;
+      var deleted = false;
+
+      for (var r = 1; r < dataK.length; r++) {
+        if (String(dataK[r][0]) === String(targetId)) {
+          sheetK.deleteRow(r + 1);
+          deleted = true;
+          break;
+        }
+      }
+
+      return jsonResponse({
+        success: deleted,
+        message: deleted ? "Data kiriman rekomendasi berhasil dihapus." : "ID tidak ditemukan."
       });
     }
 

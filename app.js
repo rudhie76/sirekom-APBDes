@@ -138,6 +138,12 @@ const AppState = {
   ],
   operatorDesaAktif: (localStorage.getItem('sip_operator_desa') && localStorage.getItem('sip_operator_desa') !== 'Waru') ? localStorage.getItem('sip_operator_desa') : 'Api-Api',
   pengajuanDesa: JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]').filter(item => item.namaDesa !== 'Waru'),
+  kirimRekomDesa: JSON.parse(localStorage.getItem('sip_kirim_rekom_desa') || '[]'),
+  draftKirimKecamatan: {
+    rekomTtd: null,
+    spKec: null,
+    ceklistKec: null
+  },
   uploadedFilesDraft: {
     sp: null,
     ceklist: null,
@@ -370,6 +376,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHistoryTable();
   updateSyncStatusBadge();
   initDesaOperatorFeature();
+  renderTabelKirimRekomDesa();
+  renderDokumenKecamatanUntukDesa();
   checkAuthSession();
 });
 
@@ -3094,44 +3102,52 @@ window.toggleSidebar = function(forceState) {
 };
 
 /**
- * Beralih Sub-Tab di Menu 3: Verifikasi Berkas vs Generator Rekomendasi
+ * Beralih Sub-Tab di Menu 3: Verifikasi Berkas vs Generator Rekomendasi vs Kirim Rekom Ke Desa
  */
 window.switchKecamatanSubTab = function(tabKey) {
   AppState.kecamatanSubTab = tabKey;
   const tabBtnVerif = document.getElementById('tabBtnVerifikasi');
   const tabBtnGen = document.getElementById('tabBtnGenerator');
+  const tabBtnKirim = document.getElementById('tabBtnKirimDesa');
   const tabContentVerif = document.getElementById('tabContentVerifikasiDesa');
   const tabContentGen = document.getElementById('workspaceKecamatan');
+  const tabContentKirim = document.getElementById('tabContentKirimRekomDesa');
   const splitControls = document.getElementById('containerSplitControls');
   const btnPrintDoc = document.getElementById('btnPrintDoc');
   const btnSaveToDb = document.getElementById('btnSaveToDb');
 
+  // Reset semua tombol subtab ke inaktif
+  const btnInactive = 'px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer';
+  if (tabBtnVerif) tabBtnVerif.className = btnInactive;
+  if (tabBtnGen) tabBtnGen.className = btnInactive;
+  if (tabBtnKirim) tabBtnKirim.className = btnInactive;
+
+  // Sembunyikan semua kontainer subtab
+  if (tabContentVerif) tabContentVerif.classList.add('hidden');
+  if (tabContentGen) tabContentGen.classList.add('hidden');
+  if (tabContentKirim) tabContentKirim.classList.add('hidden');
+
   if (tabKey === 'verifikasi') {
-    if (tabBtnVerif) {
-      tabBtnVerif.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition flex items-center gap-1.5';
-    }
-    if (tabBtnGen) {
-      tabBtnGen.className = 'px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5';
-    }
+    if (tabBtnVerif) tabBtnVerif.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
     if (tabContentVerif) tabContentVerif.classList.remove('hidden');
-    if (tabContentGen) tabContentGen.classList.add('hidden');
     if (splitControls) splitControls.classList.add('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     renderTabelPengajuanKecamatan();
-  } else {
-    if (tabBtnVerif) {
-      tabBtnVerif.className = 'px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5';
-    }
-    if (tabBtnGen) {
-      tabBtnGen.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center gap-1.5';
-    }
-    if (tabContentVerif) tabContentVerif.classList.add('hidden');
+  } else if (tabKey === 'generator') {
+    if (tabBtnGen) tabBtnGen.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
     if (tabContentGen) tabContentGen.classList.remove('hidden');
     if (splitControls) splitControls.classList.remove('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.remove('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.remove('hidden');
     updateLivePreview();
+  } else if (tabKey === 'kirim_desa') {
+    if (tabBtnKirim) tabBtnKirim.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
+    if (tabContentKirim) tabContentKirim.classList.remove('hidden');
+    if (splitControls) splitControls.classList.add('hidden');
+    if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    renderTabelKirimRekomDesa();
   }
 };
 
@@ -3388,6 +3404,7 @@ window.onOperatorDesaChange = function() {
 
   renderTabelPengajuanDesa();
   renderBannerRevisiDesa();
+  renderDokumenKecamatanUntukDesa();
 };
 
 /**
@@ -4013,8 +4030,11 @@ window.renderTabelPengajuanKecamatan = function() {
     } else if (item.status === 'Diterbitkan') {
       tindakanHtml = `
         <div class="flex flex-col gap-1.5">
-          <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="w-full px-2.5 py-1.5 bg-blue-700 hover:bg-blue-600 text-white rounded-lg text-[11px] font-bold transition shadow-xs flex items-center justify-center gap-1 cursor-pointer" title="Buka kembali formulir generator rekomendasi camat">
-            <span>⚡ Buka Rekom Camat</span>
+          <button onclick="bukaModalKirimDariPengajuan('${item.id}')" class="w-full px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[11px] font-bold transition shadow-xs flex items-center justify-center gap-1 cursor-pointer" title="Kirim Berkas Rekomendasi Resmi ke Desa untuk BKAD">
+            <span>📤 Kirim ke Desa</span>
+          </button>
+          <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka kembali formulir generator rekomendasi camat">
+            <span>⚡ Buka Rekom</span>
           </button>
           <button onclick="bukaModalKembalikanPengajuan('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-300 rounded-lg text-[10px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Koreksi dan kembalikan berkas ke desa">
             <span>↩️ Koreksi / Kembalikan</span>
@@ -4033,6 +4053,11 @@ window.renderTabelPengajuanKecamatan = function() {
           <!-- Pilihan 2: Jika Data TIDAK OK -->
           <button onclick="bukaModalKembalikanPengajuan('${item.id}')" class="w-full px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-300 hover:border-rose-400 rounded-lg text-[11px] font-bold transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer" title="Data berkas belum lengkap atau salah: Kembalikan ke desa dengan catatan perbaikan">
             <span>↩️ Tidak OK: Kembalikan</span>
+          </button>
+
+          <!-- Pilihan 3: Kirim Langsung Dokumen ke Desa -->
+          <button onclick="bukaModalKirimDariPengajuan('${item.id}')" class="w-full px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer" title="Unggah 3 Berkas & Kirim ke Desa untuk BKAD">
+            <span>📤 Kirim ke Desa</span>
           </button>
         </div>
       `;
@@ -4364,10 +4389,13 @@ window.sinkronPengajuanKeGoogleSheets = async function() {
       await sinkronRiwayatDariGoogleSheets(true);
       await sinkronMasterDesaDariGoogleSheets(true);
       await sinkronDataUserDariGoogleSheets();
+      await sinkronKirimRekomDariGoogleSheets(true);
     } catch (_) {}
     updateBadgePengajuanDesa();
     renderTabelPengajuanKecamatan();
     renderTabelPengajuanDesa();
+    renderTabelKirimRekomDesa();
+    renderDokumenKecamatanUntukDesa();
     renderDashboardSummary();
   }
 };
@@ -4421,11 +4449,15 @@ window.kosongkanDatabaseLokal = async function() {
   }
   AppState.pengajuanDesa = [];
   AppState.riwayat = [];
+  AppState.kirimRekomDesa = [];
   localStorage.setItem('sip_pengajuan_desa', '[]');
   localStorage.setItem('sip_riwayat_rekom', '[]');
+  localStorage.setItem('sip_kirim_rekom_desa', '[]');
   renderDashboardSummary();
   renderTabelPengajuanKecamatan();
   renderTabelPengajuanDesa();
+  renderTabelKirimRekomDesa();
+  renderDokumenKecamatanUntukDesa();
   renderHistoryTable();
   updateBadgePengajuanDesa();
 
@@ -4434,6 +4466,614 @@ window.kosongkanDatabaseLokal = async function() {
     await sinkronPengajuanKeGoogleSheets();
   } else {
     showToast('Database lokal di browser berhasil dibersihkan!', 'success');
+  }
+};
+
+/**
+ * =============================================================================
+ * TAB 3: KIRIM REKOM KE DESA (DOKUMEN RESMI KECAMATAN SIAP BKAD)
+ * =============================================================================
+ */
+
+// Buka Modal Kirim Rekom ke Desa
+window.bukaModalKirimRekomDesa = function(editId = null, prefillData = null) {
+  const modal = document.getElementById('modalKirimRekomDesa');
+  if (!modal) return;
+
+  AppState.draftKirimKecamatan = {
+    rekomTtd: null,
+    spKec: null,
+    ceklistKec: null
+  };
+
+  const form = document.getElementById('formKirimRekomDesa');
+  if (form) form.reset();
+
+  const idInput = document.getElementById('inputKirimEditId');
+  const title = document.getElementById('modalKirimRekomTitle');
+  const btnSubmit = document.getElementById('btnSubmitKirimRekomDesa');
+
+  // Reset file info
+  const fInfoRekom = document.getElementById('fileInfoKirimRekomTtd');
+  const fInfoSp = document.getElementById('fileInfoKirimSpKec');
+  const fInfoCek = document.getElementById('fileInfoKirimCeklistKec');
+  if (fInfoRekom) fInfoRekom.innerHTML = 'Belum ada file dipilih';
+  if (fInfoSp) fInfoSp.innerHTML = 'Belum ada file dipilih';
+  if (fInfoCek) fInfoCek.innerHTML = 'Belum ada file dipilih';
+
+  if (editId) {
+    const item = (AppState.kirimRekomDesa || []).find(k => k.id === editId);
+    if (item) {
+      if (idInput) idInput.value = item.id;
+      if (title) title.textContent = 'Edit Dokumen Kiriman Rekomendasi ke Desa';
+      if (btnSubmit) btnSubmit.innerHTML = '<span>💾 Simpan Perubahan</span>';
+
+      const selDesa = document.getElementById('selectKirimDesa');
+      const selJenis = document.getElementById('selectKirimJenisDana');
+      const selTahap = document.getElementById('selectKirimTahap');
+      const inTahun = document.getElementById('inputKirimTahun');
+      const inNominal = document.getElementById('inputKirimNominal');
+      const inNoRekom = document.getElementById('inputKirimNomorRekom');
+      const inTglRekom = document.getElementById('inputKirimTanggalRekom');
+      const inNoSp = document.getElementById('inputKirimNomorSpKec');
+      const inTglSp = document.getElementById('inputKirimTanggalSpKec');
+      const inCatatan = document.getElementById('inputKirimCatatan');
+
+      if (selDesa) selDesa.value = item.namaDesa || 'Api-Api';
+      if (selJenis) selJenis.value = item.jenisDana || 'add_reguler';
+      if (selTahap) selTahap.value = item.tahap || 'Tahap II';
+      if (inTahun) inTahun.value = item.tahunAnggaran || '2026';
+      if (inNominal) inNominal.value = formatRupiah(item.nominal || 0).replace('Rp ', '');
+      if (inNoRekom) inNoRekom.value = item.nomorRekom || '';
+      if (inTglRekom) inTglRekom.value = item.tanggalRekom || '';
+      if (inNoSp) inNoSp.value = item.nomorSpKec || '';
+      if (inTglSp) inTglSp.value = item.tanggalSpKec || '';
+      if (inCatatan) inCatatan.value = item.catatan || '';
+
+      if (fInfoRekom && item.fileRekomTtdName) {
+        fInfoRekom.innerHTML = `<span class="text-blue-700 font-semibold text-[10px]">📁 File ada: ${escapeHtml(item.fileRekomTtdName)}</span>`;
+      }
+      if (fInfoSp && item.fileSpKecName) {
+        fInfoSp.innerHTML = `<span class="text-indigo-700 font-semibold text-[10px]">📁 File ada: ${escapeHtml(item.fileSpKecName)}</span>`;
+      }
+      if (fInfoCek && item.fileCeklistKecName) {
+        fInfoCek.innerHTML = `<span class="text-emerald-700 font-semibold text-[10px]">📁 File ada: ${escapeHtml(item.fileCeklistKecName)}</span>`;
+      }
+    }
+  } else {
+    if (idInput) idInput.value = '';
+    if (title) title.textContent = 'Kirim Dokumen Rekomendasi ke Desa';
+    if (btnSubmit) btnSubmit.innerHTML = '<span>🚀 Simpan & Kirim ke Desa</span>';
+
+    const today = new Date().toISOString().split('T')[0];
+    const tglRekom = document.getElementById('inputKirimTanggalRekom');
+    const tglSp = document.getElementById('inputKirimTanggalSpKec');
+    if (tglRekom) tglRekom.value = today;
+    if (tglSp) tglSp.value = today;
+
+    if (prefillData) {
+      if (prefillData.namaDesa && document.getElementById('selectKirimDesa')) document.getElementById('selectKirimDesa').value = prefillData.namaDesa;
+      if (prefillData.jenisDana && document.getElementById('selectKirimJenisDana')) document.getElementById('selectKirimJenisDana').value = prefillData.jenisDana;
+      if (prefillData.tahap && document.getElementById('selectKirimTahap')) document.getElementById('selectKirimTahap').value = prefillData.tahap;
+      if (prefillData.tahunAnggaran && document.getElementById('inputKirimTahun')) document.getElementById('inputKirimTahun').value = prefillData.tahunAnggaran;
+      if (prefillData.nominal && document.getElementById('inputKirimNominal')) document.getElementById('inputKirimNominal').value = formatRupiah(prefillData.nominal).replace('Rp ', '');
+    }
+  }
+
+  modal.classList.remove('hidden');
+};
+
+// Tutup Modal
+window.tutupModalKirimRekomDesa = function() {
+  const modal = document.getElementById('modalKirimRekomDesa');
+  if (modal) modal.classList.add('hidden');
+};
+
+// Handle file pick untuk kecamatan
+window.handleKirimKecamatanFilePick = function(type, inputEl) {
+  if (!inputEl || !inputEl.files || inputEl.files.length === 0) return;
+  const file = inputEl.files[0];
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const fileId = `file_krm_${type}_${Date.now()}`;
+    if (!AppState.draftKirimKecamatan) AppState.draftKirimKecamatan = {};
+    AppState.draftKirimKecamatan[type] = {
+      id: fileId,
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: file.type,
+      dataUrl: e.target.result
+    };
+
+    const infoMap = {
+      rekomTtd: 'fileInfoKirimRekomTtd',
+      spKec: 'fileInfoKirimSpKec',
+      ceklistKec: 'fileInfoKirimCeklistKec'
+    };
+    const infoEl = document.getElementById(infoMap[type]);
+    if (infoEl) {
+      infoEl.innerHTML = `
+        <span class="inline-flex items-center gap-1 text-emerald-700 font-bold">
+          <span>✅</span> <span class="truncate max-w-[150px]">${escapeHtml(file.name)}</span>
+        </span>
+        <span class="block text-[9.5px] text-slate-500 font-mono">(${formatFileSize(file.size)})</span>
+      `;
+    }
+    showToast(`Dokumen "${file.name}" berhasil dipilih!`, 'success');
+  };
+  reader.onerror = function() {
+    showToast('Gagal membaca berkas.', 'error');
+  };
+  reader.readAsDataURL(file);
+};
+
+// Buka Modal Kirim langsung dari daftar pengajuan kotak masuk
+window.bukaModalKirimDariPengajuan = function(pengajuanId) {
+  const item = (AppState.pengajuanDesa || []).find(p => p.id === pengajuanId);
+  if (!item) {
+    showToast('Data pengajuan berkas tidak ditemukan.', 'error');
+    return;
+  }
+  switchKecamatanSubTab('kirim_desa');
+  bukaModalKirimRekomDesa(null, {
+    namaDesa: item.namaDesa,
+    jenisDana: item.jenisDana,
+    tahap: item.tahap,
+    tahunAnggaran: item.tahunAnggaran,
+    nominal: item.nominal
+  });
+};
+
+// Submit Simpan & Kirim Rekomendasi ke Desa
+window.simpanKirimRekomDesa = async function(event) {
+  if (event) event.preventDefault();
+
+  const editId = document.getElementById('inputKirimEditId')?.value || '';
+  const desa = document.getElementById('selectKirimDesa')?.value || 'Api-Api';
+  const jenisDana = document.getElementById('selectKirimJenisDana')?.value || 'add_reguler';
+  const tahap = document.getElementById('selectKirimTahap')?.value || 'Tahap II';
+  const tahun = document.getElementById('inputKirimTahun')?.value || '2026';
+  const nominalStr = document.getElementById('inputKirimNominal')?.value || '0';
+  const nominalAngka = parseNominal(nominalStr);
+
+  const noRekom = document.getElementById('inputKirimNomorRekom')?.value?.trim() || '';
+  const tglRekom = document.getElementById('inputKirimTanggalRekom')?.value || '';
+  const noSpKec = document.getElementById('inputKirimNomorSpKec')?.value?.trim() || '';
+  const tglSpKec = document.getElementById('inputKirimTanggalSpKec')?.value || '';
+  const catatan = document.getElementById('inputKirimCatatan')?.value?.trim() || '';
+
+  if (!noRekom || !tglRekom) {
+    showToast('Nomor dan Tanggal Surat Rekomendasi Camat wajib diisi!', 'warning');
+    return;
+  }
+  if (!noSpKec || !tglSpKec) {
+    showToast('Nomor dan Tanggal Surat Pengantar Kecamatan wajib diisi!', 'warning');
+    return;
+  }
+
+  const btnSubmit = document.getElementById('btnSubmitKirimRekomDesa');
+  const origBtnHtml = btnSubmit ? btnSubmit.innerHTML : '';
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<span>⏳ Menyimpan & Menyiapkan Berkas...</span>';
+  }
+
+  const isEditing = Boolean(editId);
+  const existingItem = isEditing ? (AppState.kirimRekomDesa || []).find(k => k.id === editId) : null;
+  const draft = AppState.draftKirimKecamatan || {};
+
+  // 1. Simpan ke IndexedDB lokal
+  const fileRekomTtdId = draft.rekomTtd ? draft.rekomTtd.id : (existingItem ? existingItem.fileRekomTtdId : `file_krm_rekom_${Date.now()}`);
+  const fileRekomTtdName = draft.rekomTtd ? draft.rekomTtd.name : (existingItem ? existingItem.fileRekomTtdName : `Rekom_TTD_${desa.replace(/\s+/g, '_')}.pdf`);
+  if (draft.rekomTtd) await FileStorage.saveFile(draft.rekomTtd);
+
+  const fileSpKecId = draft.spKec ? draft.spKec.id : (existingItem ? existingItem.fileSpKecId : `file_krm_sp_${Date.now()}`);
+  const fileSpKecName = draft.spKec ? draft.spKec.name : (existingItem ? existingItem.fileSpKecName : `SP_Kecamatan_${desa.replace(/\s+/g, '_')}.pdf`);
+  if (draft.spKec) await FileStorage.saveFile(draft.spKec);
+
+  const fileCeklistKecId = draft.ceklistKec ? draft.ceklistKec.id : (existingItem ? existingItem.fileCeklistKecId : `file_krm_cek_${Date.now()}`);
+  const fileCeklistKecName = draft.ceklistKec ? draft.ceklistKec.name : (existingItem ? existingItem.fileCeklistKecName : `Ceklist_Kecamatan_${desa.replace(/\s+/g, '_')}.pdf`);
+  if (draft.ceklistKec) await FileStorage.saveFile(draft.ceklistKec);
+
+  let recordToSave;
+  if (isEditing && existingItem) {
+    existingItem.namaDesa = desa;
+    existingItem.jenisDana = jenisDana;
+    existingItem.tahap = tahap;
+    existingItem.tahunAnggaran = tahun;
+    existingItem.nominal = nominalAngka;
+    existingItem.nomorRekom = noRekom;
+    existingItem.tanggalRekom = tglRekom;
+    existingItem.nomorSpKec = noSpKec;
+    existingItem.tanggalSpKec = tglSpKec;
+    existingItem.catatan = catatan;
+    existingItem.fileRekomTtdId = fileRekomTtdId;
+    existingItem.fileRekomTtdName = fileRekomTtdName;
+    existingItem.fileSpKecId = fileSpKecId;
+    existingItem.fileSpKecName = fileSpKecName;
+    existingItem.fileCeklistKecId = fileCeklistKecId;
+    existingItem.fileCeklistKecName = fileCeklistKecName;
+    existingItem.waktuKirim = new Date().toISOString();
+    existingItem.status = 'Siap Kirim ke BKAD';
+    recordToSave = existingItem;
+  } else {
+    recordToSave = {
+      id: `KRM-${new Date().toISOString().replace(/\D/g, '').substring(0, 14)}`,
+      namaDesa: desa,
+      jenisDana: jenisDana,
+      tahap: tahap,
+      tahunAnggaran: tahun,
+      nominal: nominalAngka,
+      nomorRekom: noRekom,
+      tanggalRekom: tglRekom,
+      nomorSpKec: noSpKec,
+      tanggalSpKec: tglSpKec,
+      catatan: catatan,
+      fileRekomTtdId: fileRekomTtdId,
+      fileRekomTtdName: fileRekomTtdName,
+      fileSpKecId: fileSpKecId,
+      fileSpKecName: fileSpKecName,
+      fileCeklistKecId: fileCeklistKecId,
+      fileCeklistKecName: fileCeklistKecName,
+      waktuKirim: new Date().toISOString(),
+      status: 'Siap Kirim ke BKAD'
+    };
+    if (!Array.isArray(AppState.kirimRekomDesa)) AppState.kirimRekomDesa = [];
+    AppState.kirimRekomDesa.unshift(recordToSave);
+  }
+
+  localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
+
+  // 2. Upload berkas ke subfolder 'kecamatan' di Google Drive & simpan ke Google Sheets
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    try {
+      if (btnSubmit) btnSubmit.innerHTML = '<span>☁️ Mengunggah ke Google Drive (subfolder kecamatan)...</span>';
+      const payloadGas = {
+        action: 'simpanKirimRekomDesa',
+        id: recordToSave.id,
+        namaDesa: recordToSave.namaDesa,
+        jenisDana: recordToSave.jenisDana,
+        tahap: recordToSave.tahap,
+        tahunAnggaran: recordToSave.tahunAnggaran,
+        nominal: recordToSave.nominal,
+        nomorRekom: recordToSave.nomorRekom,
+        tanggalRekom: recordToSave.tanggalRekom,
+        nomorSpKec: recordToSave.nomorSpKec,
+        tanggalSpKec: recordToSave.tanggalSpKec,
+        catatan: recordToSave.catatan,
+        status: recordToSave.status,
+        fileRekomTtd: draft.rekomTtd ? { name: draft.rekomTtd.name, type: draft.rekomTtd.type, dataUrl: draft.rekomTtd.dataUrl } : null,
+        fileSpKecamatan: draft.spKec ? { name: draft.spKec.name, type: draft.spKec.type, dataUrl: draft.spKec.dataUrl } : null,
+        fileCeklistKecamatan: draft.ceklistKec ? { name: draft.ceklistKec.name, type: draft.ceklistKec.type, dataUrl: draft.ceklistKec.dataUrl } : null,
+        existingRekomTtd: existingItem ? { name: existingItem.fileRekomTtdName, url: existingItem.driveRekomTtdUrl || '-' } : null,
+        existingSpKecamatan: existingItem ? { name: existingItem.fileSpKecName, url: existingItem.driveSpKecUrl || '-' } : null,
+        existingCeklistKecamatan: existingItem ? { name: existingItem.fileCeklistKecName, url: existingItem.driveCeklistKecUrl || '-' } : null
+      };
+
+      const res = await fetch(AppState.gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payloadGas)
+      });
+      const resJson = await res.json();
+      if (resJson.success) {
+        recordToSave.driveFolderUrl = resJson.driveFolderUrl;
+        if (resJson.driveFiles) {
+          if (resJson.driveFiles.rekomTtd && resJson.driveFiles.rekomTtd.url !== '-') recordToSave.driveRekomTtdUrl = resJson.driveFiles.rekomTtd.url;
+          if (resJson.driveFiles.spKecamatan && resJson.driveFiles.spKecamatan.url !== '-') recordToSave.driveSpKecUrl = resJson.driveFiles.spKecamatan.url;
+          if (resJson.driveFiles.ceklistKecamatan && resJson.driveFiles.ceklistKecamatan.url !== '-') recordToSave.driveCeklistKecUrl = resJson.driveFiles.ceklistKecamatan.url;
+        }
+        localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
+        showToast('Berkas berhasil diunggah ke Google Drive subfolder kecamatan & dicatat di Google Sheets!', 'success');
+      }
+    } catch (gasErr) {
+      console.warn('Gagal sinkron ke Google Drive kecamatan:', gasErr);
+      showToast('Data tersimpan di database lokal (Offline Google Sheets).', 'info');
+    }
+  }
+
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = origBtnHtml;
+  }
+
+  tutupModalKirimRekomDesa();
+  renderTabelKirimRekomDesa();
+  renderDokumenKecamatanUntukDesa();
+  showToast(`Dokumen Rekomendasi untuk Desa ${desa} berhasil disimpan & dikirim!`, 'success');
+};
+
+// Hapus Kiriman Rekomendasi
+window.hapusKirimRekomDesa = async function(id) {
+  if (!confirm('Apakah Anda yakin ingin menghapus data kiriman rekomendasi ini?')) return;
+  AppState.kirimRekomDesa = (AppState.kirimRekomDesa || []).filter(k => k.id !== id);
+  localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
+
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    try {
+      fetch(AppState.gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'hapusKirimRekomDesa', id: id })
+      }).catch(e => console.warn(e));
+    } catch (_) {}
+  }
+
+  renderTabelKirimRekomDesa();
+  renderDokumenKecamatanUntukDesa();
+  showToast('Data kiriman rekomendasi berhasil dihapus.', 'info');
+};
+
+// Render Tabel Tab 3
+window.renderTabelKirimRekomDesa = function() {
+  const tbody = document.getElementById('tbodyKirimRekomDesa');
+  const badgeTotal = document.getElementById('badgeTotalKirimRekom');
+  const badgeTab = document.getElementById('badgeTabKirimDesaCount');
+  if (!tbody) return;
+
+  const filterDesa = document.getElementById('filterDesaKirim')?.value || 'semua';
+  const filterJenis = document.getElementById('filterJenisKirim')?.value || 'semua';
+
+  let list = AppState.kirimRekomDesa || [];
+  if (badgeTab) badgeTab.textContent = list.length;
+  if (badgeTotal) badgeTotal.textContent = `${list.length} Rekomendasi Terkirim`;
+
+  if (filterDesa !== 'semua') {
+    list = list.filter(item => item.namaDesa === filterDesa);
+  }
+  if (filterJenis !== 'semua') {
+    list = list.filter(item => item.jenisDana === filterJenis);
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="text-center py-12 text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <span class="text-3xl">📤</span>
+            <span class="font-bold text-slate-600 text-xs">Belum ada Rekomendasi yang dikirimkan ke Desa.</span>
+            <span class="text-[11px] text-slate-400">Klik tombol "➕ Kirim Rekom Baru ke Desa" di atas untuk mulai mengunggah berkas resmi.</span>
+            <button onclick="bukaModalKirimRekomDesa()" class="mt-2 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+              ➕ Buat Kiriman Pertama
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = list.map((item, index) => {
+    return `
+      <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+        <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
+        <td class="py-3 px-3">
+          <div class="font-bold text-slate-900 text-xs">Desa ${escapeHtml(item.namaDesa)}</div>
+          <div class="text-[11px] text-slate-500">${new Date(item.waktuKirim).toLocaleDateString('id-ID')} ${new Date(item.waktuKirim).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>
+        </td>
+        <td class="py-3 px-3">
+          <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+            ${escapeHtml(getNamaTipe(item.jenisDana))}
+          </span>
+          <div class="text-[11px] text-slate-600 mt-0.5 font-medium">${escapeHtml(item.tahap)} TA ${escapeHtml(item.tahunAnggaran)}</div>
+        </td>
+        <td class="py-3 px-3">
+          <div class="font-mono text-xs font-semibold text-slate-800">${escapeHtml(item.nomorRekom || '-')}</div>
+          <div class="text-[11px] text-blue-900 font-medium">Tgl: <strong>${formatTanggalIndo(item.tanggalRekom)}</strong></div>
+        </td>
+        <td class="py-3 px-3">
+          <div class="font-mono text-xs font-semibold text-slate-800">${escapeHtml(item.nomorSpKec || '-')}</div>
+          <div class="text-[11px] text-indigo-900 font-medium">Tgl: <strong>${formatTanggalIndo(item.tanggalSpKec)}</strong></div>
+        </td>
+        <td class="py-3 px-3 text-right font-mono font-bold text-emerald-800 text-xs">
+          ${formatRupiah(item.nominal)}
+        </td>
+        <td class="py-3 px-3 text-center">
+          <div class="flex flex-col gap-1 items-center min-w-[150px]">
+            <button onclick="downloadDokumenPengajuan('${item.fileRekomTtdId}', '${item.fileRekomTtdName}', '${item.driveRekomTtdUrl || ''}')" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[10px] font-bold border border-blue-200 transition flex items-center gap-1 w-full justify-center cursor-pointer" title="Unduh Rekomendasi Desa Sudah TTD">
+              <span>📄 1. Rekom TTD</span>
+            </button>
+            <button onclick="downloadDokumenPengajuan('${item.fileSpKecId}', '${item.fileSpKecName}', '${item.driveSpKecUrl || ''}')" class="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[10px] font-bold border border-indigo-200 transition flex items-center gap-1 w-full justify-center cursor-pointer" title="Unduh Surat Pengantar Kecamatan">
+              <span>✉️ 2. SP Kecamatan</span>
+            </button>
+            <button onclick="downloadDokumenPengajuan('${item.fileCeklistKecId}', '${item.fileCeklistKecName}', '${item.driveCeklistKecUrl || ''}')" class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold border border-emerald-200 transition flex items-center gap-1 w-full justify-center cursor-pointer" title="Unduh Ceklist Kecamatan">
+              <span>📋 3. Ceklist Kecamatan</span>
+            </button>
+            ${item.driveFolderUrl ? `
+            <a href="${item.driveFolderUrl}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[9.5px] font-bold border border-slate-300 transition flex items-center gap-1 w-full justify-center mt-0.5" title="Buka Subfolder Kecamatan di Google Drive">
+              <span>📁 Drive Kecamatan</span>
+            </a>` : ''}
+          </div>
+        </td>
+        <td class="py-3 px-3 text-center">
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs">
+            <span>✅</span>
+            <span>${escapeHtml(item.status || 'Siap Kirim ke BKAD')}</span>
+          </span>
+          ${item.catatan ? `<div class="mt-1 text-[10px] text-slate-500 italic max-w-[150px] truncate" title="${escapeHtml(item.catatan)}">"${escapeHtml(item.catatan)}"</div>` : ''}
+        </td>
+        <td class="py-3 px-3 text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            <button onclick="bukaModalKirimRekomDesa('${item.id}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 rounded-lg text-xs font-semibold border border-amber-200 transition cursor-pointer" title="Edit Data & Berkas">
+              ✏️ Edit
+            </button>
+            <button onclick="hapusKirimRekomDesa('${item.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 rounded-lg text-xs font-semibold border border-rose-200 transition cursor-pointer" title="Hapus Kiriman">
+              🗑️
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+// Render Dokumen Rekomendasi di Akun Desa (Siap BKAD)
+window.renderDokumenKecamatanUntukDesa = function() {
+  const container = document.getElementById('containerListRekomDesa');
+  const badgeCount = document.getElementById('badgeCountRekomBkad');
+  if (!container) return;
+
+  const currentDesa = AppState.operatorDesaAktif || 'Api-Api';
+  const list = (AppState.kirimRekomDesa || []).filter(item => item.namaDesa === currentDesa);
+
+  if (badgeCount) badgeCount.textContent = `${list.length} Dokumen`;
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="bg-slate-900/60 p-5 rounded-xl border border-blue-500/20 text-center space-y-1.5">
+        <span class="text-2xl">📭</span>
+        <div class="text-xs font-bold text-blue-200">Belum ada Rekomendasi Resmi dari Kecamatan Waru untuk Desa ${escapeHtml(currentDesa)}.</div>
+        <p class="text-[11px] text-slate-400">Setelah pengajuan diverifikasi dan ditandatangani Camat, dokumen resmi akan otomatis tampil di sini dan siap diunduh untuk dikirim ke BKAD.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = list.map(item => {
+    return `
+      <div class="bg-slate-900/80 border border-blue-500/30 rounded-xl p-4 transition hover:border-blue-400/60 shadow-md">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-blue-800/60 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/30 text-emerald-300 border border-emerald-400/30">
+                ✅ Siap Kirim ke BKAD
+              </span>
+              <span class="text-[11px] text-blue-300 font-semibold">${getNamaTipe(item.jenisDana)} - ${escapeHtml(item.tahap)} TA ${escapeHtml(item.tahunAnggaran)}</span>
+            </div>
+            <div class="text-sm font-bold text-white mt-1">
+              Pencairan: <span class="font-mono text-emerald-400">${formatRupiah(item.nominal)}</span>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-300 flex flex-col items-start md:items-end">
+            <span>Diterbitkan: <b>${formatTanggalIndo(item.tanggalRekom)}</b></span>
+            <span class="text-[10px] text-slate-400">Dikirim Kec: ${new Date(item.waktuKirim).toLocaleDateString('id-ID')}</span>
+          </div>
+        </div>
+
+        <!-- Detail Nomor & Tanggal Surat Resmi -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 text-xs border-b border-blue-800/40">
+          <div class="bg-slate-800/70 p-2.5 rounded-lg border border-slate-700">
+            <span class="block text-[10px] text-blue-300 uppercase font-bold">📄 Surat Rekomendasi Camat Waru:</span>
+            <span class="font-mono font-bold text-white text-xs">${escapeHtml(item.nomorRekom || '-')}</span>
+            <span class="block text-[10.5px] text-slate-400 mt-0.5">Tanggal: ${formatTanggalIndo(item.tanggalRekom)}</span>
+          </div>
+          <div class="bg-slate-800/70 p-2.5 rounded-lg border border-slate-700">
+            <span class="block text-[10px] text-indigo-300 uppercase font-bold">✉️ Surat Pengantar (SP) Kecamatan:</span>
+            <span class="font-mono font-bold text-white text-xs">${escapeHtml(item.nomorSpKec || '-')}</span>
+            <span class="block text-[10.5px] text-slate-400 mt-0.5">Tanggal: ${formatTanggalIndo(item.tanggalSpKec)}</span>
+          </div>
+        </div>
+
+        ${item.catatan ? `
+        <div class="py-2 text-[11px] text-amber-200 bg-amber-950/40 px-3 rounded-lg border border-amber-700/40 my-2">
+          <b>Catatan Kecamatan:</b> ${escapeHtml(item.catatan)}
+        </div>` : ''}
+
+        <!-- 3 Tombol Download Dokumen untuk Desa Kirim ke BKAD -->
+        <div class="pt-2 flex flex-wrap items-center justify-between gap-2">
+          <div class="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+            <span>📥 Unduh Berkas untuk BKAD:</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="downloadDokumenPengajuan('${item.fileRekomTtdId}', '${item.fileRekomTtdName}', '${item.driveRekomTtdUrl || ''}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Unduh Rekomendasi Camat yang sudah bertanda tangan">
+              <span>📄 Rekom Camat (TTD)</span>
+            </button>
+            <button onclick="downloadDokumenPengajuan('${item.fileSpKecId}', '${item.fileSpKecName}', '${item.driveSpKecUrl || ''}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Unduh Surat Pengantar Resmi Kecamatan Waru">
+              <span>✉️ SP Kecamatan</span>
+            </button>
+            <button onclick="downloadDokumenPengajuan('${item.fileCeklistKecId}', '${item.fileCeklistKecName}', '${item.driveCeklistKecUrl || ''}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Unduh Ceklist Kelengkapan Kecamatan">
+              <span>📋 Ceklist Kecamatan</span>
+            </button>
+            ${item.driveFolderUrl ? `
+            <a href="${item.driveFolderUrl}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer" title="Buka Folder Google Drive">
+              <span>📂 Folder Drive</span>
+            </a>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+// Sinkronisasi data Kirim Rekom dari Google Sheets
+window.sinkronKirimRekomDariGoogleSheets = async function(silent = false) {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) {
+    renderTabelKirimRekomDesa();
+    renderDokumenKecamatanUntukDesa();
+    if (!silent) showToast('Data lokal ditampilkan. Atur URL Web App di Pengaturan untuk terhubung ke Cloud.', 'info');
+    return;
+  }
+
+  try {
+    if (!silent) showToast('Mengambil data Kirim Rekom dari Google Sheets...', 'info');
+    const url = `${AppState.gasUrl}?action=getKirimRekomDesa&_t=${Date.now()}`;
+    const res = await fetch(url);
+    const result = await res.json();
+
+    if (result.success && Array.isArray(result.data)) {
+      const cloudList = result.data.map(row => ({
+        id: row['ID Kirim Rekom'] || `KRM-${Date.now()}`,
+        waktuKirim: row['Waktu Kirim (WITA)'] ? new Date(row['Waktu Kirim (WITA)']).toISOString() : new Date().toISOString(),
+        namaDesa: row['Nama Desa'] || '',
+        jenisDana: row['Jenis Dana'] || 'add_reguler',
+        tahap: row['Tahap / Bulan'] || '',
+        tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
+        nominal: Number(row['Nominal (Rp)']) || 0,
+        nomorRekom: row['Nomor Rekomendasi'] || '',
+        tanggalRekom: row['Tanggal Rekomendasi'] ? String(row['Tanggal Rekomendasi']).substring(0, 10) : '',
+        nomorSpKec: row['Nomor SP Kecamatan'] || '',
+        tanggalSpKec: row['Tanggal SP Kecamatan'] ? String(row['Tanggal SP Kecamatan']).substring(0, 10) : '',
+        fileRekomTtdId: `file_krm_rekom_${row['ID Kirim Rekom']}`,
+        fileRekomTtdName: row['Nama File Rekom TTD'] || 'Rekom_TTD.pdf',
+        driveRekomTtdUrl: row['Link Google Drive Rekom TTD'] && row['Link Google Drive Rekom TTD'] !== '-' ? row['Link Google Drive Rekom TTD'] : null,
+        fileSpKecId: `file_krm_sp_${row['ID Kirim Rekom']}`,
+        fileSpKecName: row['Nama File SP Kecamatan'] || 'SP_Kecamatan.pdf',
+        driveSpKecUrl: row['Link Google Drive SP Kecamatan'] && row['Link Google Drive SP Kecamatan'] !== '-' ? row['Link Google Drive SP Kecamatan'] : null,
+        fileCeklistKecId: `file_krm_cek_${row['ID Kirim Rekom']}`,
+        fileCeklistKecName: row['Nama File Ceklist Kecamatan'] || 'Ceklist_Kecamatan.pdf',
+        driveCeklistKecUrl: row['Link Google Drive Ceklist Kecamatan'] && row['Link Google Drive Ceklist Kecamatan'] !== '-' ? row['Link Google Drive Ceklist Kecamatan'] : null,
+        driveFolderUrl: row['Folder Google Drive Kecamatan'] && row['Folder Google Drive Kecamatan'] !== '-' ? row['Folder Google Drive Kecamatan'] : null,
+        status: row['Status'] || 'Siap Kirim ke BKAD',
+        catatan: row['Catatan untuk Desa'] || ''
+      }));
+
+      AppState.kirimRekomDesa = cloudList;
+      AppState.kirimRekomDesa.sort((a, b) => new Date(b.waktuKirim) - new Date(a.waktuKirim));
+      localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
+
+      if (!silent) {
+        showToast(`Berhasil menarik ${cloudList.length} data kiriman rekomendasi dari Google Sheets!`, 'success');
+      }
+    }
+  } catch (err) {
+    console.warn('Gagal menarik Kirim Rekom dari Google Sheets:', err);
+    if (!silent) showToast('Gagal sinkron data dari Google Sheets.', 'error');
+  } finally {
+    renderTabelKirimRekomDesa();
+    renderDokumenKecamatanUntukDesa();
+  }
+};
+
+// Buka subfolder 'kecamatan' di Google Drive
+window.openDriveFolderSubKecamatan = async function() {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) {
+    alert('URL Google Apps Script belum disetel di Konfigurasi Google Sheets.\n\nSilakan masukkan URL Web App Google Apps Script terlebih dahulu agar folder Google Drive otomatis terbuka.');
+    return;
+  }
+  try {
+    showToast('Membuka subfolder kecamatan di Google Drive...', 'info');
+    const res = await fetch(`${AppState.gasUrl}?action=ping`);
+    const data = await res.json();
+    if (data.driveKecamatanFolderUrl && data.driveKecamatanFolderUrl !== '-') {
+      window.open(data.driveKecamatanFolderUrl, '_blank');
+    } else if (data.driveFolderUrl && data.driveFolderUrl !== '-') {
+      window.open(data.driveFolderUrl, '_blank');
+    } else {
+      window.open('https://drive.google.com/', '_blank');
+    }
+  } catch (e) {
+    window.open('https://drive.google.com/', '_blank');
   }
 };
 

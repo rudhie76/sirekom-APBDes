@@ -841,6 +841,10 @@
           <button id="tabBtnGenerator" onclick="switchKecamatanSubTab('generator')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
             <span>📝 2. Generator Rekomendasi Camat</span>
           </button>
+          <button id="tabBtnKirimDesa" onclick="switchKecamatanSubTab('kirim_desa')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
+            <span>📤 3. Kirim Rekom Ke Desa</span>
+            <span id="badgeTabKirimDesaCount" class="bg-blue-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+          </button>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="openDriveFolderKecamatan()" class="px-3 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs">
@@ -1289,6 +1293,81 @@
     </div>
     <!-- /#workspaceKecamatan -->
 
+    <!-- ============================================================================= -->
+    <!-- TAB 3: KIRIM REKOM KE DESA (DOKUMEN RESMI KECAMATAN SIAP BKAD) -->
+    <!-- ============================================================================= -->
+    <div id="tabContentKirimRekomDesa" class="hidden flex-1 flex flex-col overflow-hidden bg-slate-50">
+      <!-- Filter & Action Bar -->
+      <div class="p-3.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+        <div class="flex flex-wrap items-center gap-3">
+          <button onclick="bukaModalKirimRekomDesa()" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+            <span>➕ Kirim Rekom Baru ke Desa</span>
+          </button>
+
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs font-semibold text-slate-700">Filter Desa:</label>
+            <select id="filterDesaKirim" onchange="renderTabelKirimRekomDesa()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 focus:bg-white">
+              <option value="semua">Semua Desa (3 Desa)</option>
+              <option value="Api-Api">Desa Api-Api</option>
+              <option value="Sesulu">Desa Sesulu</option>
+              <option value="Bangun Mulya">Desa Bangun Mulya</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs font-semibold text-slate-700">Jenis Dana:</label>
+            <select id="filterJenisKirim" onchange="renderTabelKirimRekomDesa()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-800 focus:bg-white">
+              <option value="semua">Semua Jenis Dana</option>
+              <option value="siltap">ADD Siltap & Tunjangan</option>
+              <option value="add_reguler">ADD Reguler</option>
+              <option value="dbh">PBH / DBH</option>
+              <option value="dd">Dana Desa (DD)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openDriveFolderSubKecamatan()" class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs" title="Buka Subfolder 'kecamatan' di Google Drive">
+            <span>📁 Folder Kecamatan Drive</span>
+          </button>
+          <button onclick="sinkronKirimRekomDariGoogleSheets()" class="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs" title="Tarik data dari Google Sheets">
+            <span>🔄 Tarik Data</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Banner Info Petunjuk -->
+      <div class="px-4 py-2.5 bg-blue-50/80 border-b border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-blue-900 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-base">💡</span>
+          <span><b>Arsip Dokumen Resmi Siap BKAD:</b> Unggah Rekom yang sudah TTD, Surat Pengantar Kecamatan, dan Ceklist Kecamatan. Berkas tersimpan di subfolder <code>kecamatan</code> Google Drive & siap diunduh Desa untuk diteruskan ke BKAD.</span>
+        </div>
+        <span id="badgeTotalKirimRekom" class="self-start sm:self-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-900 whitespace-nowrap">0 Rekomendasi Terkirim</span>
+      </div>
+
+      <!-- Tabel Daftar Kirim Rekom ke Desa -->
+      <div class="flex-1 overflow-auto custom-scrollbar p-4">
+        <table class="w-full border-collapse text-left text-xs bg-white rounded-xl shadow-2xs border border-slate-200">
+          <thead>
+            <tr class="bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase">
+              <th class="py-2.5 px-3 text-center w-10">No</th>
+              <th class="py-2.5 px-3">Desa & Waktu Kirim</th>
+              <th class="py-2.5 px-3">Jenis Dana & Tahap</th>
+              <th class="py-2.5 px-3">Data Surat Rekomendasi</th>
+              <th class="py-2.5 px-3">Data Surat Pengantar (SP)</th>
+              <th class="py-2.5 px-3 text-right">Nominal (Rp)</th>
+              <th class="py-2.5 px-3 text-center">3 Berkas Diunggah (Untuk BKAD)</th>
+              <th class="py-2.5 px-3 text-center">Status</th>
+              <th class="py-2.5 px-3 text-center w-36">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyKirimRekomDesa">
+            <!-- Diisi dinamis oleh JavaScript renderTabelKirimRekomDesa -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     </div>
     <!-- /#viewVerifikasiRekom -->
 
@@ -1551,6 +1630,39 @@
 
             </div>
 
+          </div>
+
+          <!-- ========================================================================= -->
+          <!-- DOKUMEN REKOMENDASI RESMI DARI KECAMATAN WARU (SIAP DIKIRIM KE BKAD) -->
+          <!-- ========================================================================= -->
+          <div class="bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 rounded-2xl p-5 text-white shadow-md border border-blue-500/30 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-800/80 pb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-xl shadow-inner">
+                  🏛️
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-500/30 text-blue-200 border border-blue-400/30">Dokumen Resmi Kecamatan</span>
+                    <span id="badgeCountRekomBkad" class="px-2 py-0.2 rounded-full text-[10px] bg-emerald-500 text-white font-bold">0 Dokumen</span>
+                  </div>
+                  <h3 class="text-sm font-bold text-white mt-0.5">
+                    Surat Rekomendasi & Berkas dari Kecamatan Waru (Siap Diajukan ke BKAD)
+                  </h3>
+                </div>
+              </div>
+              <button onclick="sinkronKirimRekomDariGoogleSheets()" class="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-blue-700/80 hover:bg-blue-600 text-white text-xs font-semibold border border-blue-500/40 transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <span>🔄 Perbarui Berkas</span>
+              </button>
+            </div>
+
+            <p class="text-xs text-blue-200 leading-relaxed">
+              Setelah berkas pengajuan diverifikasi dan ditandatangani Camat Waru, dokumen resmi berupa <b>Surat Rekomendasi Camat</b>, <b>Surat Pengantar Kecamatan</b>, dan <b>Ceklist Kecamatan</b> di bawah ini dapat langsung diunduh oleh Pemerintah Desa untuk diteruskan ke Badan Keuangan dan Aset Daerah (BKAD) Kab. PPU.
+            </p>
+
+            <div id="containerListRekomDesa" class="space-y-3">
+              <!-- Diisi dinamis oleh renderDokumenKecamatanUntukDesa() -->
+            </div>
           </div>
 
           <!-- TABEL RIWAYAT PENGAJUAN DESA -->
@@ -1950,9 +2062,232 @@
     </div>
   </div>
 
+  <!-- ================================================================================= -->
+  <!-- MODAL: FORMULIR INPUT & UPLOAD BERKAS REKOMENDASI KECAMATAN KE DESA (SIAP BKAD) -->
+  <!-- ================================================================================= -->
+  <div id="modalKirimRekomDesa" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh]">
+      
+      <!-- Header Modal -->
+      <div class="px-6 py-4 bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 text-white flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center text-xl font-bold shadow-inner">
+            📤
+          </div>
+          <div>
+            <h3 id="modalKirimRekomTitle" class="text-sm font-bold uppercase tracking-wide">Kirim Dokumen Rekomendasi ke Desa</h3>
+            <p class="text-[11px] text-blue-200">Lengkapi nomor/tanggal surat dan unggah 3 berkas resmi untuk diunduh desa ke BKAD</p>
+          </div>
+        </div>
+        <button type="button" onclick="tutupModalKirimRekomDesa()" class="text-blue-200 hover:text-white text-xl cursor-pointer">✕</button>
+      </div>
+
+      <!-- Form Body Modal -->
+      <form id="formKirimRekomDesa" onsubmit="simpanKirimRekomDesa(event)" class="p-5 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1 text-xs">
+        <input type="hidden" id="inputKirimEditId" value="" />
+
+        <!-- 1. Parameter Penyaluran Dana -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+          <div class="font-bold text-slate-800 uppercase tracking-wide text-[11px] flex items-center gap-1.5 border-b border-slate-200 pb-2">
+            <span>📍 Parameter Penyaluran Dana APBDes</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                Desa Tujuan <span class="text-rose-500">*</span>
+              </label>
+              <select id="selectKirimDesa" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500">
+                <option value="Api-Api">Desa Api-Api</option>
+                <option value="Sesulu">Desa Sesulu</option>
+                <option value="Bangun Mulya">Desa Bangun Mulya</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                Jenis Dana <span class="text-rose-500">*</span>
+              </label>
+              <select id="selectKirimJenisDana" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500">
+                <option value="siltap">ADD Siltap & Tunjangan</option>
+                <option value="add_reguler" selected>ADD Reguler</option>
+                <option value="dbh">PBH / DBH</option>
+                <option value="dd">Dana Desa (DD)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                Tahap / Bulan <span class="text-rose-500">*</span>
+              </label>
+              <select id="selectKirimTahap" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500">
+                <option value="Tahap I">Tahap I</option>
+                <option value="Tahap II" selected>Tahap II</option>
+                <option value="Tahap III">Tahap III</option>
+                <option value="Kurang Salur">Kurang Salur</option>
+                <option value="Bulan Januari">Bulan Januari</option>
+                <option value="Bulan Februari">Bulan Februari</option>
+                <option value="Bulan Maret">Bulan Maret</option>
+                <option value="Bulan April">Bulan April</option>
+                <option value="Bulan Mei">Bulan Mei</option>
+                <option value="Bulan Juni">Bulan Juni</option>
+                <option value="Bulan Juli">Bulan Juli</option>
+                <option value="Bulan Agustus">Bulan Agustus</option>
+                <option value="Bulan September">Bulan September</option>
+                <option value="Bulan Oktober">Bulan Oktober</option>
+                <option value="Bulan November">Bulan November</option>
+                <option value="Bulan Desember">Bulan Desember</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                Tahun Anggaran <span class="text-rose-500">*</span>
+              </label>
+              <input type="number" id="inputKirimTahun" value="2026" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                Nominal Pencairan (Rp) <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="inputKirimNominal" placeholder="Contoh: 366.716.750" value="0" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold font-mono text-emerald-800 focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Data Nomor & Tanggal Surat Resmi -->
+        <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-200 space-y-3">
+          <div class="font-bold text-indigo-900 uppercase tracking-wide text-[11px] flex items-center gap-1.5 border-b border-indigo-200 pb-2">
+            <span>📝 Data Nomor & Tanggal Surat Rekomendasi serta Pengantar Kecamatan</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-800 mb-1">
+                Nomor Surat Rekomendasi Camat <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="inputKirimNomorRekom" placeholder="100.3.3.1/    /Kec-Waru/2026" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-800 mb-1">
+                Tanggal Surat Rekomendasi Camat <span class="text-rose-500">*</span>
+              </label>
+              <input type="date" id="inputKirimTanggalRekom" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-800 mb-1">
+                Nomor Surat Pengantar (SP) Kecamatan <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="inputKirimNomorSpKec" placeholder="140/    /Kec-Waru/2026" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-800 mb-1">
+                Tanggal Surat Pengantar (SP) Kecamatan <span class="text-rose-500">*</span>
+              </label>
+              <input type="date" id="inputKirimTanggalSpKec" required class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Upload 3 Berkas Dokumen Resmi Kecamatan -->
+        <div class="space-y-3">
+          <div class="font-bold text-slate-800 uppercase tracking-wide text-[11px] flex items-center justify-between border-b border-slate-200 pb-2">
+            <span>📎 Unggah 3 Dokumen Persyaratan untuk Desa & BKAD</span>
+            <span class="text-[10px] text-slate-500 font-normal">Tersimpan di Google Drive subfolder <b>kecamatan</b></span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            
+            <!-- Berkas 1: Rekom Desa yang sudah TTD -->
+            <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-3 text-center transition bg-slate-50/70 hover:bg-blue-50/30 flex flex-col justify-between">
+              <div>
+                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center mx-auto text-base mb-1.5">
+                  📄
+                </div>
+                <h4 class="text-xs font-bold text-slate-800">1. Rekom Desa (Sudah TTD)</h4>
+                <p class="text-[10px] text-slate-500 mt-0.5">Scan / PDF Rekomendasi TTD</p>
+              </div>
+              <div class="mt-2.5">
+                <input type="file" id="fileInputKirimRekomTtd" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" class="hidden" onchange="handleKirimKecamatanFilePick('rekomTtd', this)" />
+                <button type="button" onclick="document.getElementById('fileInputKirimRekomTtd').click()" class="w-full py-1.5 px-2 rounded-lg bg-white border border-slate-300 hover:border-blue-500 text-slate-700 text-xs font-semibold shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer">
+                  <span>📁 Pilih File</span>
+                </button>
+                <div id="fileInfoKirimRekomTtd" class="text-[10px] text-slate-500 mt-1.5 truncate font-medium">
+                  Belum ada file dipilih
+                </div>
+              </div>
+            </div>
+
+            <!-- Berkas 2: Surat Pengantar Kecamatan -->
+            <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-3 text-center transition bg-slate-50/70 hover:bg-blue-50/30 flex flex-col justify-between">
+              <div>
+                <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center mx-auto text-base mb-1.5">
+                  ✉️
+                </div>
+                <h4 class="text-xs font-bold text-slate-800">2. SP Kecamatan</h4>
+                <p class="text-[10px] text-slate-500 mt-0.5">Surat Pengantar Camat</p>
+              </div>
+              <div class="mt-2.5">
+                <input type="file" id="fileInputKirimSpKec" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" class="hidden" onchange="handleKirimKecamatanFilePick('spKec', this)" />
+                <button type="button" onclick="document.getElementById('fileInputKirimSpKec').click()" class="w-full py-1.5 px-2 rounded-lg bg-white border border-slate-300 hover:border-blue-500 text-slate-700 text-xs font-semibold shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer">
+                  <span>📁 Pilih File</span>
+                </button>
+                <div id="fileInfoKirimSpKec" class="text-[10px] text-slate-500 mt-1.5 truncate font-medium">
+                  Belum ada file dipilih
+                </div>
+              </div>
+            </div>
+
+            <!-- Berkas 3: Ceklist Kecamatan -->
+            <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-3 text-center transition bg-slate-50/70 hover:bg-blue-50/30 flex flex-col justify-between">
+              <div>
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto text-base mb-1.5">
+                  📋
+                </div>
+                <h4 class="text-xs font-bold text-slate-800">3. Ceklist Kecamatan</h4>
+                <p class="text-[10px] text-slate-500 mt-0.5">Ceklist Verifikasi Camat</p>
+              </div>
+              <div class="mt-2.5">
+                <input type="file" id="fileInputKirimCeklistKec" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" class="hidden" onchange="handleKirimKecamatanFilePick('ceklistKec', this)" />
+                <button type="button" onclick="document.getElementById('fileInputKirimCeklistKec').click()" class="w-full py-1.5 px-2 rounded-lg bg-white border border-slate-300 hover:border-blue-500 text-slate-700 text-xs font-semibold shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer">
+                  <span>📁 Pilih File</span>
+                </button>
+                <div id="fileInfoKirimCeklistKec" class="text-[10px] text-slate-500 mt-1.5 truncate font-medium">
+                  Belum ada file dipilih
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Catatan Tambahan -->
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+            Catatan Tambahan untuk Operator Desa (Opsional)
+          </label>
+          <textarea id="inputKirimCatatan" rows="2" placeholder="Contoh: Berkas telah lengkap dan ditandatangani Camat Waru, silakan segera diteruskan ke BKAD Kab. PPU." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <!-- Tombol Aksi Modal -->
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="tutupModalKirimRekomDesa()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer">
+            Batal
+          </button>
+          <button type="submit" id="btnSubmitKirimRekomDesa" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">
+            <span>🚀 Simpan & Kirim ke Desa</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261014_split_controls_horizontal"></script>
+  <script src="app.js?v=20261015_kirim_rekom_ke_desa"></script>
 </body>
 </html>
