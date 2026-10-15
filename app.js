@@ -2753,6 +2753,11 @@ window.updateUserProfileUI = function() {
     topRole.className = isKecamatan ? 'text-[9.5px] text-blue-600 font-bold truncate' : 'text-[9.5px] text-emerald-600 font-bold truncate';
   }
 
+  const subProfile = document.getElementById('subtextSidebarProfile');
+  if (subProfile) {
+    subProfile.textContent = isKecamatan ? 'Data Master Desa' : (`Data Desa ${user.desa || ''}`);
+  }
+
   // Terapkan proteksi & status menu terkunci
   applyRoleAccessControl();
 };
@@ -5087,13 +5092,63 @@ window.bukaModalProfileDesa = function(targetDesa) {
   const modal = document.getElementById('modalProfileDesa');
   if (!modal) return;
 
-  // Tentukan default tab: jika targetDesa ada gunakan itu, jika login sebagai desa gunakan desanya, fallback ke activeProfileTab atau 'Api-Api'
+  const user = AppState.currentUser;
+  const isKecamatan = user && user.role === 'kecamatan';
+  const isDesa = user && user.role === 'desa';
+  const userDesa = user && user.desa;
+
+  // 1. Kunci target desa sesuai role pengguna:
+  // Jika desa login, HANYA BISA mengakses desanya sendiri!
   let desaToOpen = targetDesa;
-  if (!desaToOpen) {
-    if (AppState.currentUser && AppState.currentUser.role === 'desa' && AppState.currentUser.desa) {
-      desaToOpen = AppState.currentUser.desa;
-    } else {
-      desaToOpen = activeProfileTab || 'Api-Api';
+  if (isDesa && userDesa) {
+    desaToOpen = userDesa;
+  } else if (!desaToOpen) {
+    desaToOpen = isKecamatan ? (activeProfileTab || 'Api-Api') : (userDesa || 'Api-Api');
+  }
+
+  // 2. Kontrol visibilitas Tab di Modal:
+  const tabBtns = {
+    'Api-Api': document.getElementById('tabBtnProfileApiApi'),
+    'Sesulu': document.getElementById('tabBtnProfileSesulu'),
+    'Bangun Mulya': document.getElementById('tabBtnProfileBangunMulya'),
+    'Camat': document.getElementById('tabBtnProfileCamat')
+  };
+
+  const badgeSource = document.getElementById('badgeProfileSource');
+  const textTabInfo = document.getElementById('textProfileTabInfo');
+
+  if (isDesa && userDesa) {
+    // Sembunyikan tab desa lain dan tab Camat
+    Object.keys(tabBtns).forEach(key => {
+      const btn = tabBtns[key];
+      if (!btn) return;
+      if (key === userDesa) {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
+    });
+
+    if (badgeSource) {
+      badgeSource.textContent = `🔒 Khusus Operator Desa ${userDesa}`;
+      badgeSource.className = 'text-[10px] text-emerald-200 bg-emerald-950/80 px-2 py-0.5 rounded font-bold border border-emerald-600/40';
+    }
+    if (textTabInfo) {
+      textTabInfo.textContent = `Akses Terkunci: Hanya dapat melihat & mengedit Master Data Desa ${userDesa}`;
+    }
+  } else {
+    // Kecamatan: Akses penuh ke seluruh desa dan Camat
+    Object.keys(tabBtns).forEach(key => {
+      const btn = tabBtns[key];
+      if (btn) btn.classList.remove('hidden');
+    });
+
+    if (badgeSource) {
+      badgeSource.textContent = isKecamatan ? '🔑 Administrator Kecamatan (Semua Desa)' : 'Tersinkron Database';
+      badgeSource.className = 'text-[10px] text-blue-200 bg-blue-950/80 px-2 py-0.5 rounded font-bold border border-blue-600/40';
+    }
+    if (textTabInfo) {
+      textTabInfo.textContent = 'Pilih tab desa yang akan diedit';
     }
   }
 
@@ -5107,6 +5162,17 @@ window.tutupModalProfileDesa = function() {
 };
 
 window.pilihTabProfileDesa = function(tabKey) {
+  const user = AppState.currentUser;
+  const isKecamatan = user && user.role === 'kecamatan';
+  const isDesa = user && user.role === 'desa';
+  const userDesa = user && user.desa;
+
+  // Proteksi hak akses: Desa hanya boleh membuka tab desanya sendiri
+  if (isDesa && userDesa && tabKey !== userDesa) {
+    showToast(`Akses Ditolak: Anda hanya memiliki izin mengakses Data Master Desa ${userDesa}.`, 'warning');
+    tabKey = userDesa;
+  }
+
   activeProfileTab = tabKey;
 
   const tabBtns = {
@@ -5131,6 +5197,11 @@ window.pilihTabProfileDesa = function(tabKey) {
   const formCamat = document.getElementById('formProfileCamatEditor');
 
   if (tabKey === 'Camat') {
+    if (!isKecamatan) {
+      showToast('Akses Terbatas: Hanya pihak Kecamatan yang dapat melihat profil Camat.', 'warning');
+      return;
+    }
+
     if (formDesa) formDesa.classList.add('hidden');
     if (formCamat) formCamat.classList.remove('hidden');
 
@@ -5221,7 +5292,19 @@ window.pilihTabProfileDesa = function(tabKey) {
 window.simpanDataProfileDesa = async function(event) {
   if (event) event.preventDefault();
 
+  const user = AppState.currentUser;
+  const isKecamatan = user && user.role === 'kecamatan';
+  const isDesa = user && user.role === 'desa';
+  const userDesa = user && user.desa;
+
   const namaDesa = document.getElementById('profDesaNama')?.value || activeProfileTab;
+
+  // Proteksi hak akses simpan:
+  if (isDesa && userDesa && namaDesa !== userDesa) {
+    showToast(`Akses Ditolak: Anda hanya memiliki izin mengubah Data Master Desa ${userDesa}.`, 'error');
+    return;
+  }
+
   let desa = (AppState.masterDesa || []).find(d => d.nama === namaDesa);
 
   if (!desa) {
@@ -5329,6 +5412,14 @@ window.simpanDataProfileDesa = async function(event) {
 
 window.simpanDataProfileCamat = async function(event) {
   if (event) event.preventDefault();
+
+  const user = AppState.currentUser;
+  const isKecamatan = user && user.role === 'kecamatan';
+
+  if (!isKecamatan) {
+    showToast('Akses Ditolak: Hanya Tim Fasilitasi / Pihak Kecamatan yang dapat mengubah data Pejabat Camat.', 'error');
+    return;
+  }
 
   const nama = document.getElementById('profCamatNama')?.value?.trim() || '';
   const pangkat = document.getElementById('profCamatPangkat')?.value?.trim() || '';

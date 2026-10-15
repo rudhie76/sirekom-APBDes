@@ -482,7 +482,7 @@
         </div>
         <div class="sidebar-text leading-tight truncate flex-1">
           <div class="font-bold text-white text-xs">Profile</div>
-          <div class="text-[9.5px] text-slate-400 font-normal">Data Master Desa</div>
+          <div id="subtextSidebarProfile" class="text-[9.5px] text-slate-400 font-normal">Data Master Desa</div>
         </div>
       </button>
 
@@ -1418,6 +1418,9 @@
           <div id="infoDesaOperator" class="text-[10px] text-slate-400 flex flex-col gap-0.5 mt-0.5">
             <!-- Otomatis diisi Kepala Desa & Kaur Keuangan -->
           </div>
+          <button type="button" onclick="bukaModalProfileDesa()" class="mt-1 py-1 px-2.5 rounded-lg bg-emerald-700/60 hover:bg-emerald-600 text-white text-[10.5px] font-bold border border-emerald-500/40 transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>👤 Edit Profil Desa Ini</span>
+          </button>
         </div>
       </div>
 
@@ -1825,7 +1828,7 @@
             <span>🏛️ Camat Waru</span>
           </button>
         </div>
-        <span class="text-[11px] text-slate-500 font-medium hidden sm:inline">Pilih tab desa yang akan diedit</span>
+        <span id="textProfileTabInfo" class="text-[11px] text-slate-500 font-medium hidden sm:inline">Pilih tab desa yang akan diedit</span>
       </div>
 
       <!-- Body / Formulir Editor Data Master (Scrollable) -->
@@ -2596,6 +2599,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261015_profile_master_desa"></script>
+  <script src="app.js?v=20261015_profile_role_locked"></script>
 </body>
 </html>
