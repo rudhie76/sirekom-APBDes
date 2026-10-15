@@ -69,7 +69,15 @@ function AKTIFKAN_IZIN_DAN_TEST() {
  * Inisialisasi Sheet dan Struktur Kolom
  */
 function initSheets() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+  } catch (e) {
+    Logger.log("Peringatan LockService: " + e.toString());
+  }
+
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // 1. Sheet Pengajuan Berkas Desa (Lengkap dengan Link Google Drive)
   var sheetPengajuan = ss.getSheetByName(SHEET_PENGAJUAN_DESA);
@@ -277,6 +285,11 @@ function initSheets() {
     headerRangeK.setFontColor("#FFFFFF");
     headerRangeK.setFontWeight("bold");
     sheetKirimDesa.setFrozenRows(1);
+  }
+  } finally {
+    try {
+      lock.releaseLock();
+    } catch (_) {}
   }
 }
 
