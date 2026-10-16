@@ -1,0 +1,29 @@
+{
+  "name": "SIP-REKOM APBDes Kecamatan Waru",
+  "short_name": "SIP-REKOM",
+  "description": "Sistem Pelayanan Rekomendasi APBDes Kecamatan Waru, Kabupaten Penajam Paser Utara",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo_ppu.png",
+      "sizes": "76x88",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
