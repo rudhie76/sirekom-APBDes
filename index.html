@@ -89,15 +89,21 @@
       #viewDashboard,
       #viewPengajuanDesa,
       #tabContentVerifikasiDesa,
+      #tabContentKirimRekomDesa,
       #panelFormKiri,
       #previewToolbar,
       #containerSplitControls,
       #toastContainer,
       #modalGasSettings,
+      #modalProfileDesa,
+      #modalKirimRekomDesa,
       #drawerHistory,
       #modalKembalikanPengajuan,
       #modalDetailPengajuanKecamatan,
       #modalPengajuanDesaKecamatan,
+      [id^="modal"],
+      .hidden,
+      [hidden],
       .no-print {
         display: none !important;
         visibility: hidden !important;
@@ -114,11 +120,12 @@
         display: none !important;
       }
 
-      /* Netralkan container pembungkus agar unconstrained (hanya div.flex-1 pembungkus konten utama) */
+      /* Netralkan container pembungkus dokumen agar unconstrained (tidak flex-hidden) */
+      body,
       body > div.flex-1,
-      .flex-1,
+      main,
       #viewVerifikasiRekom,
-      #tabContentGeneratorRekomendasi,
+      #workspaceKecamatan,
       #panelPreviewKanan,
       #previewViewport,
       #previewDocumentContainer {
@@ -136,6 +143,20 @@
         transform: none !important;
         box-shadow: none !important;
         border: none !important;
+      }
+
+      /* Jaminan ekstra: Tab riwayat kirim dan view non-surat TIDAK BOLEH tampil di lembar cetak */
+      #tabContentKirimRekomDesa,
+      #tabContentVerifikasiDesa,
+      #viewDashboard,
+      #viewPengajuanDesa {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
 
       #previewDocumentContainer {
@@ -851,7 +872,7 @@
     <div id="viewVerifikasiRekom" class="hidden flex-1 flex flex-col w-full h-full overflow-hidden">
       
       <!-- Sub-Tab Header Menu 3 -->
-      <div class="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between gap-3 flex-shrink-0">
+      <div class="no-print bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between gap-3 flex-shrink-0">
         <div class="flex items-center gap-2">
           <button id="tabBtnVerifikasi" onclick="switchKecamatanSubTab('verifikasi')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition flex items-center gap-1.5">
             <span>📥 1. Kotak Masuk & Verifikasi Berkas Desa</span>
@@ -876,7 +897,7 @@
       </div>
 
       <!-- Tab 1: Kotak Masuk & Verifikasi Berkas Desa -->
-      <div id="tabContentVerifikasiDesa" class="flex-1 flex flex-col overflow-hidden bg-slate-50">
+      <div id="tabContentVerifikasiDesa" class="no-print flex-1 flex flex-col overflow-hidden bg-slate-50">
         <!-- Filter Bar -->
         <div class="p-3.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
           <div class="flex items-center gap-3">
@@ -1342,7 +1363,7 @@
     <!-- ============================================================================= -->
     <!-- TAB 3: KIRIM REKOM KE DESA (DOKUMEN RESMI KECAMATAN SIAP BKAD) -->
     <!-- ============================================================================= -->
-    <div id="tabContentKirimRekomDesa" class="hidden flex-1 flex flex-col overflow-hidden bg-slate-50">
+    <div id="tabContentKirimRekomDesa" class="no-print hidden flex-1 flex flex-col overflow-hidden bg-slate-50">
       <!-- Filter & Action Bar -->
       <div class="p-3.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
         <div class="flex flex-wrap items-center gap-3">
@@ -1819,7 +1840,7 @@
   <!-- ================================================================================= -->
   <!-- MODAL: PROFILE & MASTER DATA DESA -->
   <!-- ================================================================================= -->
-  <div id="modalProfileDesa" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+  <div id="modalProfileDesa" class="no-print fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
     <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in duration-200">
       
       <!-- Header Modal -->
@@ -2420,7 +2441,7 @@
   <!-- ================================================================================= -->
   <!-- MODAL: FORMULIR INPUT & UPLOAD BERKAS REKOMENDASI KECAMATAN KE DESA (SIAP BKAD) -->
   <!-- ================================================================================= -->
-  <div id="modalKirimRekomDesa" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+  <div id="modalKirimRekomDesa" class="no-print fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
     <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh]">
       
       <!-- Header Modal -->
@@ -2643,6 +2664,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261015_berkas_edit_tambah"></script>
+  <script src="app.js?v=20261016_fix_print_last_page"></script>
 </body>
 </html>

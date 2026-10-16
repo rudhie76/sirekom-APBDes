@@ -2047,6 +2047,19 @@ function triggerPrint() {
     loginPortal.style.setProperty('display', 'none', 'important');
   }
 
+  // Pastikan tab arsip kirim rekom & tab verifikasi desa disembunyikan dari print
+  const tabKirim = document.getElementById('tabContentKirimRekomDesa');
+  const wasKirimDisplay = tabKirim ? tabKirim.style.display : '';
+  if (tabKirim) {
+    tabKirim.style.setProperty('display', 'none', 'important');
+  }
+
+  const tabVerif = document.getElementById('tabContentVerifikasiDesa');
+  const wasVerifDisplay = tabVerif ? tabVerif.style.display : '';
+  if (tabVerif) {
+    tabVerif.style.setProperty('display', 'none', 'important');
+  }
+
   // Terapkan mode pemisah halaman aktif
   applyPageBreakMode();
 
@@ -2076,6 +2089,12 @@ function triggerPrint() {
     }
     if (loginPortal) {
       loginPortal.style.display = wasDisplay;
+    }
+    if (tabKirim) {
+      tabKirim.style.display = wasKirimDisplay;
+    }
+    if (tabVerif) {
+      tabVerif.style.display = wasVerifDisplay;
     }
     // Pulihkan style tampilan layar
     sheets.forEach((sheet, idx) => {
