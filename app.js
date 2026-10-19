@@ -2144,10 +2144,27 @@ async function saveRecommendationData() {
   const berkasChecked = [];
   document.querySelectorAll('.berkas-checkbox:checked').forEach(cb => berkasChecked.push(cb.value));
 
+  const nomorSurat = document.getElementById('inputNomorSurat')?.value?.trim() || '';
+
+  // 1. Cek apakah dalam mode edit atau data sudah ada sebelumnya
+  const isEditing = Boolean(AppState.editingRekomId);
+  let targetIndex = -1;
+
+  if (isEditing) {
+    targetIndex = (AppState.riwayat || []).findIndex(r => String(r.id) === String(AppState.editingRekomId));
+  }
+
+  // Fallback jika tidak ada editingId tetapi nomor surat sama persis
+  if (targetIndex === -1 && nomorSurat) {
+    targetIndex = (AppState.riwayat || []).findIndex(r => String(r.nomorSurat || '').trim().toLowerCase() === nomorSurat.toLowerCase());
+  }
+
+  const targetId = targetIndex !== -1 ? AppState.riwayat[targetIndex].id : ('REK-' + Date.now());
+
   const data = {
-    id: 'REK-' + Date.now(),
+    id: targetId,
     waktuSimpan: new Date().toLocaleString('id-ID'),
-    nomorSurat: document.getElementById('inputNomorSurat')?.value || '',
+    nomorSurat: nomorSurat,
     tanggalSurat: document.getElementById('inputTanggalSurat')?.value || '',
     namaDesa: desa,
     jenisDana: AppState.tipeRekomendasi.toUpperCase(),
@@ -2166,7 +2183,19 @@ async function saveRecommendationData() {
     status: 'Diterbitkan'
   };
 
-  AppState.riwayat.unshift(data);
+  if (targetIndex !== -1) {
+    // Mode EDIT: Perbarui data yang sudah ada (tidak membuat data baru)
+    AppState.riwayat[targetIndex] = data;
+    showToast(`Arsip surat ${data.nomorSurat || ''} berhasil diperbarui!`, 'success');
+  } else {
+    // Mode BARU: Tambahkan ke atas riwayat
+    if (!Array.isArray(AppState.riwayat)) AppState.riwayat = [];
+    AppState.riwayat.unshift(data);
+    showToast('Tersimpan di Arsip Baru!', 'success');
+  }
+
+  AppState.editingRekomId = null;
+  renderEditingRekomBanner();
   localStorage.setItem('sip_riwayat_rekom', JSON.stringify(AppState.riwayat));
   renderHistoryTable();
 
@@ -2178,13 +2207,11 @@ async function saveRecommendationData() {
         body: JSON.stringify({ action: 'simpanRekomendasi', ...data })
       });
       const resJson = await res.json();
-      if (resJson.success) showToast('Tersimpan di Google Sheets & Lokal!', 'success');
+      if (resJson.success) showToast(targetIndex !== -1 ? 'Perubahan diperbarui di Google Sheets & Lokal!' : 'Tersimpan di Google Sheets & Lokal!', 'success');
       else showToast('Tersimpan di lokal.', 'warning');
     } catch {
       showToast('Tersimpan di Lokal (Offline Sheets).', 'info');
     }
-  } else {
-    showToast('Tersimpan di Arsip Lokal!', 'success');
   }
 
   if (saveBtn) { saveBtn.innerHTML = orig; saveBtn.disabled = false; }
@@ -2395,22 +2422,128 @@ function renderHistoryTable(query = '') {
 }
 
 function loadHistoryItem(id) {
-  const item = AppState.riwayat.find(r => r.id === id);
+  const item = (AppState.riwayat || []).find(r => String(r.id) === String(id));
   if (!item) return;
 
-  if (item.namaDesa) document.getElementById('selectNamaDesa').value = item.namaDesa;
-  if (item.nomorSurat) document.getElementById('inputNomorSurat').value = item.nomorSurat;
-  if (item.tanggalSurat) document.getElementById('inputTanggalSurat').value = item.tanggalSurat;
+  AppState.editingRekomId = item.id;
+
+  // 1. Pilih Tipe Rekomendasi (ADD Siltap, Reguler, DBH, DD)
+  if (item.jenisDana) {
+    pilihTipeRekomendasi(item.jenisDana.toLowerCase());
+  }
+
+  // 2. Pilih Desa
+  if (item.namaDesa && document.getElementById('selectNamaDesa')) {
+    document.getElementById('selectNamaDesa').value = item.namaDesa;
+    triggerAutoFillDesa();
+  }
+
+  // 3. Nomor dan Tanggal Surat
+  if (item.nomorSurat && document.getElementById('inputNomorSurat')) {
+    document.getElementById('inputNomorSurat').value = item.nomorSurat;
+  }
+  if (item.tanggalSurat && document.getElementById('inputTanggalSurat')) {
+    document.getElementById('inputTanggalSurat').value = item.tanggalSurat;
+  }
+
+  // 4. Tahap / Perihal
+  if (item.tahap) {
+    if (document.getElementById('inputPerihalSurat')) document.getElementById('inputPerihalSurat').value = item.tahap;
+    if (document.getElementById('selectTahapReguler')) document.getElementById('selectTahapReguler').value = item.tahap;
+    if (document.getElementById('selectBulanGaji') && item.tahap.startsWith('Bulan')) {
+      document.getElementById('selectBulanGaji').value = item.tahap.replace('Bulan', '').trim();
+    }
+  }
+
+  // 5. Tahun Anggaran
+  if (item.tahunAnggaran) {
+    if (document.getElementById('inputTahunAnggaran')) document.getElementById('inputTahunAnggaran').value = item.tahunAnggaran;
+    if (document.getElementById('inputTahunAnggaranReguler')) document.getElementById('inputTahunAnggaranReguler').value = item.tahunAnggaran;
+  }
+
+  // 6. Nominal Angka & Terbilang
   if (item.nominalAngka) {
-    document.getElementById('inputNominalAngka').value = Number(item.nominalAngka).toLocaleString('id-ID');
-    document.getElementById('outputTerbilang').textContent = convertTerbilang(item.nominalAngka);
+    const nom = Number(item.nominalAngka);
+    if (document.getElementById('inputNominalAngka')) {
+      document.getElementById('inputNominalAngka').value = nom.toLocaleString('id-ID');
+    }
+    if (document.getElementById('outputTerbilang')) {
+      document.getElementById('outputTerbilang').textContent = item.terbilang || convertTerbilang(nom);
+    }
+  }
+
+  // 7. Rekening & Pejabat
+  if (item.nomorRekening && document.getElementById('inputNomorRekening')) {
+    document.getElementById('inputNomorRekening').value = item.nomorRekening;
+  }
+  if (item.kepalaDesa && document.getElementById('inputKepalaDesa')) {
+    document.getElementById('inputKepalaDesa').value = item.kepalaDesa;
+  }
+  if (item.kaurKeuangan && document.getElementById('inputKaurKeuangan')) {
+    document.getElementById('inputKaurKeuangan').value = item.kaurKeuangan;
+  }
+  if (item.namaCamat && document.getElementById('inputNamaCamat')) {
+    document.getElementById('inputNamaCamat').value = item.namaCamat;
+  }
+  if (item.nipCamat && document.getElementById('inputNipCamat')) {
+    document.getElementById('inputNipCamat').value = item.nipCamat;
+  }
+  if (item.metodeTte && document.getElementById('selectMetodeTte')) {
+    document.getElementById('selectMetodeTte').value = item.metodeTte;
+  }
+
+  // 8. Kelengkapan Berkas
+  if (Array.isArray(item.kelengkapanBerkas)) {
+    document.querySelectorAll('.berkas-checkbox').forEach(cb => {
+      cb.checked = item.kelengkapanBerkas.includes(cb.value);
+    });
   }
 
   autoUpdatePerihal();
   updateLivePreview();
+  renderEditingRekomBanner();
+
   document.getElementById('drawerHistory')?.classList.add('hidden');
-  showToast(`Arsip ${item.nomorSurat} dimuat!`, 'info');
+  showToast(`✏️ Mode Edit: Arsip ${item.nomorSurat} dimuat! Perubahan akan memperbarui data arsip ini saat disimpan.`, 'info');
 }
+
+function batalEditRekomendasi() {
+  AppState.editingRekomId = null;
+  renderEditingRekomBanner();
+  showToast('Mode edit dibatalkan. Formulir kembali ke mode pembuatan rekomendasi baru.', 'info');
+}
+window.batalEditRekomendasi = batalEditRekomendasi;
+
+function renderEditingRekomBanner() {
+  const banner = document.getElementById('bannerEditingRekom');
+  const btnSave = document.getElementById('btnSaveToDb');
+
+  if (!AppState.editingRekomId) {
+    if (banner) banner.classList.add('hidden');
+    if (btnSave) {
+      btnSave.classList.remove('bg-amber-600', 'hover:bg-amber-500');
+      btnSave.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+      btnSave.innerHTML = '<span>💾 Simpan Data</span>';
+    }
+    return;
+  }
+
+  const item = (AppState.riwayat || []).find(r => String(r.id) === String(AppState.editingRekomId));
+  const noSurat = item ? item.nomorSurat : AppState.editingRekomId;
+
+  if (banner) {
+    banner.classList.remove('hidden');
+    const txt = document.getElementById('textEditingRekomNomor');
+    if (txt) txt.textContent = noSurat || 'Surat Rekomendasi';
+  }
+
+  if (btnSave) {
+    btnSave.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+    btnSave.classList.add('bg-amber-600', 'hover:bg-amber-500');
+    btnSave.innerHTML = '<span>💾 Simpan Perubahan</span>';
+  }
+}
+window.renderEditingRekomBanner = renderEditingRekomBanner;
 
 function deleteHistoryItem(id) {
   if (!confirm('Hapus arsip ini?')) return;
@@ -3836,9 +3969,22 @@ window.submitPengajuanDesa = async function() {
     btnKirim.innerHTML = '<span>⏳ Menyimpan Berkas...</span>';
   }
 
-  // Simpan file yang dipilih ke IndexedDB (atau gunakan file lama jika dalam mode perbaikan dan tidak pilih file baru)
-  const isEditing = Boolean(AppState.editingPengajuanId);
-  const targetItem = isEditing ? AppState.pengajuanDesa.find(p => p.id === AppState.editingPengajuanId) : null;
+  // Cek apakah mode edit (melalui editingPengajuanId ATAU pengajuan dengan Desa+Dana+Tahap+Tahun yang sama sudah ada di riwayat)
+  let existingIndex = -1;
+  if (AppState.editingPengajuanId) {
+    existingIndex = (AppState.pengajuanDesa || []).findIndex(p => String(p.id) === String(AppState.editingPengajuanId));
+  }
+  if (existingIndex === -1) {
+    existingIndex = (AppState.pengajuanDesa || []).findIndex(p =>
+      p.namaDesa === desa &&
+      p.jenisDana === jenisDana &&
+      p.tahap === tahap &&
+      String(p.tahunAnggaran) === String(tahun)
+    );
+  }
+
+  const isEditing = existingIndex !== -1;
+  const targetItem = isEditing ? AppState.pengajuanDesa[existingIndex] : null;
 
   const draft = AppState.uploadedFilesDraft;
   const fileSpId = draft.sp ? draft.sp.id : (targetItem ? targetItem.fileSpId : `file_sp_${Date.now()}`);
@@ -3898,6 +4044,14 @@ window.submitPengajuanDesa = async function() {
     };
     AppState.pengajuanDesa.unshift(submissionToSave);
   }
+
+  // Pastikan data pengajuan tidak ada yang duplikat
+  const seenPengIds = new Set();
+  AppState.pengajuanDesa = AppState.pengajuanDesa.filter(item => {
+    if (!item.id || seenPengIds.has(String(item.id))) return false;
+    seenPengIds.add(String(item.id));
+    return true;
+  });
 
   localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
 
@@ -4194,11 +4348,45 @@ window.simpanEditPengajuanDesa = async function(e) {
   const id = document.getElementById('editPengajuanId')?.value;
   if (!id) return;
 
-  const targetItem = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id)) || (() => { try { return (JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]')).find(p => String(p.id) === String(id)); } catch(e) { return null; } })();
-  if (!targetItem) {
+  if (!Array.isArray(AppState.pengajuanDesa)) {
+    try {
+      AppState.pengajuanDesa = JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]');
+    } catch(e) {
+      AppState.pengajuanDesa = [];
+    }
+  }
+
+  let targetIndex = AppState.pengajuanDesa.findIndex(p => String(p.id) === String(id));
+  if (targetIndex === -1) {
+    try {
+      const localList = JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]');
+      targetIndex = localList.findIndex(p => String(p.id) === String(id));
+      if (targetIndex !== -1) {
+        AppState.pengajuanDesa = localList;
+      }
+    } catch(e) {}
+  }
+
+  // Fallback pencocokan namaDesa + jenisDana + tahap + tahun jika ID tidak cocok persis
+  if (targetIndex === -1) {
+    const editDesa = document.getElementById('editPengajuanDesaNama')?.value;
+    const editJenis = document.getElementById('editPengajuanJenisDana')?.value;
+    const editTahap = document.getElementById('editPengajuanTahap')?.value;
+    const editTahun = document.getElementById('editPengajuanTahun')?.value;
+    targetIndex = AppState.pengajuanDesa.findIndex(p =>
+      p.namaDesa === editDesa &&
+      p.jenisDana === editJenis &&
+      p.tahap === editTahap &&
+      String(p.tahunAnggaran) === String(editTahun)
+    );
+  }
+
+  if (targetIndex === -1) {
     showToast('Data pengajuan tidak ditemukan.', 'error');
     return;
   }
+
+  const targetItem = AppState.pengajuanDesa[targetIndex];
 
   const jenisDana = document.getElementById('editPengajuanJenisDana')?.value || targetItem.jenisDana;
   const tahap = document.getElementById('editPengajuanTahap')?.value || targetItem.tahap;
@@ -4292,6 +4480,14 @@ window.simpanEditPengajuanDesa = async function(e) {
       targetItem.riwayatCatatanSebelumnya = targetItem.catatanKecamatan;
       targetItem.catatanKecamatan = null;
     }
+
+    // Pastikan data pengajuan tidak ada yang duplikat
+    const seenP = new Set();
+    AppState.pengajuanDesa = AppState.pengajuanDesa.filter(item => {
+      if (!item.id || seenP.has(String(item.id))) return false;
+      seenP.add(String(item.id));
+      return true;
+    });
 
     localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
 
@@ -4829,7 +5025,29 @@ window.prosesPengajuanKeRekomendasi = function(id) {
   switchKecamatanSubTab('generator');
 
   autoUpdatePerihal();
-  autoGenerateNomorSurat();
+
+  // Cek apakah rekomendasi untuk berkas ini sudah pernah dibuat sebelumnya di riwayat
+  const existingRekom = (AppState.riwayat || []).find(r => 
+    r.namaDesa === item.namaDesa &&
+    String(r.jenisDana).toLowerCase() === String(item.jenisDana).toLowerCase() &&
+    r.tahap === item.tahap &&
+    String(r.tahunAnggaran) === String(item.tahunAnggaran)
+  );
+
+  if (existingRekom) {
+    AppState.editingRekomId = existingRekom.id;
+    if (existingRekom.nomorSurat && document.getElementById('inputNomorSurat')) {
+      document.getElementById('inputNomorSurat').value = existingRekom.nomorSurat;
+    }
+    if (existingRekom.tanggalSurat && document.getElementById('inputTanggalSurat')) {
+      document.getElementById('inputTanggalSurat').value = existingRekom.tanggalSurat;
+    }
+  } else {
+    AppState.editingRekomId = null;
+    autoGenerateNomorSurat();
+  }
+
+  renderEditingRekomBanner();
   updateLivePreview();
 
   showToast(`Data pengajuan Desa ${item.namaDesa} berhasil disinkronkan ke Surat Rekomendasi Camat!`, 'success');
@@ -4854,31 +5072,43 @@ window.sinkronPengajuanKeGoogleSheets = async function() {
     const result = await res.json();
 
     if (result.success && Array.isArray(result.data)) {
-      const cloudList = result.data.map(row => ({
-        id: row['ID Pengajuan'] || `PENG-${Date.now()}`,
-        waktuKirim: row['Waktu Pengajuan'] ? new Date(row['Waktu Pengajuan']).toISOString() : new Date().toISOString(),
-        namaDesa: row['Nama Desa'] || '',
-        jenisDana: row['Jenis Dana'] || 'add_reguler',
-        tahap: row['Tahap Pencairan'] || '',
-        tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
-        nominal: Number(row['Nominal Angka (Rp)']) || 0,
-        nomorSp: row['Nomor SP Desa'] || '',
-        tanggalSp: row['Tanggal SP Desa'] ? String(row['Tanggal SP Desa']).substring(0, 10) : '',
-        nomorRekomDesa: row['Nomor Rekomendasi Desa'] || '',
-        tanggalRekomDesa: row['Tanggal Rekom Desa'] ? String(row['Tanggal Rekom Desa']).substring(0, 10) : '',
-        fileSpId: `file_sp_${row['ID Pengajuan']}`,
-        fileSpName: row['Nama File SP'] || 'Surat_Pengantar.pdf',
-        driveSpUrl: row['Link Google Drive SP'] && row['Link Google Drive SP'] !== '-' ? row['Link Google Drive SP'] : null,
-        fileCeklistId: `file_cek_${row['ID Pengajuan']}`,
-        fileCeklistName: row['Nama File Ceklist'] || 'Ceklist_Berkas.pdf',
-        driveCeklistUrl: row['Link Google Drive Ceklist'] && row['Link Google Drive Ceklist'] !== '-' ? row['Link Google Drive Ceklist'] : null,
-        fileRekomDesaId: `file_rek_${row['ID Pengajuan']}`,
-        fileRekomDesaName: row['Nama File Rekom Desa'] || 'Rekomendasi_Desa.pdf',
-        driveRekomUrl: row['Link Google Drive Rekom Desa'] && row['Link Google Drive Rekom Desa'] !== '-' ? row['Link Google Drive Rekom Desa'] : null,
-        driveFolderUrl: row['Folder Google Drive Desa'] && row['Folder Google Drive Desa'] !== '-' ? row['Folder Google Drive Desa'] : null,
-        status: row['Status Verifikasi'] || 'Menunggu Verifikasi',
-        catatanKecamatan: row['Catatan Verifikasi / Alasan Pengembalian'] || row['Catatan Verifikasi'] || row['Catatan'] || ''
-      }));
+      const seenP = new Map();
+      result.data.forEach(row => {
+        const id = String(row['ID Pengajuan'] || '').trim();
+        const desa = String(row['Nama Desa'] || '').trim().toLowerCase();
+        const dana = String(row['Jenis Dana'] || '').trim().toLowerCase();
+        const tahap = String(row['Tahap Pencairan'] || '').trim().toLowerCase();
+        const thn = String(row['Tahun Anggaran'] || '2026').trim();
+        const key = id ? `id:${id}` : `p:${desa}_${dana}_${tahap}_${thn}`;
+        const item = {
+          id: id || `PENG-${Date.now()}`,
+          waktuKirim: row['Waktu Pengajuan'] ? new Date(row['Waktu Pengajuan']).toISOString() : new Date().toISOString(),
+          namaDesa: row['Nama Desa'] || '',
+          jenisDana: row['Jenis Dana'] || 'add_reguler',
+          tahap: row['Tahap Pencairan'] || '',
+          tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
+          nominal: Number(row['Nominal Angka (Rp)']) || 0,
+          nomorSp: row['Nomor SP Desa'] || '',
+          tanggalSp: row['Tanggal SP Desa'] ? String(row['Tanggal SP Desa']).substring(0, 10) : '',
+          nomorRekomDesa: row['Nomor Rekomendasi Desa'] || '',
+          tanggalRekomDesa: row['Tanggal Rekom Desa'] ? String(row['Tanggal Rekom Desa']).substring(0, 10) : '',
+          fileSpId: `file_sp_${row['ID Pengajuan']}`,
+          fileSpName: row['Nama File SP'] || 'Surat_Pengantar.pdf',
+          driveSpUrl: row['Link Google Drive SP'] && row['Link Google Drive SP'] !== '-' ? row['Link Google Drive SP'] : null,
+          fileCeklistId: `file_cek_${row['ID Pengajuan']}`,
+          fileCeklistName: row['Nama File Ceklist'] || 'Ceklist_Berkas.pdf',
+          driveCeklistUrl: row['Link Google Drive Ceklist'] && row['Link Google Drive Ceklist'] !== '-' ? row['Link Google Drive Ceklist'] : null,
+          fileRekomDesaId: `file_rek_${row['ID Pengajuan']}`,
+          fileRekomDesaName: row['Nama File Rekom Desa'] || 'Rekomendasi_Desa.pdf',
+          driveRekomUrl: row['Link Google Drive Rekom Desa'] && row['Link Google Drive Rekom Desa'] !== '-' ? row['Link Google Drive Rekom Desa'] : null,
+          driveFolderUrl: row['Folder Google Drive Desa'] && row['Folder Google Drive Desa'] !== '-' ? row['Folder Google Drive Desa'] : null,
+          status: row['Status Verifikasi'] || 'Menunggu Verifikasi',
+          catatanKecamatan: row['Catatan Verifikasi / Alasan Pengembalian'] || row['Catatan Verifikasi'] || row['Catatan'] || ''
+        };
+        seenP.set(key, item);
+      });
+
+      const cloudList = Array.from(seenP.values());
 
       // Google Sheets adalah Sumber Data Utama (Single Source of Truth)
       // Seluruh data lokal disesuaikan persis dengan baris data di Google Sheets
@@ -4921,26 +5151,39 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
     const res = await fetch(url);
     const result = await res.json();
     if (result.success && Array.isArray(result.data)) {
-      AppState.riwayat = result.data.map(row => ({
-        id: row['ID Rekomendasi'] || `REK-${Date.now()}`,
-        waktuTerbit: row['Waktu Terbit'] || new Date().toISOString(),
-        nomorSurat: row['Nomor Surat Rekomendasi'] || row['Nomor Surat'] || '',
-        tanggalSurat: row['Tanggal Surat'] ? String(row['Tanggal Surat']).substring(0, 10) : '',
-        namaDesa: row['Nama Desa'] || '',
-        jenisDana: row['Jenis Dana'] || 'add_reguler',
-        tahap: row['Tahap'] || '',
-        tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
-        nominalAngka: Number(row['Nominal (Rp)']) || 0,
-        terbilang: row['Terbilang'] || '',
-        bankPenyalur: row['Bank Penyalur'] || '',
-        nomorRekening: row['Nomor Rekening RKD'] || '',
-        kepalaDesa: row['Kepala Desa'] || '',
-        kaurKeuangan: row['Kaur Keuangan'] || '',
-        namaCamat: row['Nama Camat'] || '',
-        nipCamat: row['NIP Camat'] || '',
-        metodeTte: row['Metode TTE / Format'] || 'tte',
-        status: row['Status Penyaluran'] || 'Diterbitkan'
-      }));
+      const seenR = new Map();
+      result.data.forEach(row => {
+        const id = String(row['ID Rekomendasi'] || '').trim();
+        const noSurat = String(row['Nomor Surat Rekomendasi'] || row['Nomor Surat'] || '').trim().toLowerCase();
+        const desa = String(row['Nama Desa'] || '').trim().toLowerCase();
+        const dana = String(row['Jenis Dana'] || '').trim().toLowerCase();
+        const tahap = String(row['Tahap'] || '').trim().toLowerCase();
+        const thn = String(row['Tahun Anggaran'] || '2026').trim();
+        const key = noSurat ? `no:${noSurat}` : (id ? `id:${id}` : `p:${desa}_${dana}_${tahap}_${thn}`);
+        const item = {
+          id: id || `REK-${Date.now()}`,
+          waktuTerbit: row['Waktu Terbit'] || new Date().toISOString(),
+          nomorSurat: row['Nomor Surat Rekomendasi'] || row['Nomor Surat'] || '',
+          tanggalSurat: row['Tanggal Surat'] ? String(row['Tanggal Surat']).substring(0, 10) : '',
+          namaDesa: row['Nama Desa'] || '',
+          jenisDana: row['Jenis Dana'] || 'add_reguler',
+          tahap: row['Tahap'] || '',
+          tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
+          nominalAngka: Number(row['Nominal (Rp)']) || 0,
+          terbilang: row['Terbilang'] || '',
+          bankPenyalur: row['Bank Penyalur'] || '',
+          nomorRekening: row['Nomor Rekening RKD'] || '',
+          kepalaDesa: row['Kepala Desa'] || '',
+          kaurKeuangan: row['Kaur Keuangan'] || '',
+          namaCamat: row['Nama Camat'] || '',
+          nipCamat: row['NIP Camat'] || '',
+          metodeTte: row['Metode TTE / Format'] || 'tte',
+          status: row['Status Penyaluran'] || 'Diterbitkan'
+        };
+        seenR.set(key, item);
+      });
+
+      AppState.riwayat = Array.from(seenR.values());
       localStorage.setItem('sip_riwayat_rekom', JSON.stringify(AppState.riwayat));
       renderHistoryTable();
       renderDashboardSummary();

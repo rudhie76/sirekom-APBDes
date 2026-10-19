@@ -719,7 +719,22 @@ function doPost(e) {
       var existingRowIndex = -1;
       var dataP = sheetPengajuan.getDataRange().getValues();
       for (var r = 1; r < dataP.length; r++) {
-        if (dataP[r][0] && dataP[r][0].toString() === id.toString()) {
+        var rowId = dataP[r][0] ? dataP[r][0].toString().trim() : "";
+        var rowDesa = dataP[r][2] ? dataP[r][2].toString().trim() : "";
+        var rowDana = dataP[r][3] ? dataP[r][3].toString().trim() : "";
+        var rowTahap = dataP[r][4] ? dataP[r][4].toString().trim() : "";
+        var rowTahun = dataP[r][5] ? dataP[r][5].toString().trim() : "";
+        var rowSp = dataP[r][7] ? dataP[r][7].toString().trim() : "";
+
+        var isSameId = (rowId && id && rowId.toLowerCase() === id.toString().trim().toLowerCase());
+        var isSameParams = (rowDesa.toLowerCase() === namaDesa.toString().trim().toLowerCase() &&
+                            rowDana.toLowerCase() === (payload.jenisDana || "").toString().trim().toLowerCase() &&
+                            rowTahap.toLowerCase() === (payload.tahap || "").toString().trim().toLowerCase() &&
+                            rowTahun === (payload.tahunAnggaran || "").toString().trim());
+        var isSameSp = (payload.nomorSp && rowSp && rowSp.toLowerCase() === payload.nomorSp.toString().trim().toLowerCase() &&
+                        rowDesa.toLowerCase() === namaDesa.toString().trim().toLowerCase());
+
+        if (isSameId || isSameParams || isSameSp) {
           existingRowIndex = r + 1;
           // Pertahankan link & nama file lama jika tidak ada upload file pengganti
           if (spResult.url === "-" && dataP[r][12] && dataP[r][12] !== "-") {
@@ -773,8 +788,8 @@ function doPost(e) {
       return jsonResponse({
         success: true,
         message: subFolderUrl !== "-"
-          ? "Berkas berhasil diunggah ke Google Drive dan dicatat di Google Sheets!"
-          : "Pengajuan berhasil dicatat di Google Sheets (Google Drive perlu otorisasi).",
+          ? (existingRowIndex > 0 ? "Data pengajuan berhasil diperbarui di Google Drive & Google Sheets!" : "Berkas berhasil diunggah ke Google Drive dan dicatat di Google Sheets!")
+          : (existingRowIndex > 0 ? "Pengajuan berhasil diperbarui di Google Sheets!" : "Pengajuan berhasil dicatat di Google Sheets (Google Drive perlu otorisasi)."),
         id: id,
         driveFolderUrl: subFolderUrl,
         driveFiles: {
@@ -790,6 +805,10 @@ function doPost(e) {
     // -------------------------------------------------------------------------------------
     if (action === "simpanRekomendasi") {
       var sheetRekom = ss.getSheetByName(SHEET_REKOMENDASI);
+      if (!sheetRekom) {
+        initSheets();
+        sheetRekom = ss.getSheetByName(SHEET_REKOMENDASI);
+      }
       var idRekom = payload.id || ("REK-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
       var timestampRekom = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
 
@@ -814,11 +833,29 @@ function doPost(e) {
         payload.status || "Diterbitkan"
       ];
 
-      sheetRekom.appendRow(rowRekom);
+      // Cek apakah mode edit (cocokkan berdasarkan ID Rekomendasi ATAU Nomor Surat)
+      var existingRowIndex = -1;
+      var dataR = sheetRekom.getDataRange().getValues();
+      for (var r = 1; r < dataR.length; r++) {
+        var rowId = dataR[r][0] ? dataR[r][0].toString().trim() : "";
+        var rowNoSurat = dataR[r][2] ? dataR[r][2].toString().trim() : "";
+        var isSameId = (rowId && idRekom && rowId.toLowerCase() === idRekom.toString().trim().toLowerCase());
+        var isSameNoSurat = (payload.nomorSurat && rowNoSurat && rowNoSurat.toLowerCase() === payload.nomorSurat.toString().trim().toLowerCase());
+        if (isSameId || isSameNoSurat) {
+          existingRowIndex = r + 1;
+          break;
+        }
+      }
+
+      if (existingRowIndex > 0) {
+        sheetRekom.getRange(existingRowIndex, 1, 1, rowRekom.length).setValues([rowRekom]);
+      } else {
+        sheetRekom.appendRow(rowRekom);
+      }
 
       return jsonResponse({
         success: true,
-        message: "Surat Rekomendasi Camat berhasil dicatat ke Google Sheets!",
+        message: existingRowIndex > 0 ? "Surat Rekomendasi Camat berhasil diperbarui di Google Sheets!" : "Surat Rekomendasi Camat berhasil dicatat ke Google Sheets!",
         id: idRekom
       });
     }

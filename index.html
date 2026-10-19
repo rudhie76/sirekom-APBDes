@@ -1041,6 +1041,20 @@
       <!-- Scrollable Inputs -->
       <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
 
+        <!-- Banner Mode Edit Rekomendasi (Muncul jika sedang mengedit arsip yang sudah ada) -->
+        <div id="bannerEditingRekom" class="hidden p-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl text-xs font-semibold flex items-center justify-between gap-2 shadow-sm border border-amber-400">
+          <div class="flex items-center gap-2">
+            <span class="text-base">✏️</span>
+            <div>
+              <div class="font-bold text-[11px] uppercase tracking-wide">Mode Edit Rekomendasi</div>
+              <div class="text-[10.5px] text-amber-100">Memperbarui arsip: <b id="textEditingRekomNomor" class="font-mono text-white">-</b></div>
+            </div>
+          </div>
+          <button type="button" onclick="batalEditRekomendasi()" class="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-[10.5px] font-bold transition cursor-pointer">
+            ✕ Buat Baru
+          </button>
+        </div>
+
         <!-- KARTU 0: PILIHAN 4 TEMPLATE SURAT RESMI KECAMATAN WARU -->
         <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-xl p-3.5 shadow-sm space-y-2">
           <div class="text-[11px] uppercase tracking-wider font-bold text-blue-200">Jenis Surat Rekomendasi Pencairan:</div>
@@ -2829,6 +2843,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261020_nav_bawah"></script>
+  <script src="app.js?v=20261020_fix_edit_dedup"></script>
 </body>
 </html>
