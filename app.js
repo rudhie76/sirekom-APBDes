@@ -4083,7 +4083,7 @@ window.bukaModalEditPengajuanDesa = function(id) {
   const modal = document.getElementById('modalEditPengajuanDesa');
   if (!modal) return;
 
-  const item = (AppState.pengajuanDesa || []).find(p => p.id === id);
+  const item = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id)) || (() => { try { return (JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]')).find(p => String(p.id) === String(id)); } catch(e) { return null; } })();
   if (!item) {
     showToast('Data pengajuan tidak ditemukan.', 'error');
     return;
@@ -4096,7 +4096,7 @@ window.bukaModalEditPengajuanDesa = function(id) {
   if (desaEl) desaEl.value = item.namaDesa || '';
 
   const selJenis = document.getElementById('editPengajuanJenisDana');
-  if (selJenis && item.jenisDana) selJenis.value = item.jenisDana;
+  if (selJenis && item.jenisDana) { const opt = Array.from(selJenis.options).find(o => o.value.toLowerCase() === String(item.jenisDana).toLowerCase()); if (opt) selJenis.value = opt.value; else selJenis.value = item.jenisDana; }
 
   const selTahap = document.getElementById('editPengajuanTahap');
   if (selTahap && item.tahap) selTahap.value = item.tahap;
@@ -4167,7 +4167,7 @@ window.bukaModalEditPengajuanDesa = function(id) {
     }
   }
 
-  modal.classList.remove('hidden');
+  modal.classList.remove('hidden'); modal.style.display = 'flex';
 };
 
 /**
@@ -4175,7 +4175,7 @@ window.bukaModalEditPengajuanDesa = function(id) {
  */
 window.tutupModalEditPengajuanDesa = function() {
   const modal = document.getElementById('modalEditPengajuanDesa');
-  if (modal) modal.classList.add('hidden');
+  if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
 };
 
 /**
@@ -4194,7 +4194,7 @@ window.simpanEditPengajuanDesa = async function(e) {
   const id = document.getElementById('editPengajuanId')?.value;
   if (!id) return;
 
-  const targetItem = (AppState.pengajuanDesa || []).find(p => p.id === id);
+  const targetItem = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id)) || (() => { try { return (JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]')).find(p => String(p.id) === String(id)); } catch(e) { return null; } })();
   if (!targetItem) {
     showToast('Data pengajuan tidak ditemukan.', 'error');
     return;
@@ -4655,7 +4655,7 @@ window.openDriveFolderKecamatan = async function() {
 AppState.kembalikanPengajuanId = null;
 
 window.bukaModalKembalikanPengajuan = function(id) {
-  const item = (AppState.pengajuanDesa || []).find(p => p.id === id);
+  const item = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id)) || (() => { try { return (JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]')).find(p => String(p.id) === String(id)); } catch(e) { return null; } })();
   if (!item) {
     showToast('Data pengajuan berkas tidak ditemukan.', 'error');
     return;
@@ -4680,14 +4680,14 @@ window.bukaModalKembalikanPengajuan = function(id) {
 
   const modal = document.getElementById('modalKembalikanPengajuan');
   if (modal) {
-    modal.classList.remove('hidden');
+    modal.classList.remove('hidden'); modal.style.display = 'flex';
     setTimeout(() => inputCatatan?.focus(), 150);
   }
 };
 
 window.closeModalKembalikanPengajuan = function() {
   const modal = document.getElementById('modalKembalikanPengajuan');
-  if (modal) modal.classList.add('hidden');
+  if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
   AppState.kembalikanPengajuanId = null;
 };
 
@@ -4710,7 +4710,7 @@ window.submitKembalikanPengajuan = function() {
     return;
   }
 
-  const item = (AppState.pengajuanDesa || []).find(p => p.id === id);
+  const item = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id)) || (() => { try { return (JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]')).find(p => String(p.id) === String(id)); } catch(e) { return null; } })();
   if (!item) {
     showToast('Data pengajuan tidak ditemukan.', 'error');
     closeModalKembalikanPengajuan();
@@ -5076,13 +5076,13 @@ window.bukaModalKirimRekomDesa = function(editId = null, prefillData = null) {
     }
   }
 
-  modal.classList.remove('hidden');
+  modal.classList.remove('hidden'); modal.style.display = 'flex';
 };
 
 // Tutup Modal
 window.tutupModalKirimRekomDesa = function() {
   const modal = document.getElementById('modalKirimRekomDesa');
-  if (modal) modal.classList.add('hidden');
+  if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
 };
 
 // Handle file pick untuk kecamatan
@@ -5664,12 +5664,12 @@ window.bukaModalProfileDesa = function(targetDesa) {
   }
 
   pilihTabProfileDesa(desaToOpen);
-  modal.classList.remove('hidden');
+  modal.classList.remove('hidden'); modal.style.display = 'flex';
 };
 
 window.tutupModalProfileDesa = function() {
   const modal = document.getElementById('modalProfileDesa');
-  if (modal) modal.classList.add('hidden');
+  if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
 };
 
 window.pilihTabProfileDesa = function(tabKey) {
