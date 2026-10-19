@@ -715,7 +715,33 @@ function doPost(e) {
         Logger.log("Peringatan DriveApp (perlu izin): " + driveErr.toString());
       }
 
-      // 3. Catat Seluruh Data dan Link Google Drive ke Baris Spreadsheet
+      // 3. Cek apakah ID Pengajuan sudah ada di Sheet (Mode Edit / Perbaikan Data)
+      var existingRowIndex = -1;
+      var dataP = sheetPengajuan.getDataRange().getValues();
+      for (var r = 1; r < dataP.length; r++) {
+        if (dataP[r][0] && dataP[r][0].toString() === id.toString()) {
+          existingRowIndex = r + 1;
+          // Pertahankan link & nama file lama jika tidak ada upload file pengganti
+          if (spResult.url === "-" && dataP[r][12] && dataP[r][12] !== "-") {
+            spResult.name = dataP[r][11] || spResult.name;
+            spResult.url = dataP[r][12];
+          }
+          if (ceklistResult.url === "-" && dataP[r][14] && dataP[r][14] !== "-") {
+            ceklistResult.name = dataP[r][13] || ceklistResult.name;
+            ceklistResult.url = dataP[r][14];
+          }
+          if (rekomResult.url === "-" && dataP[r][16] && dataP[r][16] !== "-") {
+            rekomResult.name = dataP[r][15] || rekomResult.name;
+            rekomResult.url = dataP[r][16];
+          }
+          if ((subFolderUrl === "-" || !subFolderUrl) && dataP[r][17] && dataP[r][17] !== "-") {
+            subFolderUrl = dataP[r][17];
+          }
+          break;
+        }
+      }
+
+      // 4. Catat Seluruh Data dan Link Google Drive ke Baris Spreadsheet
       var rowData = [
         id,
         timestamp,
@@ -738,7 +764,11 @@ function doPost(e) {
         payload.status || "Menunggu Verifikasi"
       ];
 
-      sheetPengajuan.appendRow(rowData);
+      if (existingRowIndex > 0) {
+        sheetPengajuan.getRange(existingRowIndex, 1, 1, rowData.length).setValues([rowData]);
+      } else {
+        sheetPengajuan.appendRow(rowData);
+      }
 
       return jsonResponse({
         success: true,

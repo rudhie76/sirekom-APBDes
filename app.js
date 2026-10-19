@@ -1121,6 +1121,30 @@ function setupEventListeners() {
   document.getElementById('btnViewSplit')?.addEventListener('click', () => setViewMode('split'));
   document.getElementById('btnViewForm')?.addEventListener('click', () => setViewMode('form'));
   document.getElementById('btnViewPreview')?.addEventListener('click', () => setViewMode('preview'));
+
+  // Formatting Otomatis Nominal Pengajuan Desa (Form Utama & Modal Edit)
+  const desaNominalInput = document.getElementById('desaInputNominal');
+  if (desaNominalInput) {
+    desaNominalInput.addEventListener('input', () => {
+      const val = parseCurrencyInput(desaNominalInput.value);
+      desaNominalInput.value = val ? val.toLocaleString('id-ID') : '';
+    });
+  }
+
+  const editNominalInput = document.getElementById('editPengajuanNominal');
+  if (editNominalInput) {
+    editNominalInput.addEventListener('input', () => {
+      const val = parseCurrencyInput(editNominalInput.value);
+      editNominalInput.value = val ? val.toLocaleString('id-ID') : '';
+      const terbilangEl = document.getElementById('editPengajuanTerbilang');
+      if (terbilangEl) terbilangEl.textContent = val ? convertTerbilang(val) + ' Rupiah' : 'Nol Rupiah';
+    });
+  }
+
+  // Tutup Modal Edit Pengajuan jika klik di luar area modal
+  document.getElementById('modalEditPengajuanDesa')?.addEventListener('click', (e) => {
+    if (e.target.id === 'modalEditPengajuanDesa') tutupModalEditPengajuanDesa();
+  });
 }
 
 function handleTipeChange() {
@@ -3982,19 +4006,24 @@ function renderTabelPengajuanDesa() {
     }
 
     let aksiHtml = `
-      <button onclick="hapusPengajuanDesa('${item.id}')" class="text-rose-600 hover:text-rose-800 text-xs font-semibold px-2 py-1 rounded hover:bg-rose-50 transition" title="Hapus Berkas">
-        Hapus
-      </button>
+      <div class="flex flex-col gap-1 items-center justify-center min-w-[72px]">
+        <button onclick="bukaModalEditPengajuanDesa('${item.id}')" class="w-full px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 border border-amber-300 rounded-lg text-[11px] font-bold transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer" title="Edit / Perbaiki Data & Dokumen Pengajuan">
+          <span>✏️ Edit</span>
+        </button>
+        <button onclick="hapusPengajuanDesa('${item.id}')" class="w-full px-2 py-0.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded text-[10.5px] font-medium transition flex items-center justify-center gap-1 cursor-pointer" title="Hapus Berkas">
+          <span>🗑️ Hapus</span>
+        </button>
+      </div>
     `;
 
     if (item.status === 'Dikembalikan') {
       aksiHtml = `
-        <div class="flex flex-col gap-1 items-center">
-          <button onclick="perbaikiPengajuanDesa('${item.id}')" class="w-full px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10.5px] font-bold transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer" title="Muat data pengajuan ini ke formulir untuk diperbaiki">
+        <div class="flex flex-col gap-1 items-center justify-center min-w-[72px]">
+          <button onclick="bukaModalEditPengajuanDesa('${item.id}')" class="w-full px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer" title="Perbaiki berkas sesuai catatan kecamatan">
             <span>✏️ Perbaiki</span>
           </button>
-          <button onclick="hapusPengajuanDesa('${item.id}')" class="text-rose-500 hover:text-rose-700 text-[10px] font-medium transition" title="Hapus Berkas">
-            Hapus
+          <button onclick="hapusPengajuanDesa('${item.id}')" class="w-full px-2 py-0.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded text-[10.5px] font-medium transition flex items-center justify-center gap-1 cursor-pointer" title="Hapus Berkas">
+            <span>🗑️ Hapus</span>
           </button>
         </div>
       `;
@@ -4048,59 +4077,284 @@ function renderTabelPengajuanDesa() {
 }
 
 /**
- * Memuat Data Pengajuan yang Dikembalikan ke Formulir untuk Diperbaiki
+ * Buka Modal Edit Data Pengajuan Desa
  */
-window.perbaikiPengajuanDesa = function(id) {
+window.bukaModalEditPengajuanDesa = function(id) {
+  const modal = document.getElementById('modalEditPengajuanDesa');
+  if (!modal) return;
+
   const item = (AppState.pengajuanDesa || []).find(p => p.id === id);
-  if (!item) return;
-
-  AppState.editingPengajuanId = id;
-
-  const selJenis = document.getElementById('desaInputJenisDana');
-  if (selJenis && item.jenisDana) selJenis.value = item.jenisDana;
-
-  const selTahap = document.getElementById('desaInputTahap');
-  if (selTahap && item.tahap) selTahap.value = item.tahap;
-
-  const inTahun = document.getElementById('desaInputTahun');
-  if (inTahun && item.tahunAnggaran) inTahun.value = item.tahunAnggaran;
-
-  const inNominal = document.getElementById('desaInputNominal');
-  if (inNominal && item.nominal) inNominal.value = Number(item.nominal).toLocaleString('id-ID');
-
-  const inNoSp = document.getElementById('desaInputNomorSp');
-  if (inNoSp) inNoSp.value = item.nomorSp || '';
-
-  const inTglSp = document.getElementById('desaInputTanggalSp');
-  if (inTglSp) inTglSp.value = item.tanggalSp || '';
-
-  const inNoRekom = document.getElementById('desaInputNomorRekom');
-  if (inNoRekom) inNoRekom.value = item.nomorRekomDesa || '';
-
-  const inTglRekom = document.getElementById('desaInputTanggalRekom');
-  if (inTglRekom) inTglRekom.value = item.tanggalRekomDesa || '';
-
-  // Keterangan file lama
-  const spInfo = document.getElementById('fileInfoSp');
-  if (spInfo && item.fileSpName) spInfo.innerHTML = `<span class="text-amber-700 font-semibold text-[10px]">📁 File lama: ${escapeHtml(item.fileSpName)}</span>`;
-
-  const ceklistInfo = document.getElementById('fileInfoCeklist');
-  if (ceklistInfo && item.fileCeklistName) ceklistInfo.innerHTML = `<span class="text-amber-700 font-semibold text-[10px]">📁 File lama: ${escapeHtml(item.fileCeklistName)}</span>`;
-
-  const rekomInfo = document.getElementById('fileInfoRekom');
-  if (rekomInfo && item.fileRekomDesaName) rekomInfo.innerHTML = `<span class="text-amber-700 font-semibold text-[10px]">📁 File lama: ${escapeHtml(item.fileRekomDesaName)}</span>`;
-
-  // Ubah tombol kirim
-  const btnKirim = document.getElementById('btnKirimPengajuanDesa');
-  if (btnKirim) {
-    btnKirim.className = 'px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white text-xs font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer';
-    btnKirim.innerHTML = '<span>🚀 Simpan & Kirim Ulang Berkas Perbaikan</span>';
+  if (!item) {
+    showToast('Data pengajuan tidak ditemukan.', 'error');
+    return;
   }
 
-  // Gulir ke form
-  document.getElementById('viewPengajuanDesa')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const idEl = document.getElementById('editPengajuanId');
+  if (idEl) idEl.value = item.id;
 
-  showToast(`Data pengajuan ${item.nomorSp} dimuat ke formulir. Silakan sesuaikan data/dokumen lalu klik Kirim Ulang.`, 'info');
+  const desaEl = document.getElementById('editPengajuanDesaNama');
+  if (desaEl) desaEl.value = item.namaDesa || '';
+
+  const selJenis = document.getElementById('editPengajuanJenisDana');
+  if (selJenis && item.jenisDana) selJenis.value = item.jenisDana;
+
+  const selTahap = document.getElementById('editPengajuanTahap');
+  if (selTahap && item.tahap) selTahap.value = item.tahap;
+
+  const inTahun = document.getElementById('editPengajuanTahun');
+  if (inTahun) inTahun.value = item.tahunAnggaran || '2026';
+
+  const inNominal = document.getElementById('editPengajuanNominal');
+  const terbilangEl = document.getElementById('editPengajuanTerbilang');
+  const nomVal = Number(item.nominal) || 0;
+  if (inNominal) {
+    inNominal.value = nomVal > 0 ? nomVal.toLocaleString('id-ID') : '0';
+  }
+  if (terbilangEl) {
+    terbilangEl.textContent = nomVal > 0 ? convertTerbilang(nomVal) + ' Rupiah' : 'Nol Rupiah';
+  }
+
+  const inNoSp = document.getElementById('editPengajuanNomorSp');
+  if (inNoSp) inNoSp.value = item.nomorSp || '';
+
+  const inTglSp = document.getElementById('editPengajuanTanggalSp');
+  if (inTglSp) inTglSp.value = item.tanggalSp || '';
+
+  const inNoRekom = document.getElementById('editPengajuanNomorRekom');
+  if (inNoRekom) inNoRekom.value = item.nomorRekomDesa || '';
+
+  const inTglRekom = document.getElementById('editPengajuanTanggalRekom');
+  if (inTglRekom) inTglRekom.value = item.tanggalRekomDesa || '';
+
+  // File labels
+  const spInfo = document.getElementById('editInfoFileSp');
+  if (spInfo) {
+    spInfo.innerHTML = item.fileSpName
+      ? `📁 File saat ini: <strong class="text-slate-800">${escapeHtml(item.fileSpName)}</strong>`
+      : 'Belum ada file diunggah';
+  }
+  const fileSpInput = document.getElementById('editFileInputSp');
+  if (fileSpInput) fileSpInput.value = '';
+
+  const ceklistInfo = document.getElementById('editInfoFileCeklist');
+  if (ceklistInfo) {
+    ceklistInfo.innerHTML = item.fileCeklistName
+      ? `📁 File saat ini: <strong class="text-slate-800">${escapeHtml(item.fileCeklistName)}</strong>`
+      : 'Belum ada file diunggah';
+  }
+  const fileCeklistInput = document.getElementById('editFileInputCeklist');
+  if (fileCeklistInput) fileCeklistInput.value = '';
+
+  const rekomInfo = document.getElementById('editInfoFileRekom');
+  if (rekomInfo) {
+    rekomInfo.innerHTML = item.fileRekomDesaName
+      ? `📁 File saat ini: <strong class="text-slate-800">${escapeHtml(item.fileRekomDesaName)}</strong>`
+      : 'Belum ada file diunggah';
+  }
+  const fileRekomInput = document.getElementById('editFileInputRekom');
+  if (fileRekomInput) fileRekomInput.value = '';
+
+  // Banner Catatan Kecamatan jika ada
+  const bannerCatatan = document.getElementById('editPengajuanBannerCatatan');
+  const teksCatatan = document.getElementById('editPengajuanTeksCatatan');
+  if (bannerCatatan && teksCatatan) {
+    if (item.catatanKecamatan) {
+      bannerCatatan.classList.remove('hidden');
+      teksCatatan.textContent = item.catatanKecamatan;
+    } else {
+      bannerCatatan.classList.add('hidden');
+      teksCatatan.textContent = '';
+    }
+  }
+
+  modal.classList.remove('hidden');
+};
+
+/**
+ * Tutup Modal Edit Data Pengajuan Desa
+ */
+window.tutupModalEditPengajuanDesa = function() {
+  const modal = document.getElementById('modalEditPengajuanDesa');
+  if (modal) modal.classList.add('hidden');
+};
+
+/**
+ * Alias perbaikiPengajuanDesa agar kompatibel dengan tombol banner perbaikan
+ */
+window.perbaikiPengajuanDesa = function(id) {
+  bukaModalEditPengajuanDesa(id);
+};
+
+/**
+ * Simpan Perubahan / Perbaikan Pengajuan Desa dari Modal
+ */
+window.simpanEditPengajuanDesa = async function(e) {
+  if (e && e.preventDefault) e.preventDefault();
+
+  const id = document.getElementById('editPengajuanId')?.value;
+  if (!id) return;
+
+  const targetItem = (AppState.pengajuanDesa || []).find(p => p.id === id);
+  if (!targetItem) {
+    showToast('Data pengajuan tidak ditemukan.', 'error');
+    return;
+  }
+
+  const jenisDana = document.getElementById('editPengajuanJenisDana')?.value || targetItem.jenisDana;
+  const tahap = document.getElementById('editPengajuanTahap')?.value || targetItem.tahap;
+  const tahun = document.getElementById('editPengajuanTahun')?.value || targetItem.tahunAnggaran;
+  const nominalRaw = document.getElementById('editPengajuanNominal')?.value || '0';
+  const nominalAngka = parseCurrencyInput(nominalRaw);
+
+  const noSp = document.getElementById('editPengajuanNomorSp')?.value.trim() || '';
+  const tglSp = document.getElementById('editPengajuanTanggalSp')?.value || '';
+  const noRekom = document.getElementById('editPengajuanNomorRekom')?.value.trim() || '';
+  const tglRekom = document.getElementById('editPengajuanTanggalRekom')?.value || '';
+
+  if (!tglSp) {
+    showToast('Tanggal Surat Pengantar (Tanggal SP) wajib diisi!', 'error');
+    document.getElementById('editPengajuanTanggalSp')?.focus();
+    return;
+  }
+
+  if (!tglRekom) {
+    showToast('Tanggal Rekomendasi Desa wajib diisi!', 'error');
+    document.getElementById('editPengajuanTanggalRekom')?.focus();
+    return;
+  }
+
+  const btnSubmit = document.getElementById('btnSubmitEditPengajuanDesa');
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<span>⏳ Menyimpan Perubahan...</span>';
+  }
+
+  try {
+    const spFileInput = document.getElementById('editFileInputSp');
+    const ceklistFileInput = document.getElementById('editFileInputCeklist');
+    const rekomFileInput = document.getElementById('editFileInputRekom');
+
+    function readFilePromise(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = ev => resolve({
+          name: file.name,
+          size: formatFileSize(file.size),
+          type: file.type || 'application/pdf',
+          dataUrl: ev.target.result
+        });
+        reader.onerror = err => reject(err);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    const newSp = spFileInput && spFileInput.files && spFileInput.files[0] ? await readFilePromise(spFileInput.files[0]) : null;
+    const newCeklist = ceklistFileInput && ceklistFileInput.files && ceklistFileInput.files[0] ? await readFilePromise(ceklistFileInput.files[0]) : null;
+    const newRekom = rekomFileInput && rekomFileInput.files && rekomFileInput.files[0] ? await readFilePromise(rekomFileInput.files[0]) : null;
+
+    if (newSp) {
+      const fileSpId = `file_sp_${Date.now()}`;
+      newSp.id = fileSpId;
+      await FileStorage.saveFile(newSp);
+      targetItem.fileSpId = fileSpId;
+      targetItem.fileSpName = newSp.name;
+    }
+
+    if (newCeklist) {
+      const fileCeklistId = `file_ceklist_${Date.now()}`;
+      newCeklist.id = fileCeklistId;
+      await FileStorage.saveFile(newCeklist);
+      targetItem.fileCeklistId = fileCeklistId;
+      targetItem.fileCeklistName = newCeklist.name;
+    }
+
+    if (newRekom) {
+      const fileRekomDesaId = `file_rekom_${Date.now()}`;
+      newRekom.id = fileRekomDesaId;
+      await FileStorage.saveFile(newRekom);
+      targetItem.fileRekomDesaId = fileRekomDesaId;
+      targetItem.fileRekomDesaName = newRekom.name;
+    }
+
+    targetItem.jenisDana = jenisDana;
+    targetItem.tahap = tahap;
+    targetItem.tahunAnggaran = tahun;
+    targetItem.nominal = nominalAngka;
+    targetItem.nomorSp = noSp;
+    targetItem.tanggalSp = tglSp;
+    targetItem.nomorRekomDesa = noRekom;
+    targetItem.tanggalRekomDesa = tglRekom;
+    targetItem.waktuKirim = new Date().toISOString();
+
+    if (targetItem.status === 'Dikembalikan') {
+      targetItem.status = 'Menunggu Verifikasi';
+      targetItem.riwayatCatatanSebelumnya = targetItem.catatanKecamatan;
+      targetItem.catatanKecamatan = null;
+    }
+
+    localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+
+    if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+      try {
+        if (btnSubmit) btnSubmit.innerHTML = '<span>☁️ Sinkronisasi ke Google Drive & Sheets...</span>';
+        const payloadGas = {
+          action: 'simpanPengajuanDesa',
+          id: targetItem.id,
+          namaDesa: targetItem.namaDesa,
+          jenisDana: targetItem.jenisDana,
+          tahap: targetItem.tahap,
+          tahunAnggaran: targetItem.tahunAnggaran,
+          nominal: targetItem.nominal,
+          nomorSp: targetItem.nomorSp,
+          tanggalSp: targetItem.tanggalSp,
+          nomorRekomDesa: targetItem.nomorRekomDesa,
+          tanggalRekomDesa: targetItem.tanggalRekomDesa,
+          status: targetItem.status,
+          fileSp: newSp ? { name: newSp.name, type: newSp.type, dataUrl: newSp.dataUrl } : null,
+          fileCeklist: newCeklist ? { name: newCeklist.name, type: newCeklist.type, dataUrl: newCeklist.dataUrl } : null,
+          fileRekom: newRekom ? { name: newRekom.name, type: newRekom.type, dataUrl: newRekom.dataUrl } : null
+        };
+
+        const res = await fetch(AppState.gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payloadGas)
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          if (resJson.driveFolderUrl && resJson.driveFolderUrl !== '-') {
+            targetItem.driveFolderUrl = resJson.driveFolderUrl;
+          }
+          if (resJson.driveFiles) {
+            if (resJson.driveFiles.sp && resJson.driveFiles.sp.url !== '-') targetItem.driveSpUrl = resJson.driveFiles.sp.url;
+            if (resJson.driveFiles.ceklist && resJson.driveFiles.ceklist.url !== '-') targetItem.driveCeklistUrl = resJson.driveFiles.ceklist.url;
+            if (resJson.driveFiles.rekom && resJson.driveFiles.rekom.url !== '-') targetItem.driveRekomUrl = resJson.driveFiles.rekom.url;
+          }
+          localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+        }
+      } catch (syncErr) {
+        console.warn('Gagal sinkron edit pengajuan ke GAS:', syncErr);
+      }
+    }
+
+    tutupModalEditPengajuanDesa();
+    renderTabelPengajuanDesa();
+    renderTabelPengajuanKecamatan();
+    renderBannerRevisiDesa();
+    updateBadgePengajuanDesa();
+    renderDashboardSummary();
+
+    showToast('Data pengajuan berhasil diperbarui!', 'success');
+  } catch (err) {
+    console.error('Error saat menyimpan perbaikan pengajuan:', err);
+    showToast('Terjadi kesalahan saat menyimpan: ' + err.message, 'error');
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = '<span>💾 Simpan Perubahan Pengajuan</span>';
+    }
+  }
 };
 
 /**

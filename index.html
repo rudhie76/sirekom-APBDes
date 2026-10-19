@@ -2658,12 +2658,169 @@
         </div>
       </form>
 
+  <!-- ================================================================================= -->
+  <!-- MODAL: EDIT / PERBAIKI DATA PENGAJUAN DESA -->
+  <!-- ================================================================================= -->
+  <div id="modalEditPengajuanDesa" class="no-print fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh]">
+      
+      <!-- Header Modal -->
+      <div class="px-6 py-4 bg-gradient-to-r from-amber-600 via-amber-700 to-slate-900 text-white flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 text-white border border-white/30 flex items-center justify-center text-xl font-bold shadow-inner">
+            ✏️
+          </div>
+          <div>
+            <h3 id="modalEditPengajuanTitle" class="text-sm font-bold uppercase tracking-wide">Edit Data Pengajuan Berkas Desa</h3>
+            <p class="text-[11px] text-amber-100">Perbaiki nominal (Rp), nomor/tanggal SP, nomor/tanggal rekomendasi, atau ganti file dokumen</p>
+          </div>
+        </div>
+        <button type="button" onclick="tutupModalEditPengajuanDesa()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm transition cursor-pointer" title="Tutup Modal">
+          ✕
+        </button>
+      </div>
+
+      <!-- Formulir Edit Pengajuan -->
+      <form id="formEditPengajuanDesa" onsubmit="simpanEditPengajuanDesa(event)" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+        <input type="hidden" id="editPengajuanId" value="" />
+
+        <!-- Banner Info Catatan Revisi Kecamatan (jika ada) -->
+        <div id="editPengajuanBannerCatatan" class="hidden p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs">
+          <div class="font-bold flex items-center gap-1.5 text-rose-800 uppercase tracking-wide text-[11px]">
+            <span>⚠️ Catatan Revisi dari Kecamatan Waru:</span>
+          </div>
+          <div id="editPengajuanTeksCatatan" class="mt-1 text-slate-800 font-medium whitespace-pre-wrap"></div>
+        </div>
+
+        <!-- Baris 1: Info Desa, Jenis Dana, Tahap, Tahun -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Desa Pemohon</label>
+            <input type="text" id="editPengajuanDesaNama" readonly class="w-full bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 cursor-not-allowed" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Jenis Dana <span class="text-rose-500">*</span></label>
+            <select id="editPengajuanJenisDana" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-amber-500">
+              <option value="siltap">ADD - Siltap & Tunjangan</option>
+              <option value="add_reguler">ADD - Reguler</option>
+              <option value="dbh">PBH / DBH</option>
+              <option value="dd">DD - Dana Desa</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap / Bulan <span class="text-rose-500">*</span></label>
+            <select id="editPengajuanTahap" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-amber-500">
+              <option value="Tahap I">Tahap I</option>
+              <option value="Tahap II">Tahap II</option>
+              <option value="Tahap III">Tahap III</option>
+              <option value="Kurang Salur">Kurang Salur</option>
+              <option value="Bulan Januari">Bulan Januari</option>
+              <option value="Bulan Februari">Bulan Februari</option>
+              <option value="Bulan Maret">Bulan Maret</option>
+              <option value="Bulan April">Bulan April</option>
+              <option value="Bulan Mei">Bulan Mei</option>
+              <option value="Bulan Juni">Bulan Juni</option>
+              <option value="Bulan Juli">Bulan Juli</option>
+              <option value="Bulan Agustus">Bulan Agustus</option>
+              <option value="Bulan September">Bulan September</option>
+              <option value="Bulan Oktober">Bulan Oktober</option>
+              <option value="Bulan November">Bulan November</option>
+              <option value="Bulan Desember">Bulan Desember</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahun Anggaran <span class="text-rose-500">*</span></label>
+            <input type="number" id="editPengajuanTahun" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-amber-500" />
+          </div>
+        </div>
+
+        <!-- Baris 2: Nominal Pengajuan (Rp) -->
+        <div class="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1.5">
+          <label class="block text-xs font-bold text-emerald-950">
+            Nominal Pengajuan Pencairan (Rp) <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-2 text-xs font-bold text-emerald-800">Rp</span>
+            <input type="text" id="editPengajuanNominal" placeholder="0" class="w-full bg-white border border-emerald-300 rounded-lg pl-9 pr-3 py-1.5 text-xs font-mono font-bold text-emerald-900 focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div id="editPengajuanTerbilang" class="text-[11px] text-emerald-800 font-semibold italic"></div>
+        </div>
+
+        <!-- Baris 3: Data Surat Pengantar & Rekomendasi Desa -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Kolom SP -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+            <div class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-200 pb-1">
+              <span>📄</span>
+              <span>1. Surat Pengantar (SP) Desa</span>
+            </div>
+            <div>
+              <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Nomor SP Desa <span class="text-rose-500">*</span></label>
+              <input type="text" id="editPengajuanNomorSp" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-medium text-slate-900 focus:ring-2 focus:ring-amber-500" />
+            </div>
+            <div>
+              <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Tanggal SP Desa <span class="text-rose-500">*</span></label>
+              <input type="date" id="editPengajuanTanggalSp" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-amber-500" />
+            </div>
+            <div>
+              <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Ganti Berkas SP (Opsional)</label>
+              <div id="editInfoFileSp" class="text-[10px] text-slate-500 font-medium mb-1 truncate"></div>
+              <input type="file" id="editFileInputSp" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" class="w-full text-[10.5px] text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 cursor-pointer" />
+            </div>
+          </div>
+
+          <!-- Kolom Rekom Desa -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+            <div class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-200 pb-1">
+              <span>📑</span>
+              <span>2. Surat Rekomendasi Desa</span>
+            </div>
+            <div>
+              <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Nomor Rekom Desa <span class="text-rose-500">*</span></label>
+              <input type="text" id="editPengajuanNomorRekom" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-medium text-slate-900 focus:ring-2 focus:ring-amber-500" />
+            </div>
+            <div>
+              <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Tanggal Rekom Desa <span class="text-rose-500">*</span></label>
+              <input type="date" id="editPengajuanTanggalRekom" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-amber-500" />
+            </div>
+            <div>
+              <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Ganti Berkas Rekom Desa (Opsional)</label>
+              <div id="editInfoFileRekom" class="text-[10px] text-slate-500 font-medium mb-1 truncate"></div>
+              <input type="file" id="editFileInputRekom" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" class="w-full text-[10.5px] text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-blue-100 file:text-blue-800 hover:file:bg-blue-200 cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Kolom Berkas Ceklist Kelengkapan -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
+          <div class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-200 pb-1">
+            <span>📋</span>
+            <span>3. Berkas Ceklist Kelengkapan Berkas Desa</span>
+          </div>
+          <div id="editInfoFileCeklist" class="text-[10.5px] text-slate-500 font-medium mb-1 truncate"></div>
+          <div>
+            <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Ganti Berkas Ceklist (Opsional)</label>
+            <input type="file" id="editFileInputCeklist" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" class="w-full text-[10.5px] text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-teal-100 file:text-teal-800 hover:file:bg-teal-200 cursor-pointer" />
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Modal -->
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="tutupModalEditPengajuanDesa()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer">
+            Batal
+          </button>
+          <button type="submit" id="btnSubmitEditPengajuanDesa" class="px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer">
+            <span>💾 Simpan Perubahan Pengajuan</span>
+          </button>
+        </div>
+      </form>
+
     </div>
   </div>
 
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261016_fix_print_last_page"></script>
+  <script src="app.js?v=20261019_edit_pengajuan_desa"></script>
 </body>
 </html>
