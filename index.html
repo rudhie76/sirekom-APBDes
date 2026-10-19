@@ -536,6 +536,74 @@
           <div>Google Sheets & Drive</div>
         </div>
       </button>
+
+      <!-- Panduan & Fasilitasi (Alur Pengajuan APBDes & Kontak PMD) -->
+      <div class="sidebar-text pt-4 space-y-3">
+        <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          Panduan & Fasilitasi
+        </div>
+
+        <!-- 1. Alur Pengajuan Berkas APBDes -->
+        <div class="bg-slate-800/90 rounded-xl p-3 border border-slate-700/70 text-white space-y-2.5 shadow-2xs">
+          <div class="text-[10.5px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 border-b border-slate-700/60 pb-1.5">
+            <span>📌</span>
+            <span>Alur Pengajuan APBDes</span>
+          </div>
+          
+          <div class="space-y-2 text-[10.5px]">
+            <div class="flex items-start gap-2">
+              <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-[9px] flex-shrink-0 mt-0.5">1</span>
+              <div>
+                <div class="font-bold text-slate-200 text-[10px]">Isi Data SP & Rekomendasi</div>
+                <p class="text-[9px] text-slate-400 leading-tight mt-0.5">Nomor & tanggal SP serta Rekom Desa terisi.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2">
+              <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-[9px] flex-shrink-0 mt-0.5">2</span>
+              <div>
+                <div class="font-bold text-slate-200 text-[10px]">Unggah 3 Dokumen Persyaratan</div>
+                <p class="text-[9px] text-slate-400 leading-tight mt-0.5">Surat Pengantar, Ceklist, & Rekomendasi Desa.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2">
+              <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-[9px] flex-shrink-0 mt-0.5">3</span>
+              <div>
+                <div class="font-bold text-slate-200 text-[10px]">Kirim ke Kecamatan Waru</div>
+                <p class="text-[9px] text-slate-400 leading-tight mt-0.5">Otomatis masuk ke Kotak Masuk Kecamatan.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2">
+              <span class="w-4 h-4 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-[9px] flex-shrink-0 mt-0.5">4</span>
+              <div>
+                <div class="font-bold text-slate-200 text-[10px]">Verifikasi & Terbit Rekom</div>
+                <p class="text-[9px] text-slate-400 leading-tight mt-0.5">Kecamatan verifikasi & terbitkan rekomendasi resmi.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Fasilitasi PMD Kecamatan Waru -->
+        <div class="p-3 rounded-xl bg-gradient-to-br from-indigo-950/90 to-slate-900 border border-indigo-700/40 text-white space-y-2 shadow-2xs">
+          <div class="flex items-center gap-1.5 text-indigo-300 font-bold text-[10px] uppercase tracking-wider">
+            <span>🏛️</span>
+            <span>Fasilitasi Kecamatan Waru</span>
+          </div>
+          <p class="text-[9.5px] text-slate-300 leading-relaxed">
+            Jika berkas memerlukan revisi atau terdapat kendala upload berkas, silakan berkoordinasi dengan Seksi PMD Kecamatan Waru.
+          </p>
+          <div class="pt-1.5 border-t border-indigo-800/60 flex items-center justify-between text-[10px]">
+            <span class="text-slate-400">Kontak PMD:</span>
+            <a href="https://wa.me/6282195647788" target="_blank" class="font-mono text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition" title="Hubungi Tim PMD via WhatsApp">
+              <span>0821-9564-7788</span>
+              <span class="text-[9px]">💬</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
     </div>
 
     <!-- Footer Sidebar & User Profile -->
@@ -1481,11 +1549,8 @@
         </div>
       </div>
 
-      <!-- Grid: Formulir Pengajuan & Upload Berkas (Kiri 8 Kolom) + Panduan (Kanan 4 Kolom) -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <!-- KOLOM KIRI: FORMULIR INPUT + 3 UPLOAD DOKUMEN -->
-        <div class="lg:col-span-8 space-y-6">
+      <!-- Konten Pengajuan Berkas Desa (Lebar Penuh) -->
+      <div class="space-y-6">
           
           <!-- Banner Peringatan Berkas Dikembalikan (Muncul jika ada catatan dari Kecamatan) -->
           <div id="containerBannerRevisiDesa" class="space-y-3 hidden"></div>
@@ -1767,66 +1832,6 @@
               </table>
             </div>
           </div>
-
-        </div>
-
-        <!-- KOLOM KANAN: ALUR PROSES & INFORMASI -->
-        <div class="lg:col-span-4 space-y-6">
-          
-          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b border-slate-100 pb-2.5">
-              <span>📌 Alur Pengajuan Berkas APBDes</span>
-            </h3>
-            
-            <div class="space-y-3.5 text-xs text-slate-600">
-              <div class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">1</div>
-                <div>
-                  <h4 class="font-bold text-slate-800">Isi Data Surat Pengantar & Rekomendasi</h4>
-                  <p class="text-[11px] text-slate-500 mt-0.5">Pastikan Nomor SP, Tanggal SP, Nomor Rekom, dan Tanggal Rekomendasi Desa terisi sebelum upload.</p>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">2</div>
-                <div>
-                  <h4 class="font-bold text-slate-800">Unggah 3 Dokumen Persyaratan</h4>
-                  <p class="text-[11px] text-slate-500 mt-0.5">Pilih file Surat Pengantar, Ceklist, dan Rekomendasi Desa (format PDF / Gambar / Dokumen).</p>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</div>
-                <div>
-                  <h4 class="font-bold text-slate-800">Kirim ke Kecamatan Waru</h4>
-                  <p class="text-[11px] text-slate-500 mt-0.5">Klik tombol kirim. Berkas akan otomatis masuk ke Kotak Masuk Kecamatan.</p>
-                </div>
-              </div>
-
-              <div class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">4</div>
-                <div>
-                  <h4 class="font-bold text-slate-800">Verifikasi & Unduh oleh Kecamatan</h4>
-                  <p class="text-[11px] text-slate-500 mt-0.5">Pihak Kecamatan mengunduh dokumen asli Anda, memverifikasi kelengkapan, dan menerbitkan Surat Rekomendasi Camat resmi.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
-            <div class="flex items-center gap-2 text-indigo-300 font-bold text-xs uppercase tracking-wider">
-              <span>🏛️ Fasilitasi Kecamatan Waru</span>
-            </div>
-            <p class="text-xs text-slate-300 leading-relaxed">
-              Jika berkas memerlukan revisi atau terdapat kendala upload berkas, silakan berkoordinasi dengan Seksi Pemberdayaan Masyarakat dan Desa (PMD) Kecamatan Waru.
-            </p>
-            <div class="pt-2 border-t border-indigo-800/60 flex items-center justify-between text-[11px]">
-              <span class="text-slate-400">Kontak PMD Kecamatan:</span>
-              <span class="font-mono text-emerald-300 font-bold">0821-9564-7788</span>
-            </div>
-          </div>
-
-        </div>
 
       </div>
 
@@ -2824,6 +2829,6 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261020_fix_edit_modal"></script>
+  <script src="app.js?v=20261020_nav_bawah"></script>
 </body>
 </html>
