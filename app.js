@@ -315,7 +315,7 @@ const AppState = {
   editingDasarId: null,
 
   currentZoom: 100,
-  paperSize: 'folio',
+  paperSize: 'a4',
   pageBreakMode: 'separated',
   viewMode: 'split'
 };
@@ -1963,7 +1963,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
       </div>
     </div>
     <div class="mt-8 text-[11pt] text-black leading-normal font-sans">
-      <div class="mb-1">TEMBUSAN: (apabila ada)</div>
+      <div class="mb-1 font-bold">TEMBUSAN :</div>
       <div class="flex items-start">
         <span class="w-6 flex-shrink-0">1.</span>
         <span>\${tembusan_jabatan}.</span>
@@ -2005,7 +2005,11 @@ function getQrCodeSvg() {
 
 // Print & Zoom
 function applyPaperSize() {
-  const size = AppState.paperSize;
+  const size = AppState.paperSize || 'a4';
+  const selectPaper = document.getElementById('selectPaperSize');
+  if (selectPaper && selectPaper.value !== size) {
+    selectPaper.value = size;
+  }
   const sheets = document.querySelectorAll('.surat-sheet');
   sheets.forEach(sheet => {
     if (size === 'folio') {
@@ -2187,35 +2191,35 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   // Hapus kontrol atau elemen yang tidak dicetak
   clone.querySelectorAll('.no-print, button, script').forEach(el => el.remove());
 
-  // 1. Transform Kop Surat menjadi Tabel Word Bergaris Ganda
+  // 1. Transform Kop Surat menjadi Tabel Word Bergaris Ganda yang rapi dan presisi
   const kop = clone.querySelector('.kop-surat');
   if (kop) {
     const kopTable = document.createElement('table');
-    kopTable.setAttribute('style', 'width: 100%; border-collapse: collapse; border-bottom: 3.5px double #000000; margin-bottom: 12pt; padding-bottom: 4pt;');
+    kopTable.setAttribute('style', 'width: 100%; border-collapse: collapse; margin-bottom: 8pt;');
     
     const logoImgHtml = logoBase64 
-      ? `<img src="data:image/png;base64,${logoBase64}" width="74" height="86" style="width: 74px; height: 86px;" />`
-      : `<img src="logo_ppu.png" width="74" height="86" style="width: 74px; height: 86px;" />`;
+      ? `<img src="data:image/png;base64,${logoBase64}" width="74" height="86" style="width: 74px; height: 86px; display: block;" />`
+      : `<img src="logo_ppu.png" width="74" height="86" style="width: 74px; height: 86px; display: block;" />`;
 
     kopTable.innerHTML = `
       <tr>
-        <td style="width: 75pt; vertical-align: middle; text-align: center;">
+        <td style="width: 74px; width: 56pt; vertical-align: middle; text-align: left; padding: 0 0 5pt 0; border-bottom: 3pt double #000000;">
           ${logoImgHtml}
         </td>
-        <td style="vertical-align: middle; text-align: center; font-family: Arial, sans-serif;">
-          <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; line-height: 1.15;">
+        <td style="vertical-align: middle; text-align: center; font-family: Arial, sans-serif; padding: 0 8pt 5pt 8pt; border-bottom: 3pt double #000000;">
+          <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: 1.15; color: #000000;">
             PEMERINTAH KABUPATEN PENAJAM PASER UTARA
           </div>
-          <div style="font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 2pt 0; line-height: 1.15;">
+          <div style="font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 1pt 0 2pt 0; padding: 0; line-height: 1.15; color: #000000;">
             KECAMATAN WARU
           </div>
-          <div style="font-size: 10pt; line-height: 1.2; margin: 0;">
-            Jalan Propinsi Km. 25, WA. 0821-9564-7788<br>
-            Website : <span style="color: #1d4ed8; text-decoration: underline;">https://kecwaru.penajamkab.go.id/</span><br>
-            Email : <span style="color: #1d4ed8; text-decoration: underline;">kecamatanwaru2014@gmail.com</span> Pos 76284
+          <div style="font-size: 10pt; line-height: 1.15; margin: 0; padding: 0; color: #000000;">
+            <span>Jalan Propinsi Km. 25, WA. 0821-9564-7788</span><br>
+            <span>Website : <span style="color: #1d4ed8; text-decoration: underline;">https://kecwaru.penajamkab.go.id/</span></span><br>
+            <span>Email : <span style="color: #1d4ed8; text-decoration: underline;">kecamatanwaru2014@gmail.com</span> Pos 76284</span>
           </div>
         </td>
-        <td style="width: 75pt;">&nbsp;</td>
+        <td style="width: 74px; width: 56pt; vertical-align: middle; padding: 0 0 5pt 0; border-bottom: 3pt double #000000;">&nbsp;</td>
       </tr>
     `;
     kop.parentNode.replaceChild(kopTable, kop);
@@ -2227,11 +2231,14 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     const leftCol = fh.children[0];
     const rightCol = fh.children[1];
     const headerTable = document.createElement('table');
-    headerTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 8pt; margin-bottom: 8pt;');
+    headerTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: 1.15;');
     
     if (leftCol) {
       leftCol.querySelectorAll('table').forEach(tbl => {
-        tbl.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;');
+        tbl.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
+      });
+      leftCol.querySelectorAll('td').forEach(td => {
+        td.style.lineHeight = '1.15';
       });
     }
 
@@ -2239,8 +2246,8 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     const rightHtml = rightCol ? rightCol.innerHTML : '';
     headerTable.innerHTML = `
       <tr>
-        <td style="width: 58%; vertical-align: top;">${leftHtml}</td>
-        <td style="width: 42%; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt;">${rightHtml}</td>
+        <td style="width: 58%; vertical-align: top; line-height: 1.15;">${leftHtml}</td>
+        <td style="width: 42%; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;">${rightHtml}</td>
       </tr>
     `;
     fh.parentNode.replaceChild(headerTable, fh);
@@ -2254,15 +2261,15 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     const contentDiv = fr.querySelector('.flex-1');
     if (labelDiv || contentDiv) {
       const dasarTable = document.createElement('table');
-      dasarTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt;');
+      dasarTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 4pt; margin-bottom: 4pt; line-height: 1.15;');
       const labelText = labelDiv ? labelDiv.textContent.trim() : '';
       const colonText = colonDiv ? colonDiv.textContent.trim() : (labelText ? ':' : '');
       const contentHtml = contentDiv ? contentDiv.innerHTML : '';
       dasarTable.innerHTML = `
         <tr>
-          <td style="width: 55pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt;">${labelText}</td>
-          <td style="width: 10pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt;">${colonText}</td>
-          <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt;">${contentHtml}</td>
+          <td style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;">${labelText}</td>
+          <td style="width: 8pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;">${colonText}</td>
+          <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;">${contentHtml}</td>
         </tr>
       `;
       fr.parentNode.replaceChild(dasarTable, fr);
@@ -2274,35 +2281,38 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   flexTtd.forEach(ft => {
     const ttdBox = ft.querySelector('.w-72') || ft.firstElementChild;
     const ttdTable = document.createElement('table');
-    ttdTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 18pt;');
+    ttdTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 14pt; line-height: 1.15;');
     const ttdHtml = ttdBox ? ttdBox.innerHTML : ft.innerHTML;
     ttdTable.innerHTML = `
       <tr>
-        <td style="width: 48%; vertical-align: top;">&nbsp;</td>
-        <td style="width: 52%; vertical-align: top; text-align: left; padding-left: 15pt;">${ttdHtml}</td>
+        <td style="width: 48%; vertical-align: top; line-height: 1.15;">&nbsp;</td>
+        <td style="width: 52%; vertical-align: top; text-align: left; padding-left: 15pt; line-height: 1.15;">${ttdHtml}</td>
       </tr>
     `;
     ft.parentNode.replaceChild(ttdTable, ft);
   });
 
-  // 5. Standarisasi Format Paragraf
+  // 5. Standarisasi Format Paragraf (Spasi 1.15)
   clone.querySelectorAll('p').forEach(p => {
-    p.setAttribute('style', 'text-indent: 36pt; text-align: justify; margin: 6pt 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.25;');
+    p.setAttribute('style', 'text-indent: 36pt; text-align: justify; margin: 4pt 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
   });
 
-  // 6. Standarisasi Format Tabel
+  // 6. Standarisasi Format Tabel (Spasi 1.15)
   clone.querySelectorAll('table').forEach(t => {
     if (!t.getAttribute('style')) {
-      t.setAttribute('style', 'border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;');
+      t.setAttribute('style', 'border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
     }
   });
+  clone.querySelectorAll('td').forEach(td => {
+    td.style.lineHeight = '1.15';
+  });
 
-  // 7. Standarisasi Format Daftar / List Berkas & Dasar
+  // 7. Standarisasi Format Daftar / List Berkas & Dasar (Spasi 1.15)
   clone.querySelectorAll('ol').forEach(ol => {
-    ol.setAttribute('style', 'margin: 4pt 0 4pt 15pt; padding-left: 18pt; font-family: Arial, sans-serif; font-size: 11pt;');
+    ol.setAttribute('style', 'margin: 3pt 0 3pt 15pt; padding-left: 18pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
   });
   clone.querySelectorAll('li').forEach(li => {
-    li.setAttribute('style', 'margin-bottom: 2pt; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.25;');
+    li.setAttribute('style', 'margin-bottom: 2pt; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
   });
 
   return clone.innerHTML;
@@ -2355,8 +2365,18 @@ window.eksporSuratKeDocx = async function() {
 
     const isFlowMode = document.getElementById('selectPageBreakMode')?.value === 'flow';
     const pageSeparator = isFlowMode 
-      ? '\n<div style="margin: 20pt 0;"></div>\n'
+      ? '\n<div style="margin: 16pt 0;"></div>\n'
       : '\n<div style="page-break-before: always; clear: both; height: 1px;">&nbsp;</div>\n';
+
+    const paperSize = document.getElementById('selectPaperSize')?.value || AppState.paperSize || 'a4';
+    const isA4 = paperSize === 'a4';
+    const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
+    const docxMargins = {
+      top: 680,    // 1.2 cm
+      right: 850,  // 1.5 cm
+      bottom: 850, // 1.5 cm
+      left: 1020   // 1.8 cm
+    };
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -2366,46 +2386,43 @@ window.eksporSuratKeDocx = async function() {
         <title>${escapeHtml(safeName)}</title>
         <style>
           @page {
-            size: 21.5cm 33.0cm; /* Ukuran Kertas Folio / F4 */
-            margin: 2.0cm 2.0cm 2.0cm 2.5cm;
+            size: ${pageCssSize};
+            margin: 1.2cm 1.5cm 1.5cm 1.8cm;
           }
-          body {
+          body, p, table, td, ol, li, div, span {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 11pt;
             color: #000000;
-            line-height: 1.25;
+            line-height: 1.15;
+          }
+          body {
             background-color: #ffffff;
+            margin: 0;
+            padding: 0;
           }
           p {
             text-align: justify;
             text-indent: 36pt;
-            margin: 5pt 0;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
-            line-height: 1.25;
+            margin: 4pt 0;
+            line-height: 1.15;
           }
           table {
             border-collapse: collapse;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
+            line-height: 1.15;
           }
           td {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
             vertical-align: top;
+            line-height: 1.15;
           }
           ol {
-            margin: 4pt 0 4pt 15pt;
+            margin: 3pt 0 3pt 15pt;
             padding-left: 18pt;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
+            line-height: 1.15;
           }
           li {
             margin-bottom: 2pt;
             text-align: justify;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
-            line-height: 1.25;
+            line-height: 1.15;
           }
         </style>
       </head>
@@ -2418,12 +2435,7 @@ window.eksporSuratKeDocx = async function() {
     // Buat Blob DOCX OpenXML
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
-      margins: {
-        top: 1134,    // 2.0 cm
-        right: 1134,  // 2.0 cm
-        bottom: 1134, // 2.0 cm
-        left: 1417    // 2.5 cm
-      }
+      margins: docxMargins
     });
 
     // Unduh File

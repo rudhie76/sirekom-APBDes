@@ -48,18 +48,28 @@
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
       font-family: Arial, Helvetica, sans-serif !important;
       font-size: 11pt !important;
-      line-height: 1.35 !important;
-      padding: 1cm 1cm 2cm 1.5cm;
+      line-height: 1.15 !important;
+      padding: 1.2cm 1.5cm 1.5cm 1.8cm;
     }
 
-    /* Kop Surat Spasi 1 (Single Spacing) */
-    .kop-surat,
-    .kop-surat h2,
-    .kop-surat h3,
-    .kop-surat p,
-    .kop-surat div,
-    .kop-surat span {
+    /* Seluruh elemen di dalam surat menggunakan spasi baris 1.15 */
+    .surat-sheet,
+    .surat-sheet *,
+    .surat-sheet p,
+    .surat-sheet h2,
+    .surat-sheet h3,
+    .surat-sheet div,
+    .surat-sheet span,
+    .surat-sheet table,
+    .surat-sheet td,
+    .surat-sheet ol,
+    .surat-sheet li {
       line-height: 1.15 !important;
+    }
+
+    .surat-sheet p {
+      margin-top: 4pt;
+      margin-bottom: 4pt;
     }
 
     /* Print CSS Media Query Khusus Surat Pemerintahan */
@@ -176,13 +186,13 @@
         display: block !important;
         box-sizing: border-box !important;
         width: 100% !important;
-        max-width: 215mm !important;
+        max-width: 210mm !important;
         min-height: 0 !important;
         height: auto !important;
         max-height: none !important;
         margin: 0 auto !important;
         margin-bottom: 0 !important;
-        padding: 1cm 1.5cm 1.2cm 1.8cm !important;
+        padding: 1.2cm 1.5cm 1.5cm 1.8cm !important;
         background: #ffffff !important;
         color: #000000 !important;
         border: none !important;
@@ -194,11 +204,16 @@
         box-shadow: none !important;
         font-family: Arial, Helvetica, sans-serif !important;
         font-size: 11pt !important;
-        line-height: 1.35 !important;
+        line-height: 1.15 !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         page-break-after: page !important;
         break-after: page !important;
+      }
+
+      #previewDocumentContainer .surat-sheet *,
+      .surat-sheet * {
+        line-height: 1.15 !important;
       }
 
       .surat-sheet:last-of-type,
@@ -1403,8 +1418,8 @@
           <div class="flex items-center gap-1.5 text-xs text-slate-600">
             <span>Kertas:</span>
             <select id="selectPaperSize" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500">
-              <option value="folio" selected>Folio / F4 (215 x 330 mm)</option>
-              <option value="a4">A4 (210 x 297 mm)</option>
+              <option value="a4" selected>A4 (210 x 297 mm)</option>
+              <option value="folio">Folio / F4 (215 x 330 mm)</option>
             </select>
           </div>
           <span class="text-slate-300">|</span>
@@ -2855,6 +2870,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261020_docx_export"></script>
+  <script src="app.js?v=20261020_docx_kop_a4_fix"></script>
 </body>
 </html>
