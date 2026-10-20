@@ -5054,6 +5054,47 @@ window.prosesPengajuanKeRekomendasi = function(id) {
 };
 
 /**
+ * Helper untuk mengambil nilai kolom dari Google Sheets dengan toleransi variasi penamaan header
+ */
+function getSheetVal(row, aliases, defaultVal = '') {
+  if (!row || typeof row !== 'object') return defaultVal;
+  for (const a of aliases) {
+    if (row[a] !== undefined && row[a] !== null && String(row[a]).trim() !== '') {
+      return row[a];
+    }
+  }
+  const cleanKey = k => String(k).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normalizedMap = {};
+  for (const k of Object.keys(row)) {
+    normalizedMap[cleanKey(k)] = row[k];
+  }
+  for (const a of aliases) {
+    const ck = cleanKey(a);
+    if (normalizedMap[ck] !== undefined && normalizedMap[ck] !== null && String(normalizedMap[ck]).trim() !== '') {
+      return normalizedMap[ck];
+    }
+  }
+  return defaultVal;
+}
+
+/**
+ * Helper untuk parsing format tanggal dari Google Sheets / ISO string ke format YYYY-MM-DD
+ */
+function parseTanggalSheet(val) {
+  if (!val || val === '-') return '';
+  const s = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  return s.substring(0, 10);
+}
+
+/**
  * Sinkronisasi Pengajuan ke Google Sheets & Google Drive
  */
 window.sinkronPengajuanKeGoogleSheets = async function() {
@@ -5074,36 +5115,55 @@ window.sinkronPengajuanKeGoogleSheets = async function() {
     if (result.success && Array.isArray(result.data)) {
       const seenP = new Map();
       result.data.forEach(row => {
-        const id = String(row['ID Pengajuan'] || '').trim();
-        const desa = String(row['Nama Desa'] || '').trim().toLowerCase();
-        const dana = String(row['Jenis Dana'] || '').trim().toLowerCase();
-        const tahap = String(row['Tahap Pencairan'] || '').trim().toLowerCase();
-        const thn = String(row['Tahun Anggaran'] || '2026').trim();
-        const key = id ? `id:${id}` : `p:${desa}_${dana}_${tahap}_${thn}`;
+        const id = String(getSheetVal(row, ['ID Pengajuan', 'ID', 'ID_Pengajuan', 'Kode Pengajuan'], '')).trim();
+        const desa = String(getSheetVal(row, ['Nama Desa', 'Desa'], '')).trim().toLowerCase();
+        const dana = String(getSheetVal(row, ['Jenis Dana', 'Dana'], '')).trim().toLowerCase();
+        const tahap = String(getSheetVal(row, ['Tahap / Bulan', 'Tahap Pencairan', 'Tahap', 'Bulan'], '')).trim();
+        const thn = String(getSheetVal(row, ['Tahun Anggaran', 'Tahun'], '2026')).trim();
+        const key = id ? `id:${id}` : `p:${desa}_${dana}_${tahap.toLowerCase()}_${thn}`;
+        const rawWaktu = getSheetVal(row, ['Waktu Kirim (WITA)', 'Waktu Kirim', 'Waktu Pengajuan', 'Timestamp', 'Waktu'], '');
+        let waktuIso = new Date().toISOString();
+        if (rawWaktu) {
+          const d = new Date(rawWaktu);
+          if (!isNaN(d.getTime())) waktuIso = d.toISOString();
+        }
+
         const item = {
           id: id || `PENG-${Date.now()}`,
-          waktuKirim: row['Waktu Pengajuan'] ? new Date(row['Waktu Pengajuan']).toISOString() : new Date().toISOString(),
-          namaDesa: row['Nama Desa'] || '',
-          jenisDana: row['Jenis Dana'] || 'add_reguler',
-          tahap: row['Tahap Pencairan'] || '',
-          tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
-          nominal: Number(row['Nominal Angka (Rp)']) || 0,
-          nomorSp: row['Nomor SP Desa'] || '',
-          tanggalSp: row['Tanggal SP Desa'] ? String(row['Tanggal SP Desa']).substring(0, 10) : '',
-          nomorRekomDesa: row['Nomor Rekomendasi Desa'] || '',
-          tanggalRekomDesa: row['Tanggal Rekom Desa'] ? String(row['Tanggal Rekom Desa']).substring(0, 10) : '',
-          fileSpId: `file_sp_${row['ID Pengajuan']}`,
-          fileSpName: row['Nama File SP'] || 'Surat_Pengantar.pdf',
-          driveSpUrl: row['Link Google Drive SP'] && row['Link Google Drive SP'] !== '-' ? row['Link Google Drive SP'] : null,
-          fileCeklistId: `file_cek_${row['ID Pengajuan']}`,
-          fileCeklistName: row['Nama File Ceklist'] || 'Ceklist_Berkas.pdf',
-          driveCeklistUrl: row['Link Google Drive Ceklist'] && row['Link Google Drive Ceklist'] !== '-' ? row['Link Google Drive Ceklist'] : null,
-          fileRekomDesaId: `file_rek_${row['ID Pengajuan']}`,
-          fileRekomDesaName: row['Nama File Rekom Desa'] || 'Rekomendasi_Desa.pdf',
-          driveRekomUrl: row['Link Google Drive Rekom Desa'] && row['Link Google Drive Rekom Desa'] !== '-' ? row['Link Google Drive Rekom Desa'] : null,
-          driveFolderUrl: row['Folder Google Drive Desa'] && row['Folder Google Drive Desa'] !== '-' ? row['Folder Google Drive Desa'] : null,
-          status: row['Status Verifikasi'] || 'Menunggu Verifikasi',
-          catatanKecamatan: row['Catatan Verifikasi / Alasan Pengembalian'] || row['Catatan Verifikasi'] || row['Catatan'] || ''
+          waktuKirim: waktuIso,
+          namaDesa: getSheetVal(row, ['Nama Desa', 'Desa'], ''),
+          jenisDana: getSheetVal(row, ['Jenis Dana', 'Dana'], 'add_reguler'),
+          tahap: tahap,
+          tahunAnggaran: thn,
+          nominal: parseCurrencyInput(getSheetVal(row, ['Nominal (Rp)', 'Nominal Angka (Rp)', 'Nominal', 'Jumlah (Rp)'], 0)),
+          nomorSp: getSheetVal(row, ['Nomor Surat Pengantar (SP)', 'Nomor SP Desa', 'Nomor Surat Pengantar', 'Nomor SP', 'No SP'], ''),
+          tanggalSp: parseTanggalSheet(getSheetVal(row, ['Tanggal SP Desa', 'Tanggal SP', 'Tanggal Surat Pengantar', 'Tgl SP'], '')),
+          nomorRekomDesa: getSheetVal(row, ['Nomor Rekomendasi Desa', 'Nomor Rekom Desa', 'No Rekom Desa', 'Nomor Rekomendasi'], ''),
+          tanggalRekomDesa: parseTanggalSheet(getSheetVal(row, ['Tanggal Rekom Desa', 'Tanggal Rekomendasi Desa', 'Tgl Rekom Desa'], '')),
+          fileSpId: `file_sp_${id || Date.now()}`,
+          fileSpName: getSheetVal(row, ['Nama File SP', 'Nama File Surat Pengantar', 'File SP'], 'Surat_Pengantar.pdf'),
+          driveSpUrl: (() => {
+            const u = getSheetVal(row, ['Link Google Drive SP', 'Link Drive SP', 'Link File SP', 'Drive SP'], null);
+            return (u && u !== '-') ? u : null;
+          })(),
+          fileCeklistId: `file_cek_${id || Date.now()}`,
+          fileCeklistName: getSheetVal(row, ['Nama File Ceklist', 'Nama File Checklist', 'File Ceklist'], 'Ceklist_Berkas.pdf'),
+          driveCeklistUrl: (() => {
+            const u = getSheetVal(row, ['Link Google Drive Ceklist', 'Link Drive Ceklist', 'Link File Ceklist', 'Drive Ceklist'], null);
+            return (u && u !== '-') ? u : null;
+          })(),
+          fileRekomDesaId: `file_rek_${id || Date.now()}`,
+          fileRekomDesaName: getSheetVal(row, ['Nama File Rekom Desa', 'Nama File Rekomendasi Desa', 'File Rekom Desa'], 'Rekomendasi_Desa.pdf'),
+          driveRekomUrl: (() => {
+            const u = getSheetVal(row, ['Link Google Drive Rekom Desa', 'Link Drive Rekom Desa', 'Link File Rekom Desa', 'Drive Rekom Desa'], null);
+            return (u && u !== '-') ? u : null;
+          })(),
+          driveFolderUrl: (() => {
+            const u = getSheetVal(row, ['Folder Google Drive Desa', 'Folder Drive Desa', 'Folder Google Drive', 'Link Folder Desa'], null);
+            return (u && u !== '-') ? u : null;
+          })(),
+          status: getSheetVal(row, ['Status Verifikasi', 'Status', 'Status Berkas'], 'Menunggu Verifikasi'),
+          catatanKecamatan: getSheetVal(row, ['Catatan Verifikasi / Alasan Pengembalian', 'Catatan Verifikasi', 'Catatan', 'Alasan Pengembalian'], '')
         };
         seenP.set(key, item);
       });
@@ -5153,32 +5213,39 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
     if (result.success && Array.isArray(result.data)) {
       const seenR = new Map();
       result.data.forEach(row => {
-        const id = String(row['ID Rekomendasi'] || '').trim();
-        const noSurat = String(row['Nomor Surat Rekomendasi'] || row['Nomor Surat'] || '').trim().toLowerCase();
-        const desa = String(row['Nama Desa'] || '').trim().toLowerCase();
-        const dana = String(row['Jenis Dana'] || '').trim().toLowerCase();
-        const tahap = String(row['Tahap'] || '').trim().toLowerCase();
-        const thn = String(row['Tahun Anggaran'] || '2026').trim();
-        const key = noSurat ? `no:${noSurat}` : (id ? `id:${id}` : `p:${desa}_${dana}_${tahap}_${thn}`);
+        const id = String(getSheetVal(row, ['ID Rekomendasi', 'ID', 'ID Rekom'], '')).trim();
+        const noSurat = String(getSheetVal(row, ['Nomor Surat Rekomendasi', 'Nomor Surat', 'Nomor Rekomendasi', 'No Surat'], '')).trim();
+        const desa = String(getSheetVal(row, ['Nama Desa', 'Desa'], '')).trim().toLowerCase();
+        const dana = String(getSheetVal(row, ['Jenis Dana', 'Dana'], '')).trim().toLowerCase();
+        const tahap = String(getSheetVal(row, ['Tahap / Bulan', 'Tahap', 'Tahap Pencairan', 'Bulan'], '')).trim();
+        const thn = String(getSheetVal(row, ['Tahun Anggaran', 'Tahun'], '2026')).trim();
+        const key = noSurat ? `no:${noSurat.toLowerCase()}` : (id ? `id:${id}` : `p:${desa}_${dana}_${tahap.toLowerCase()}_${thn}`);
+        const rawWaktu = getSheetVal(row, ['Waktu Terbit', 'Waktu Diterbitkan', 'Timestamp', 'Waktu'], '');
+        let waktuIso = new Date().toISOString();
+        if (rawWaktu) {
+          const d = new Date(rawWaktu);
+          if (!isNaN(d.getTime())) waktuIso = d.toISOString();
+        }
+
         const item = {
           id: id || `REK-${Date.now()}`,
-          waktuTerbit: row['Waktu Terbit'] || new Date().toISOString(),
-          nomorSurat: row['Nomor Surat Rekomendasi'] || row['Nomor Surat'] || '',
-          tanggalSurat: row['Tanggal Surat'] ? String(row['Tanggal Surat']).substring(0, 10) : '',
-          namaDesa: row['Nama Desa'] || '',
-          jenisDana: row['Jenis Dana'] || 'add_reguler',
-          tahap: row['Tahap'] || '',
-          tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
-          nominalAngka: Number(row['Nominal (Rp)']) || 0,
-          terbilang: row['Terbilang'] || '',
-          bankPenyalur: row['Bank Penyalur'] || '',
-          nomorRekening: row['Nomor Rekening RKD'] || '',
-          kepalaDesa: row['Kepala Desa'] || '',
-          kaurKeuangan: row['Kaur Keuangan'] || '',
-          namaCamat: row['Nama Camat'] || '',
-          nipCamat: row['NIP Camat'] || '',
-          metodeTte: row['Metode TTE / Format'] || 'tte',
-          status: row['Status Penyaluran'] || 'Diterbitkan'
+          waktuTerbit: waktuIso,
+          nomorSurat: noSurat,
+          tanggalSurat: parseTanggalSheet(getSheetVal(row, ['Tanggal Surat', 'Tanggal Surat Rekomendasi', 'Tgl Surat'], '')),
+          namaDesa: getSheetVal(row, ['Nama Desa', 'Desa'], ''),
+          jenisDana: getSheetVal(row, ['Jenis Dana', 'Dana'], 'add_reguler'),
+          tahap: tahap,
+          tahunAnggaran: thn,
+          nominalAngka: parseCurrencyInput(getSheetVal(row, ['Nominal (Rp)', 'Nominal Angka (Rp)', 'Nominal Rekomendasi', 'Nominal', 'Jumlah (Rp)'], 0)),
+          terbilang: getSheetVal(row, ['Terbilang'], ''),
+          bankPenyalur: getSheetVal(row, ['Bank Penyalur', 'Bank'], ''),
+          nomorRekening: getSheetVal(row, ['Nomor Rekening RKD', 'Nomor Rekening', 'No Rekening'], ''),
+          kepalaDesa: getSheetVal(row, ['Kepala Desa', 'Kades'], ''),
+          kaurKeuangan: getSheetVal(row, ['Kaur Keuangan', 'Bendahara'], ''),
+          namaCamat: getSheetVal(row, ['Nama Camat', 'Camat'], ''),
+          nipCamat: getSheetVal(row, ['NIP Camat', 'NIP'], ''),
+          metodeTte: getSheetVal(row, ['Metode TTE / Format', 'Metode TTE', 'Format'], 'tte'),
+          status: getSheetVal(row, ['Status Penyaluran', 'Status'], 'Diterbitkan')
         };
         seenR.set(key, item);
       });
@@ -5771,31 +5838,52 @@ window.sinkronKirimRekomDariGoogleSheets = async function(silent = false) {
     const result = await res.json();
 
     if (result.success && Array.isArray(result.data)) {
-      const cloudList = result.data.map(row => ({
-        id: row['ID Kirim Rekom'] || `KRM-${Date.now()}`,
-        waktuKirim: row['Waktu Kirim (WITA)'] ? new Date(row['Waktu Kirim (WITA)']).toISOString() : new Date().toISOString(),
-        namaDesa: row['Nama Desa'] || '',
-        jenisDana: row['Jenis Dana'] || 'add_reguler',
-        tahap: row['Tahap / Bulan'] || '',
-        tahunAnggaran: String(row['Tahun Anggaran'] || '2026'),
-        nominal: Number(row['Nominal (Rp)']) || 0,
-        nomorRekom: row['Nomor Rekomendasi'] || '',
-        tanggalRekom: row['Tanggal Rekomendasi'] ? String(row['Tanggal Rekomendasi']).substring(0, 10) : '',
-        nomorSpKec: row['Nomor SP Kecamatan'] || '',
-        tanggalSpKec: row['Tanggal SP Kecamatan'] ? String(row['Tanggal SP Kecamatan']).substring(0, 10) : '',
-        fileRekomTtdId: `file_krm_rekom_${row['ID Kirim Rekom']}`,
-        fileRekomTtdName: row['Nama File Rekom TTD'] || 'Rekom_TTD.pdf',
-        driveRekomTtdUrl: row['Link Google Drive Rekom TTD'] && row['Link Google Drive Rekom TTD'] !== '-' ? row['Link Google Drive Rekom TTD'] : null,
-        fileSpKecId: `file_krm_sp_${row['ID Kirim Rekom']}`,
-        fileSpKecName: row['Nama File SP Kecamatan'] || 'SP_Kecamatan.pdf',
-        driveSpKecUrl: row['Link Google Drive SP Kecamatan'] && row['Link Google Drive SP Kecamatan'] !== '-' ? row['Link Google Drive SP Kecamatan'] : null,
-        fileCeklistKecId: `file_krm_cek_${row['ID Kirim Rekom']}`,
-        fileCeklistKecName: row['Nama File Ceklist Kecamatan'] || 'Ceklist_Kecamatan.pdf',
-        driveCeklistKecUrl: row['Link Google Drive Ceklist Kecamatan'] && row['Link Google Drive Ceklist Kecamatan'] !== '-' ? row['Link Google Drive Ceklist Kecamatan'] : null,
-        driveFolderUrl: row['Folder Google Drive Kecamatan'] && row['Folder Google Drive Kecamatan'] !== '-' ? row['Folder Google Drive Kecamatan'] : null,
-        status: row['Status'] || 'Siap Kirim ke BKAD',
-        catatan: row['Catatan untuk Desa'] || ''
-      }));
+      const cloudList = result.data.map(row => {
+        const id = String(getSheetVal(row, ['ID Kirim Rekom', 'ID'], `KRM-${Date.now()}`)).trim();
+        const rawWaktu = getSheetVal(row, ['Waktu Kirim (WITA)', 'Waktu Kirim', 'Timestamp', 'Waktu'], '');
+        let waktuIso = new Date().toISOString();
+        if (rawWaktu) {
+          const d = new Date(rawWaktu);
+          if (!isNaN(d.getTime())) waktuIso = d.toISOString();
+        }
+        return {
+          id: id,
+          waktuKirim: waktuIso,
+          namaDesa: getSheetVal(row, ['Nama Desa', 'Desa'], ''),
+          jenisDana: getSheetVal(row, ['Jenis Dana', 'Dana'], 'add_reguler'),
+          tahap: getSheetVal(row, ['Tahap / Bulan', 'Tahap', 'Tahap Pencairan', 'Bulan'], ''),
+          tahunAnggaran: String(getSheetVal(row, ['Tahun Anggaran', 'Tahun'], '2026')),
+          nominal: parseCurrencyInput(getSheetVal(row, ['Nominal (Rp)', 'Nominal Angka (Rp)', 'Nominal'], 0)),
+          nomorRekom: getSheetVal(row, ['Nomor Rekomendasi', 'Nomor Rekom', 'No Rekom'], ''),
+          tanggalRekom: parseTanggalSheet(getSheetVal(row, ['Tanggal Rekomendasi', 'Tanggal Rekom', 'Tgl Rekom'], '')),
+          nomorSpKec: getSheetVal(row, ['Nomor SP Kecamatan', 'Nomor SP Kec', 'No SP Kecamatan'], ''),
+          tanggalSpKec: parseTanggalSheet(getSheetVal(row, ['Tanggal SP Kecamatan', 'Tanggal SP Kec', 'Tgl SP Kecamatan'], '')),
+          fileRekomTtdId: `file_krm_rekom_${id}`,
+          fileRekomTtdName: getSheetVal(row, ['Nama File Rekom TTD', 'File Rekom TTD'], 'Rekom_TTD.pdf'),
+          driveRekomTtdUrl: (() => {
+            const u = getSheetVal(row, ['Link Google Drive Rekom TTD', 'Link Drive Rekom TTD', 'Drive Rekom TTD'], null);
+            return (u && u !== '-') ? u : null;
+          })(),
+          fileSpKecId: `file_krm_sp_${id}`,
+          fileSpKecName: getSheetVal(row, ['Nama File SP Kecamatan', 'File SP Kecamatan'], 'SP_Kecamatan.pdf'),
+          driveSpKecUrl: (() => {
+            const u = getSheetVal(row, ['Link Google Drive SP Kecamatan', 'Link Drive SP Kecamatan', 'Drive SP Kecamatan'], null);
+            return (u && u !== '-') ? u : null;
+          })(),
+          fileCeklistKecId: `file_krm_cek_${id}`,
+          fileCeklistKecName: getSheetVal(row, ['Nama File Ceklist Kecamatan', 'File Ceklist Kecamatan'], 'Ceklist_Kecamatan.pdf'),
+          driveCeklistKecUrl: (() => {
+            const u = getSheetVal(row, ['Link Google Drive Ceklist Kecamatan', 'Link Drive Ceklist Kecamatan', 'Drive Ceklist Kecamatan'], null);
+            return (u && u !== '-') ? u : null;
+          })(),
+          driveFolderUrl: (() => {
+            const u = getSheetVal(row, ['Folder Google Drive Kecamatan', 'Folder Drive Kecamatan', 'Drive Folder Kecamatan'], null);
+            return (u && u !== '-') ? u : null;
+          })(),
+          status: getSheetVal(row, ['Status'], 'Siap Kirim ke BKAD'),
+          catatan: getSheetVal(row, ['Catatan untuk Desa', 'Catatan'], '')
+        };
+      });
 
       AppState.kirimRekomDesa = cloudList;
       AppState.kirimRekomDesa.sort((a, b) => new Date(b.waktuKirim) - new Date(a.waktuKirim));
