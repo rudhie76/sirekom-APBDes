@@ -101,13 +101,16 @@
       #tabContentVerifikasiDesa,
       #tabContentKirimRekomDesa,
       #panelFormKiri,
+      #panelFormKiriSp,
       #previewToolbar,
+      #previewToolbarSp,
       #containerSplitControls,
       #toastContainer,
       #modalGasSettings,
       #modalProfileDesa,
       #modalKirimRekomDesa,
       #drawerHistory,
+      #drawerRiwayatSp,
       #modalKembalikanPengajuan,
       #modalDetailPengajuanKecamatan,
       #modalPengajuanDesaKecamatan,
@@ -138,7 +141,11 @@
       #workspaceKecamatan,
       #panelPreviewKanan,
       #previewViewport,
-      #previewDocumentContainer {
+      #previewDocumentContainer,
+      #workspaceSuratPengantar,
+      #panelPreviewKananSp,
+      #previewViewportSp,
+      #previewSpContainer {
         display: block !important;
         position: static !important;
         float: none !important;
@@ -178,6 +185,7 @@
 
       /* Format Lembar Surat Resmi Pemerintah */
       #previewDocumentContainer .surat-sheet,
+      #previewSpContainer .surat-sheet,
       #previewDocumentContainer.mode-flow .surat-sheet,
       body.mode-flow-print .surat-sheet,
       .mode-flow-print .surat-sheet,
@@ -968,8 +976,12 @@
           <button id="tabBtnGenerator" onclick="switchKecamatanSubTab('generator')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
             <span>📝 2. Generator Rekomendasi Camat</span>
           </button>
+          <button id="tabBtnSuratPengantar" onclick="switchKecamatanSubTab('surat_pengantar')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
+            <span>✉️ 3. Surat Pengantar Kecamatan</span>
+            <span id="badgeTabSpCount" class="bg-teal-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px] hidden">0</span>
+          </button>
           <button id="tabBtnKirimDesa" onclick="switchKecamatanSubTab('kirim_desa')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
-            <span>📤 3. Kirim Rekom Ke Desa</span>
+            <span>📤 4. Kirim Rekom Ke Desa</span>
             <span id="badgeTabKirimDesaCount" class="bg-blue-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
           </button>
         </div>
@@ -1467,7 +1479,250 @@
     <!-- /#workspaceKecamatan -->
 
     <!-- ============================================================================= -->
-    <!-- TAB 3: KIRIM REKOM KE DESA (DOKUMEN RESMI KECAMATAN SIAP BKAD) -->
+    <!-- TAB 3: SURAT PENGANTAR KECAMATAN KE BKAD / DINAS (TEMPLATE RESMI KECAMATAN) -->
+    <!-- ============================================================================= -->
+    <div id="workspaceSuratPengantar" class="hidden flex-1 flex w-full h-full overflow-hidden">
+      
+      <!-- ============================================================================= -->
+      <!-- PANEL KIRI: FORMULIR INPUT DINAMIS SURAT PENGANTAR -->
+      <!-- ============================================================================= -->
+      <aside id="panelFormKiriSp" class="w-full lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200 no-print">
+        
+        <!-- Sub-header Form -->
+        <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-teal-900 flex items-center gap-1.5">
+              <span>✉️</span>
+              <span>Form Surat Pengantar</span>
+            </h2>
+            <p class="text-[11px] text-slate-500">Sesuaikan data surat pengantar resmi Kecamatan Waru</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="salinDataDariRekomAktifKeSp()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-300 font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Otomatis salin data Desa & Rekomendasi yang aktif di Generator">
+              <span>⚡ Salin dari Rekom</span>
+            </button>
+            <button type="button" onclick="autoGenNomorSp()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1 cursor-pointer" title="Generate Nomor Surat Pengantar Otomatis">
+              <span class="text-teal-600 font-bold">#</span>
+              <span>Auto No. SP</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Inputs -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+
+          <!-- KARTU 1: DATA KEPALA SURAT (NOMOR, TANGGAL & TUJUAN) -->
+          <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+              <div class="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">1</div>
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Nomor Surat, Tanggal & Tujuan</h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Nomor Surat Pengantar</label>
+                <input type="text" id="inputNomorSp" value="000.1.5 / 128 / Ekbang / X / 2026" oninput="updateLivePreviewSp()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white" placeholder="000.1.5 / ... / Ekbang / X / 2026" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tanggal Surat</label>
+                <input type="date" id="inputTanggalSp" onchange="updateLivePreviewSp()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-[11px] font-semibold text-slate-700">Kepada Yth. (Jabatan / Instansi Tujuan)</label>
+                <div class="flex items-center gap-1 text-[10px]">
+                  <span class="text-slate-400">Pilihan:</span>
+                  <button type="button" onclick="setPilihanTujuanSp('bkad')" class="text-teal-700 font-semibold hover:underline cursor-pointer">BKAD</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" onclick="setPilihanTujuanSp('dpmd')" class="text-teal-700 font-semibold hover:underline cursor-pointer">DPMD</button>
+                  <span class="text-slate-300">|</span>
+                  <button type="button" onclick="setPilihanTujuanSp('desa')" class="text-teal-700 font-semibold hover:underline cursor-pointer">Kepala Desa</button>
+                </div>
+              </div>
+              <input type="text" id="inputTujuanYthSp" value="Kepala Badan Keuangan dan Aset Daerah (BKAD) Kab. Penajam Paser Utara" oninput="updateLivePreviewSp()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white" placeholder="Contoh: Kepala Badan Keuangan dan Aset Daerah..." />
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">Di (Tempat Tujuan)</label>
+              <input type="text" id="inputTempatTujuanSp" value="Tempat" oninput="updateLivePreviewSp()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white" placeholder="Contoh: Tempat atau Penajam" />
+            </div>
+          </div>
+
+          <!-- KARTU 2: IDENTITAS DESA & REKOMENDASI TERKAIT -->
+          <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+              <div class="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">2</div>
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Identitas Desa & Rekomendasi Terkait</h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Nama Desa Terkait</label>
+                <select id="selectDesaSp" onchange="onSpDesaChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                  <option value="Sesulu">Desa Sesulu</option>
+                  <option value="Api-Api">Desa Api-Api</option>
+                  <option value="Bangun Mulya">Desa Bangun Mulya</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Jenis Dana</label>
+                <select id="selectJenisDanaSp" onchange="onSpDesaChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                  <option value="add_reguler">ADD Reguler</option>
+                  <option value="siltap">ADD Siltap & Tunjangan</option>
+                  <option value="dbh">PBH / DBH</option>
+                  <option value="dd">Dana Desa (DD)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap Penyaluran</label>
+                <select id="selectTahapSp" onchange="onSpDesaChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                  <option value="Tahap I">Tahap I</option>
+                  <option value="Tahap II" selected>Tahap II</option>
+                  <option value="Tahap III">Tahap III</option>
+                  <option value="Triwulan I">Triwulan I</option>
+                  <option value="Triwulan II">Triwulan II</option>
+                  <option value="Triwulan III">Triwulan III</option>
+                  <option value="Triwulan IV">Triwulan IV</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahun Anggaran</label>
+                <input type="text" id="inputTahunSp" value="2026" oninput="onSpDesaChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+              </div>
+            </div>
+          </div>
+
+          <!-- KARTU 3: RINCIAN BERKAS YANG DIKIRIM (TABEL 4 KOLOM) -->
+          <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
+            <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">3</div>
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Tabel Rincian Berkas (4 Kolom)</h3>
+              </div>
+              <button type="button" onclick="tambahBarisSp()" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs">
+                <span>➕ Tambah Baris</span>
+              </button>
+            </div>
+
+            <!-- List Baris Rincian Berkas -->
+            <div id="containerRowsSp" class="space-y-3">
+              <!-- Dirender dinamis oleh renderRowsSpInputs() -->
+            </div>
+          </div>
+
+          <!-- KARTU 4: PENANDATANGAN SURAT PENGANTAR (CAMAT WARU) -->
+          <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+              <div class="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">4</div>
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Penandatangan Surat Pengantar</h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Jabatan Pengirim</label>
+                <input type="text" id="inputJabatanPengirimSp" value="Camat Waru," oninput="updateLivePreviewSp()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Nama Pejabat</label>
+                <input type="text" id="inputNamaPengirimSp" value="Ahmad Yani, SSTP" oninput="updateLivePreviewSp()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">NIP Pejabat</label>
+                <input type="text" id="inputNipPengirimSp" value="198610082006021001" oninput="updateLivePreviewSp()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Format TTE & Penandatanganan</label>
+                <select id="selectMetodeTteSp" onchange="updateLivePreviewSp()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                  <option value="srikandi" selected>Format Baku SRIKANDI (${ttd_pengirim}, dll)</option>
+                  <option value="manual">Tanda Tangan Basah & Cap Stempel Dinas</option>
+                  <option value="tte_lokal">Simulasi Pratinjau TTE (QR Code Lokal)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons Bottom -->
+          <div class="pt-2 flex flex-wrap items-center gap-2">
+            <button type="button" onclick="simpanArsipSuratPengantar()" class="flex-1 py-2 px-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+              <span>💾 Simpan Arsip SP</span>
+            </button>
+            <button type="button" onclick="bukaDrawerRiwayatSp()" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer" title="Buka Riwayat Surat Pengantar Tersimpan">
+              <span>📋 Arsip SP (<span id="countArsipSpBadge">0</span>)</span>
+            </button>
+            <button type="button" onclick="resetFormSuratPengantar()" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer" title="Reset Formulir">
+              <span>🔄 Reset</span>
+            </button>
+          </div>
+
+        </div>
+
+      </aside>
+
+      <!-- ============================================================================= -->
+      <!-- PANEL KANAN: LIVE PREVIEW DOKUMEN RESMI SURAT PENGANTAR -->
+      <!-- ============================================================================= -->
+      <section id="panelPreviewKananSp" class="w-full lg:w-[55%] xl:w-[58%] bg-slate-300/80 flex flex-col h-full overflow-hidden transition-all duration-200">
+        
+        <!-- Toolbar Atas Preview SP -->
+        <div id="previewToolbarSp" class="bg-white px-4 py-2 border-b border-slate-300 flex items-center justify-between gap-3 flex-shrink-0 shadow-xs z-10 no-print">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+              Live Preview Surat Pengantar
+            </span>
+            <span class="text-slate-300">|</span>
+            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+              <span>Kertas:</span>
+              <select id="selectPaperSizeSp" onchange="applyPaperSizeSp()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-teal-500">
+                <option value="a4" selected>A4 (210 x 297 mm)</option>
+                <option value="folio">Folio / F4 (215 x 330 mm)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Tombol Cetak / PDF -->
+            <button type="button" onclick="triggerPrintSp()" class="px-3 py-1 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Surat Pengantar Resmi / Simpan PDF">
+              <span>🖨️ Cetak / PDF</span>
+            </button>
+
+            <!-- Tombol Ekspor DOCX -->
+            <button type="button" onclick="eksporSuratPengantarKeDocx()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Unduh sebagai Dokumen Microsoft Word (.docx)">
+              <span>📄 Unduh DOCX</span>
+            </button>
+
+            <!-- Zoom Controls -->
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+              <button type="button" onclick="changeZoomSp(-10)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom Out">−</button>
+              <span id="labelZoomPercentSp" class="font-mono font-bold text-slate-800 px-1 text-[11px]">100%</span>
+              <button type="button" onclick="changeZoomSp(10)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom In">+</button>
+              <button type="button" onclick="resetZoomSp()" class="px-1.5 py-0.5 text-[10px] rounded hover:bg-white text-slate-600 transition" title="Reset Zoom">Fit</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Viewport Container Preview SP -->
+        <div id="previewViewportSp" class="flex-1 overflow-auto custom-scrollbar p-6 flex justify-center bg-slate-300/60">
+          <div id="previewSpContainer" class="origin-top transition-transform duration-100">
+            <!-- Dokumen Surat Pengantar Dirender Otomatis oleh JavaScript -->
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+    <!-- /#workspaceSuratPengantar -->
+
+    <!-- ============================================================================= -->
+    <!-- TAB 4: KIRIM REKOM KE DESA (DOKUMEN RESMI KECAMATAN SIAP BKAD) -->
     <!-- ============================================================================= -->
     <div id="tabContentKirimRekomDesa" class="no-print hidden flex-1 flex flex-col overflow-hidden bg-slate-50">
       <!-- Filter & Action Bar -->
@@ -2301,6 +2556,48 @@
   </div>
 
   <!-- ================================================================================= -->
+  <!-- DRAWER: RIWAYAT ARSIP SURAT PENGANTAR KECAMATAN -->
+  <!-- ================================================================================= -->
+  <div id="drawerRiwayatSp" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex justify-end hidden">
+    <div class="bg-white w-full max-w-4xl h-full shadow-2xl flex flex-col border-l border-slate-200">
+      
+      <div class="px-6 py-4 bg-teal-900 text-white flex items-center justify-between flex-shrink-0">
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-wide">Arsip Surat Pengantar Kecamatan Waru</h3>
+          <p class="text-[11px] text-teal-200">Daftar Surat Pengantar resmi yang dikirim ke BKAD / Dinas terkait</p>
+        </div>
+        <button type="button" onclick="tutupDrawerRiwayatSp()" class="text-teal-300 hover:text-white text-xl cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+        <div class="relative flex-1 min-w-[200px]">
+          <input type="text" id="inputSearchSp" oninput="renderTabelArsipSp()" placeholder="Cari No. SP, Desa, Tujuan..."
+                 class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:ring-2 focus:ring-teal-500" />
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-auto custom-scrollbar p-4">
+        <table class="w-full border-collapse text-left">
+          <thead>
+            <tr class="bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+              <th class="py-2.5 px-3 text-center w-10">No</th>
+              <th class="py-2.5 px-3">No. SP & Tanggal</th>
+              <th class="py-2.5 px-3">Desa & Jenis</th>
+              <th class="py-2.5 px-3">Tujuan (Kepada Yth)</th>
+              <th class="py-2.5 px-3">Rincian Berkas</th>
+              <th class="py-2.5 px-3 text-center w-36">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyRiwayatSp">
+            <!-- Diisi dinamis oleh JavaScript renderTabelArsipSp -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================================================================================= -->
   <!-- MODAL: KEMBALIKAN BERKAS PENGAJUAN DESA (DENGAN CATATAN OPERATOR KECAMATAN) -->
   <!-- ================================================================================= -->
   <div id="modalKembalikanPengajuan" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
@@ -2870,6 +3167,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261020_docx_kop_a4_fix"></script>
+  <script src="app.js?v=20261021_tab_sp"></script>
 </body>
 </html>

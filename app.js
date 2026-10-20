@@ -317,7 +317,41 @@ const AppState = {
   currentZoom: 100,
   paperSize: 'a4',
   pageBreakMode: 'separated',
-  viewMode: 'split'
+  viewMode: 'split',
+
+  // State Surat Pengantar Kecamatan Waru (Menu 3 Tab 3)
+  suratPengantarData: {
+    id: null,
+    nomorSurat: '000.1.5 / 128 / Ekbang / X / 2026',
+    tanggalSurat: '', // default hari ini (YYYY-MM-DD)
+    tujuanYth: 'Kepala Badan Keuangan dan Aset Daerah (BKAD) Kab. Penajam Paser Utara',
+    tempatTujuan: 'Tempat',
+    namaDesa: 'Sesulu',
+    jenisDana: 'add_reguler',
+    tahap: 'Tahap II',
+    tahunAnggaran: '2026',
+    jabatanPengirim: 'Camat Waru,',
+    namaPengirim: 'Ahmad Yani, SSTP',
+    nipPengirim: '198610082006021001',
+    metodeTte: 'srikandi',
+    paperSize: 'a4',
+    zoomPercent: 100,
+    rows: [
+      {
+        no: 1,
+        jenis: 'Kelengkapan berkas permohonan Rekomendasi Camat Waru Penyaluran Alokasi Dana Desa (ADD) Tahap II Tahun Anggaran 2026 Desa Sesulu.',
+        banyak: '1 (satu) Berkas',
+        keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
+      }
+    ]
+  },
+  suratPengantarList: (function() {
+    try {
+      return JSON.parse(localStorage.getItem('sip_arsip_surat_pengantar') || '[]');
+    } catch (_) {
+      return [];
+    }
+  })()
 };
 
 // =========================================================================================
@@ -399,6 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTabelKirimRekomDesa();
   renderDokumenKecamatanUntukDesa();
   checkAuthSession();
+  if (typeof updateBadgeSpCount === 'function') updateBadgeSpCount();
 });
 
 window.pilihTipeRekomendasi = function(tipe) {
@@ -2302,6 +2337,18 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     if (!t.getAttribute('style')) {
       t.setAttribute('style', 'border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
     }
+    // Jika tabel berbingkai data (seperti tabel 4 kolom Surat Pengantar)
+    if (t.querySelector('th')) {
+      t.setAttribute('border', '1');
+      t.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; border: 1pt solid #000000; margin-top: 10pt; margin-bottom: 10pt;');
+      t.querySelectorAll('th').forEach(th => {
+        th.setAttribute('style', 'border: 1pt solid #000000; padding: 5pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; text-align: center; background-color: #f1f5f9; line-height: 1.15;');
+      });
+      t.querySelectorAll('td').forEach(td => {
+        const align = td.style.textAlign || 'left';
+        td.setAttribute('style', `border: 1pt solid #000000; padding: 6pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; vertical-align: top; text-align: ${align};`);
+      });
+    }
   });
   clone.querySelectorAll('td').forEach(td => {
     td.style.lineHeight = '1.15';
@@ -3828,15 +3875,17 @@ window.toggleSidebar = function(forceState) {
 };
 
 /**
- * Beralih Sub-Tab di Menu 3: Verifikasi Berkas vs Generator Rekomendasi vs Kirim Rekom Ke Desa
+ * Beralih Sub-Tab di Menu 3: Verifikasi Berkas vs Generator Rekomendasi vs Surat Pengantar vs Kirim Rekom Ke Desa
  */
 window.switchKecamatanSubTab = function(tabKey) {
   AppState.kecamatanSubTab = tabKey;
   const tabBtnVerif = document.getElementById('tabBtnVerifikasi');
   const tabBtnGen = document.getElementById('tabBtnGenerator');
+  const tabBtnSp = document.getElementById('tabBtnSuratPengantar');
   const tabBtnKirim = document.getElementById('tabBtnKirimDesa');
   const tabContentVerif = document.getElementById('tabContentVerifikasiDesa');
   const tabContentGen = document.getElementById('workspaceKecamatan');
+  const tabContentSp = document.getElementById('workspaceSuratPengantar');
   const tabContentKirim = document.getElementById('tabContentKirimRekomDesa');
   const splitControls = document.getElementById('containerSplitControls');
   const btnPrintDoc = document.getElementById('btnPrintDoc');
@@ -3847,11 +3896,13 @@ window.switchKecamatanSubTab = function(tabKey) {
   const btnInactive = 'px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer';
   if (tabBtnVerif) tabBtnVerif.className = btnInactive;
   if (tabBtnGen) tabBtnGen.className = btnInactive;
+  if (tabBtnSp) tabBtnSp.className = btnInactive;
   if (tabBtnKirim) tabBtnKirim.className = btnInactive;
 
   // Sembunyikan semua kontainer subtab
   if (tabContentVerif) tabContentVerif.classList.add('hidden');
   if (tabContentGen) tabContentGen.classList.add('hidden');
+  if (tabContentSp) tabContentSp.classList.add('hidden');
   if (tabContentKirim) tabContentKirim.classList.add('hidden');
 
   if (tabKey === 'verifikasi') {
@@ -3870,6 +3921,14 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (btnExportDocx) btnExportDocx.classList.remove('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.remove('hidden');
     updateLivePreview();
+  } else if (tabKey === 'surat_pengantar') {
+    if (tabBtnSp) tabBtnSp.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
+    if (tabContentSp) tabContentSp.classList.remove('hidden');
+    if (splitControls) splitControls.classList.add('hidden');
+    if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnExportDocx) btnExportDocx.classList.add('hidden');
+    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    initSuratPengantarTab();
   } else if (tabKey === 'kirim_desa') {
     if (tabBtnKirim) tabBtnKirim.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
     if (tabContentKirim) tabContentKirim.classList.remove('hidden');
@@ -5600,6 +5659,13 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
   } catch (e) {
     console.warn('Gagal sinkron riwayat dari Google Sheets:', e);
   }
+
+  // Sinkronisasi data Surat Pengantar Kecamatan dari Google Sheets
+  if (typeof tarikSuratPengantarDariGoogleSheets === 'function') {
+    try {
+      await tarikSuratPengantarDariGoogleSheets(true);
+    } catch (_) {}
+  }
 };
 
 /**
@@ -6629,4 +6695,971 @@ window.simpanDataProfileCamat = async function(event) {
   showToast('Data Pejabat Camat Waru berhasil diperbarui!', 'success');
   tutupModalProfileDesa();
 };
+
+// =========================================================================================
+// MODUL SURAT PENGANTAR KECAMATAN KE BKAD / DINAS (MENU 3 TAB 3)
+// =========================================================================================
+
+/**
+ * Inisialisasi Tab Surat Pengantar saat pertama kali dibuka
+ */
+window.initSuratPengantarTab = function() {
+  const data = AppState.suratPengantarData;
+  if (!data) return;
+
+  // Tanggal default: Hari ini jika kosong
+  if (!data.tanggalSurat) {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    data.tanggalSurat = `${yyyy}-${mm}-${dd}`;
+  }
+
+  const inputTanggal = document.getElementById('inputTanggalSp');
+  if (inputTanggal && !inputTanggal.value) {
+    inputTanggal.value = data.tanggalSurat;
+  }
+
+  const inputNomor = document.getElementById('inputNomorSp');
+  if (inputNomor && !inputNomor.value) {
+    inputNomor.value = data.nomorSurat || '000.1.5 / 128 / Ekbang / X / 2026';
+  }
+
+  const inputTujuan = document.getElementById('inputTujuanYthSp');
+  if (inputTujuan && !inputTujuan.value) {
+    inputTujuan.value = data.tujuanYth || 'Kepala Badan Keuangan dan Aset Daerah (BKAD) Kab. Penajam Paser Utara';
+  }
+
+  const inputTempat = document.getElementById('inputTempatTujuanSp');
+  if (inputTempat && !inputTempat.value) {
+    inputTempat.value = data.tempatTujuan || 'Tempat';
+  }
+
+  const selectDesa = document.getElementById('selectDesaSp');
+  if (selectDesa && data.namaDesa) {
+    selectDesa.value = data.namaDesa;
+  }
+
+  const selectDana = document.getElementById('selectJenisDanaSp');
+  if (selectDana && data.jenisDana) {
+    selectDana.value = data.jenisDana;
+  }
+
+  const selectTahap = document.getElementById('selectTahapSp');
+  if (selectTahap && data.tahap) {
+    selectTahap.value = data.tahap;
+  }
+
+  const inputTahun = document.getElementById('inputTahunSp');
+  if (inputTahun && data.tahunAnggaran) {
+    inputTahun.value = data.tahunAnggaran;
+  }
+
+  const inputJabatan = document.getElementById('inputJabatanPengirimSp');
+  if (inputJabatan && data.jabatanPengirim) {
+    inputJabatan.value = data.jabatanPengirim;
+  }
+
+  const inputNama = document.getElementById('inputNamaPengirimSp');
+  if (inputNama && (data.namaPengirim || AppState.camat?.nama)) {
+    inputNama.value = data.namaPengirim || AppState.camat.nama;
+  }
+
+  const inputNip = document.getElementById('inputNipPengirimSp');
+  if (inputNip && (data.nipPengirim || AppState.camat?.nip)) {
+    inputNip.value = data.nipPengirim || AppState.camat.nip;
+  }
+
+  const selectMetode = document.getElementById('selectMetodeTteSp');
+  if (selectMetode && data.metodeTte) {
+    selectMetode.value = data.metodeTte;
+  }
+
+  renderRowsSpInputs();
+  updateLivePreviewSp();
+  updateBadgeSpCount();
+};
+
+/**
+ * Render Formulir Baris-Baris Rincian Berkas (Tabel 4 Kolom)
+ */
+window.renderRowsSpInputs = function() {
+  const container = document.getElementById('containerRowsSp');
+  if (!container) return;
+
+  const rows = AppState.suratPengantarData.rows || [];
+  if (rows.length === 0) {
+    AppState.suratPengantarData.rows = [
+      {
+        no: 1,
+        jenis: 'Kelengkapan berkas Rekomendasi Camat Waru Penyaluran Alokasi Dana Desa (ADD) Tahap II Tahun Anggaran 2026 Desa Sesulu.',
+        banyak: '1 (satu) Berkas',
+        keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
+      }
+    ];
+  }
+
+  container.innerHTML = AppState.suratPengantarData.rows.map((row, index) => {
+    return `
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 relative group hover:border-teal-300 transition">
+        <div class="flex items-center justify-between pb-1 border-b border-slate-200/80">
+          <div class="flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-md bg-teal-600 text-white font-bold text-[10px] flex items-center justify-center">
+              ${index + 1}
+            </span>
+            <span class="text-xs font-bold text-slate-800">Baris Rincian #${index + 1}</span>
+          </div>
+          ${AppState.suratPengantarData.rows.length > 1 ? `
+            <button type="button" onclick="hapusBarisSp(${index})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1 rounded text-xs transition cursor-pointer" title="Hapus baris ini">
+              🗑️ Hapus
+            </button>
+          ` : ''}
+        </div>
+
+        <div>
+          <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Jenis yang dikirim (Kolom 2)</label>
+          <textarea rows="2" oninput="onSpRowInputChange(${index}, 'jenis', this.value)" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500" placeholder="Uraian berkas atau naskah dinas...">${escapeHtml(row.jenis || '')}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Banyaknya (Kolom 3)</label>
+            <input type="text" value="${escapeHtml(row.banyak || '')}" oninput="onSpRowInputChange(${index}, 'banyak', this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500" placeholder="Contoh: 1 (satu) Berkas" />
+          </div>
+          <div>
+            <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Keterangan (Kolom 4)</label>
+            <textarea rows="1" oninput="onSpRowInputChange(${index}, 'keterangan', this.value)" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500" placeholder="Catatan / maksud pengiriman...">${escapeHtml(row.keterangan || '')}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+/**
+ * Update nilai input baris tabel secara real-time
+ */
+window.onSpRowInputChange = function(index, field, value) {
+  if (!AppState.suratPengantarData.rows[index]) return;
+  AppState.suratPengantarData.rows[index][field] = value;
+  updateLivePreviewSp();
+};
+
+/**
+ * Tambah Baris Baru di Tabel Surat Pengantar
+ */
+window.tambahBarisSp = function(jenis = '', banyak = '1 (satu) Berkas', keterangan = 'Dikirim dengan hormat untuk verifikasi dan proses lebih lanjut.') {
+  const rows = AppState.suratPengantarData.rows || [];
+  rows.push({
+    no: rows.length + 1,
+    jenis: jenis,
+    banyak: banyak,
+    keterangan: keterangan
+  });
+  AppState.suratPengantarData.rows = rows;
+  renderRowsSpInputs();
+  updateLivePreviewSp();
+};
+
+/**
+ * Hapus Baris di Tabel Surat Pengantar
+ */
+window.hapusBarisSp = function(index) {
+  const rows = AppState.suratPengantarData.rows || [];
+  if (rows.length <= 1) {
+    showToast('Tabel Surat Pengantar minimal memiliki 1 baris rincian.', 'warning');
+    return;
+  }
+  rows.splice(index, 1);
+  rows.forEach((r, i) => { r.no = i + 1; });
+  AppState.suratPengantarData.rows = rows;
+  renderRowsSpInputs();
+  updateLivePreviewSp();
+};
+
+/**
+ * Pilihan Cepat Tujuan Surat (Kepada Yth)
+ */
+window.setPilihanTujuanSp = function(tipe) {
+  const inputTujuan = document.getElementById('inputTujuanYthSp');
+  const inputTempat = document.getElementById('inputTempatTujuanSp');
+  const desa = document.getElementById('selectDesaSp')?.value || 'Sesulu';
+
+  if (tipe === 'bkad') {
+    if (inputTujuan) inputTujuan.value = 'Kepala Badan Keuangan dan Aset Daerah (BKAD) Kab. Penajam Paser Utara';
+    if (inputTempat) inputTempat.value = 'Tempat';
+  } else if (tipe === 'dpmd') {
+    if (inputTujuan) inputTujuan.value = 'Kepala Dinas Pemberdayaan Masyarakat dan Desa (DPMD) Kab. Penajam Paser Utara';
+    if (inputTempat) inputTempat.value = 'Penajam';
+  } else if (tipe === 'desa') {
+    if (inputTujuan) inputTujuan.value = `Kepala Desa ${desa} Kecamatan Waru`;
+    if (inputTempat) inputTempat.value = 'Tempat';
+  }
+
+  updateLivePreviewSp();
+};
+
+/**
+ * Generate Nomor Surat Pengantar Otomatis
+ */
+window.autoGenNomorSp = function() {
+  const today = new Date();
+  const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+  const romanMonth = romanMonths[today.getMonth()];
+  const year = today.getFullYear();
+
+  // Hitung nomor urut berdasarkan riwayat tersimpan + 1
+  const existingCount = (AppState.suratPengantarList || []).length;
+  const nomorUrut = String(120 + existingCount + 1).padStart(3, '0');
+
+  const nomorBaru = `000.1.5 / ${nomorUrut} / Ekbang / ${romanMonth} / ${year}`;
+  const input = document.getElementById('inputNomorSp');
+  if (input) input.value = nomorBaru;
+  AppState.suratPengantarData.nomorSurat = nomorBaru;
+
+  updateLivePreviewSp();
+  showToast(`Nomor Surat Pengantar otomatis dibuat: ${nomorBaru}`, 'info');
+};
+
+/**
+ * Salin Otomatis Seluruh Data dari Generator Rekomendasi Camat yang Aktif
+ */
+window.salinDataDariRekomAktifKeSp = function() {
+  // Ambil data dari Form Generator Rekomendasi (Tab 2)
+  const desa = document.getElementById('selectNamaDesa')?.value || 'Sesulu';
+  const jenisTipe = AppState.activeTemplateKey || 'add_reguler';
+  const tahap = document.getElementById('inputTahapPenyaluran')?.value || document.getElementById('inputBulanPenyaluran')?.value || 'Tahap II';
+  const tahun = (document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026').trim();
+  const nomorRekom = (document.getElementById('inputNomorSurat')?.value || '').trim();
+  const rawTanggalRekom = document.getElementById('inputTanggalSurat')?.value || '';
+  const tanggalRekomIndo = rawTanggalRekom ? formatTanggalIndo(rawTanggalRekom) : 'Oktober 2026';
+  const nominalStr = document.getElementById('inputNominalAngkaReguler')?.value || document.getElementById('inputNominalAngka')?.value || '0';
+  const nominalFormatted = formatRupiah(parseCurrencyInput(nominalStr));
+
+  // Pemetaan Label Jenis Dana
+  const labelDanaMap = {
+    siltap: 'Penghasilan Tetap dan Tunjangan (Siltap)',
+    add_reguler: 'Alokasi Dana Desa (ADD) Reguler',
+    dbh: 'Bagi Hasil Pajak dan Retribusi Daerah (PBH/DBH)',
+    dd: 'Dana Desa (DD)'
+  };
+  const labelDana = labelDanaMap[jenisTipe] || 'Alokasi Dana Desa (ADD)';
+
+  // Update input Form Surat Pengantar
+  const selDesaSp = document.getElementById('selectDesaSp');
+  if (selDesaSp) selDesaSp.value = desa;
+
+  const selJenisSp = document.getElementById('selectJenisDanaSp');
+  if (selJenisSp) selJenisSp.value = jenisTipe;
+
+  const selTahapSp = document.getElementById('selectTahapSp');
+  if (selTahapSp) {
+    if (tahap.toLowerCase().includes('i') && !tahap.toLowerCase().includes('ii') && !tahap.toLowerCase().includes('iii')) {
+      selTahapSp.value = 'Tahap I';
+    } else if (tahap.toLowerCase().includes('ii') && !tahap.toLowerCase().includes('iii')) {
+      selTahapSp.value = 'Tahap II';
+    } else if (tahap.toLowerCase().includes('iii')) {
+      selTahapSp.value = 'Tahap III';
+    }
+  }
+
+  const inpTahunSp = document.getElementById('inputTahunSp');
+  if (inpTahunSp) inpTahunSp.value = tahun;
+
+  // Bangun narasi baris 1 tabel pengantar secara otomatis
+  const uraianBerkas = `Kelengkapan berkas Rekomendasi Camat Waru Penyaluran ${labelDana} ${tahap} Tahun Anggaran ${tahun} Pemerintah Desa ${desa} (Nomor Rekomendasi: ${nomorRekom || '${nomor_naskah}'}, Tanggal: ${tanggalRekomIndo}, Nominal: ${nominalFormatted}).`;
+
+  AppState.suratPengantarData.rows = [
+    {
+      no: 1,
+      jenis: uraianBerkas,
+      banyak: '1 (satu) Berkas',
+      keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
+    }
+  ];
+
+  renderRowsSpInputs();
+  updateLivePreviewSp();
+  showToast(`⚡ Berhasil menyalin data Rekomendasi Desa ${desa} (${tahap}) ke Surat Pengantar!`, 'success');
+};
+
+/**
+ * Handler saat Desa / Jenis Dana di Kartu 2 SP berubah
+ */
+window.onSpDesaChange = function() {
+  const desa = document.getElementById('selectDesaSp')?.value || 'Sesulu';
+  const jenis = document.getElementById('selectJenisDanaSp')?.value || 'add_reguler';
+  const tahap = document.getElementById('selectTahapSp')?.value || 'Tahap II';
+  const tahun = document.getElementById('inputTahunSp')?.value || '2026';
+
+  AppState.suratPengantarData.namaDesa = desa;
+  AppState.suratPengantarData.jenisDana = jenis;
+  AppState.suratPengantarData.tahap = tahap;
+  AppState.suratPengantarData.tahunAnggaran = tahun;
+
+  updateLivePreviewSp();
+};
+
+/**
+ * Perbarui Live Preview Dokumen Surat Pengantar (Sesuai Format Resmi User)
+ */
+window.updateLivePreviewSp = function() {
+  const container = document.getElementById('previewSpContainer');
+  if (!container) return;
+
+  const nomorSp = document.getElementById('inputNomorSp')?.value || AppState.suratPengantarData.nomorSurat || '000.1.5 / 128 / Ekbang / X / 2026';
+  const rawDate = document.getElementById('inputTanggalSp')?.value || AppState.suratPengantarData.tanggalSurat || '2026-10-21';
+  const tanggalIndo = formatTanggalIndo(rawDate);
+  const tujuanYth = document.getElementById('inputTujuanYthSp')?.value || 'Kepala Badan Keuangan dan Aset Daerah (BKAD) Kab. Penajam Paser Utara';
+  const tempatTujuan = document.getElementById('inputTempatTujuanSp')?.value || 'Tempat';
+
+  const jabatanPengirim = document.getElementById('inputJabatanPengirimSp')?.value || 'Camat Waru,';
+  const namaPengirim = document.getElementById('inputNamaPengirimSp')?.value || AppState.camat?.nama || 'Ahmad Yani, SSTP';
+  const nipPengirim = document.getElementById('inputNipPengirimSp')?.value || AppState.camat?.nip || '198610082006021001';
+  const metodeTte = document.getElementById('selectMetodeTteSp')?.value || 'srikandi';
+
+  const paperSize = document.getElementById('selectPaperSizeSp')?.value || 'a4';
+  const paperClass = paperSize === 'folio' ? 'surat-sheet folio' : 'surat-sheet a4';
+
+  const rows = AppState.suratPengantarData.rows || [];
+
+  // 1. Kop Surat Resmi
+  const kopHtml = getKopSuratHtml(true);
+
+  // 2. Format Header Tanggal & Tujuan
+  let headerTujuanHtml = '';
+  if (metodeTte === 'srikandi') {
+    headerTujuanHtml = `
+      <div class="mt-4 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+        <div class="w-80 text-left">
+          <div style="line-height: 1.15 !important;">Penajam, \${tanggal_naskah}</div>
+          <div class="mt-2" style="line-height: 1.15 !important;">Kepada</div>
+          <div style="line-height: 1.15 !important;">Yth. \${jabatan_tujuan}</div>
+          <div style="line-height: 1.15 !important;">di -</div>
+          <div class="pl-6" style="line-height: 1.15 !important;">\${tempat_tujuan}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    headerTujuanHtml = `
+      <div class="mt-4 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+        <div class="w-80 text-left">
+          <div style="line-height: 1.15 !important;">Penajam, ${tanggalIndo}</div>
+          <div class="mt-2" style="line-height: 1.15 !important;">Kepada</div>
+          <div style="line-height: 1.15 !important;">Yth. ${escapeHtml(tujuanYth)}</div>
+          <div style="line-height: 1.15 !important;">di -</div>
+          <div class="pl-6" style="line-height: 1.15 !important;">${escapeHtml(tempatTujuan)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 3. Judul Surat Pengantar
+  const judulSuratHtml = `
+    <div class="mt-6 text-center text-black font-sans" style="line-height: 1.15 !important;">
+      <div class="text-[14pt] font-bold tracking-wider uppercase underline" style="line-height: 1.15 !important;">
+        SURAT PENGANTAR
+      </div>
+      <div class="text-[11pt] mt-1" style="line-height: 1.15 !important;">
+        Nomor : ${metodeTte === 'srikandi' ? '${nomor_naskah}' : escapeHtml(nomorSp)}
+      </div>
+    </div>
+  `;
+
+  // 4. Tabel 4 Kolom Rincian Berkas
+  const tableRowsHtml = rows.map((r, i) => {
+    return `
+      <tr>
+        <td style="border: 1px solid #000000; padding: 8px 4px; text-align: center; vertical-align: top; line-height: 1.15 !important;">
+          ${i + 1}.
+        </td>
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: left; vertical-align: top; white-space: pre-wrap; line-height: 1.15 !important;">
+          ${escapeHtml(r.jenis || '-')}
+        </td>
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: center; vertical-align: top; white-space: pre-wrap; line-height: 1.15 !important;">
+          ${escapeHtml(r.banyak || '-')}
+        </td>
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: justify; vertical-align: top; white-space: pre-wrap; line-height: 1.15 !important;">
+          ${escapeHtml(r.keterangan || '-')}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  const tableHtml = `
+    <table class="w-full mt-6 border-collapse text-[11pt] font-sans text-black" style="line-height: 1.15 !important; border: 1.5px solid #000000;">
+      <thead>
+        <tr style="background-color: #f8fafc; border-bottom: 1.5px solid #000000;">
+          <th style="border: 1px solid #000000; padding: 6px 4px; text-align: center; width: 8%; font-weight: bold; line-height: 1.15 !important;">No</th>
+          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 44%; font-weight: bold; line-height: 1.15 !important;">Jenis yang dikirim</th>
+          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 24%; font-weight: bold; line-height: 1.15 !important;">Banyaknya</th>
+          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 24%; font-weight: bold; line-height: 1.15 !important;">Keterangan</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableRowsHtml}
+      </tbody>
+    </table>
+  `;
+
+  // 5. Tanda Tangan Camat Waru
+  let ttdHtml = '';
+  if (metodeTte === 'srikandi') {
+    ttdHtml = `
+      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+        <div class="w-72 text-left">
+          <div class="leading-normal" style="line-height: 1.15 !important;">${escapeHtml(jabatanPengirim)}</div>
+          <div class="my-5 py-2 text-center text-slate-800 font-sans tracking-wide font-mono" style="line-height: 1.15 !important;">
+            \${ttd_pengirim}
+          </div>
+          <div class="leading-normal font-bold font-sans" style="line-height: 1.15 !important;">\${nama_pengirim}</div>
+          <div class="leading-normal font-sans" style="line-height: 1.15 !important;">NIP. \${nip_pengirim}</div>
+        </div>
+      </div>
+    `;
+  } else if (metodeTte === 'tte_lokal') {
+    ttdHtml = `
+      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+        <div class="w-72 text-left">
+          <div class="leading-normal" style="line-height: 1.15 !important;">${escapeHtml(jabatanPengirim)}</div>
+          <div class="my-3 flex items-center justify-center">
+            <div class="p-1.5 border border-slate-300 rounded bg-slate-50 flex items-center gap-2">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=TTE-KECAMATAN-WARU-${encodeURIComponent(nomorSp)}" alt="QR TTE" class="w-14 h-14" />
+              <div class="text-[9px] text-slate-600 leading-tight">
+                <b>Ditandatangani secara elektronik</b><br/>
+                Balai Sertifikasi Elektronik (BSrE)<br/>
+                ${escapeHtml(namaPengirim)}
+              </div>
+            </div>
+          </div>
+          <div class="leading-normal font-bold font-sans underline" style="line-height: 1.15 !important;">${escapeHtml(namaPengirim)}</div>
+          <div class="leading-normal font-sans" style="line-height: 1.15 !important;">NIP. ${escapeHtml(nipPengirim)}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    // Manual
+    ttdHtml = `
+      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+        <div class="w-72 text-left">
+          <div class="leading-normal" style="line-height: 1.15 !important;">${escapeHtml(jabatanPengirim)}</div>
+          <div class="my-6 h-12"></div>
+          <div class="leading-normal font-bold font-sans underline" style="line-height: 1.15 !important;">${escapeHtml(namaPengirim)}</div>
+          <div class="leading-normal font-sans" style="line-height: 1.15 !important;">NIP. ${escapeHtml(nipPengirim)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 6. Satukan Lembar Dokumen Surat Pengantar
+  const fullSheetHtml = `
+    <div class="${paperClass}" style="box-sizing: border-box; background: white; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1.2cm 1.5cm 1.5cm 1.8cm; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15 !important; color: #000000;">
+      ${kopHtml}
+      ${headerTujuanHtml}
+      ${judulSuratHtml}
+      ${tableHtml}
+      ${ttdHtml}
+    </div>
+  `;
+
+  container.innerHTML = fullSheetHtml;
+};
+
+/**
+ * Terapkan Ukuran Kertas A4 vs Folio pada Preview Surat Pengantar
+ */
+window.applyPaperSizeSp = function() {
+  updateLivePreviewSp();
+};
+
+/**
+ * Zoom Controls untuk Surat Pengantar
+ */
+window.changeZoomSp = function(delta) {
+  const current = AppState.suratPengantarData.zoomPercent || 100;
+  const newZoom = Math.min(Math.max(current + delta, 40), 200);
+  AppState.suratPengantarData.zoomPercent = newZoom;
+
+  const label = document.getElementById('labelZoomPercentSp');
+  if (label) label.textContent = `${newZoom}%`;
+
+  const container = document.getElementById('previewSpContainer');
+  if (container) {
+    container.style.transform = `scale(${newZoom / 100})`;
+  }
+};
+
+window.resetZoomSp = function() {
+  AppState.suratPengantarData.zoomPercent = 100;
+  const label = document.getElementById('labelZoomPercentSp');
+  if (label) label.textContent = '100%';
+  const container = document.getElementById('previewSpContainer');
+  if (container) {
+    container.style.transform = 'scale(1)';
+  }
+};
+
+/**
+ * Cetak / Simpan PDF Surat Pengantar Resmi
+ */
+window.triggerPrintSp = function() {
+  const container = document.getElementById('previewSpContainer');
+  const oldTransform = container ? container.style.transform : '';
+  if (container) container.style.transform = 'none';
+
+  const loginPortal = document.getElementById('loginPortalContainer');
+  if (loginPortal) loginPortal.style.setProperty('display', 'none', 'important');
+
+  const workspaceKec = document.getElementById('workspaceKecamatan');
+  if (workspaceKec) workspaceKec.style.setProperty('display', 'none', 'important');
+
+  const workspaceSp = document.getElementById('workspaceSuratPengantar');
+  if (workspaceSp) workspaceSp.style.setProperty('display', 'block', 'important');
+
+  window.print();
+
+  setTimeout(() => {
+    if (container) container.style.transform = oldTransform;
+    if (workspaceSp) workspaceSp.style.display = '';
+    if (workspaceKec && AppState.kecamatanSubTab === 'generator') {
+      workspaceKec.style.display = '';
+    }
+  }, 1000);
+};
+
+/**
+ * Ekspor Surat Pengantar ke Microsoft Word (.docx)
+ */
+window.eksporSuratPengantarKeDocx = async function() {
+  if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
+    showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
+    return;
+  }
+
+  const container = document.getElementById('previewSpContainer');
+  if (!container) {
+    showToast('Dokumen preview Surat Pengantar tidak ditemukan.', 'error');
+    return;
+  }
+
+  const sheet = container.querySelector('.surat-sheet');
+  if (!sheet) {
+    showToast('Belum ada dokumen Surat Pengantar yang siap diekspor.', 'warning');
+    return;
+  }
+
+  showToast('Sedang membuat file Microsoft Word (.docx)...', 'info');
+
+  try {
+    const logoBase64 = await getLogoPpuBase64();
+    const namaDesa = (document.getElementById('selectDesaSp')?.value || 'Desa').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const tahap = (document.getElementById('selectTahapSp')?.value || 'Tahap').replace(/\s+/g, '_');
+    const tahun = (document.getElementById('inputTahunSp')?.value || '2026').trim();
+    const nomorSp = (document.getElementById('inputNomorSp')?.value || '').trim();
+
+    let safeName = `Surat_Pengantar_Kecamatan_${namaDesa}_${tahap}_${tahun}`;
+    if (nomorSp && !nomorSp.includes('${')) {
+      const cleanNo = nomorSp.replace(/[\/\\:*?"<>|]/g, '-').replace(/\s+/g, '_');
+      safeName = `Surat_Pengantar_${cleanNo}`;
+    }
+
+    const cleanHtml = cleanSheetToWordHtml(sheet, logoBase64);
+    const paperSize = document.getElementById('selectPaperSizeSp')?.value || 'a4';
+    const isA4 = paperSize === 'a4';
+    const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
+    const docxMargins = {
+      top: 680,    // 1.2 cm
+      right: 850,  // 1.5 cm
+      bottom: 850, // 1.5 cm
+      left: 1020   // 1.8 cm
+    };
+
+    const fullDocumentHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(safeName)}</title>
+        <style>
+          @page {
+            size: ${pageCssSize};
+            margin: 1.2cm 1.5cm 1.5cm 1.8cm;
+          }
+          body, p, table, td, th, div, span {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            color: #000000;
+            line-height: 1.15;
+          }
+          body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+          }
+          p {
+            margin: 4pt 0;
+            line-height: 1.15;
+          }
+          table {
+            border-collapse: collapse;
+            line-height: 1.15;
+          }
+          td, th {
+            line-height: 1.15;
+          }
+        </style>
+      </head>
+      <body>
+        ${cleanHtml}
+      </body>
+      </html>
+    `;
+
+    const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
+      orientation: 'portrait',
+      margins: docxMargins
+    });
+
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `${safeName}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    }, 500);
+
+    showToast(`Dokumen Word ${safeName}.docx berhasil diunduh!`, 'success');
+  } catch (err) {
+    console.error('Gagal ekspor DOCX Surat Pengantar:', err);
+    showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
+  }
+};
+
+/**
+ * Simpan Arsip Surat Pengantar ke Database Lokal dan Google Sheets
+ */
+window.simpanArsipSuratPengantar = async function() {
+  const nomorSp = document.getElementById('inputNomorSp')?.value?.trim() || '000.1.5 / 128 / Ekbang / X / 2026';
+  const rawDate = document.getElementById('inputTanggalSp')?.value || '2026-10-21';
+  const tanggalIndo = formatTanggalIndo(rawDate);
+  const tujuanYth = document.getElementById('inputTujuanYthSp')?.value?.trim() || 'Kepala BKAD Kab. PPU';
+  const tempatTujuan = document.getElementById('inputTempatTujuanSp')?.value?.trim() || 'Tempat';
+
+  const namaDesa = document.getElementById('selectDesaSp')?.value || 'Sesulu';
+  const jenisDana = document.getElementById('selectJenisDanaSp')?.value || 'add_reguler';
+  const tahap = document.getElementById('selectTahapSp')?.value || 'Tahap II';
+  const tahunAnggaran = document.getElementById('inputTahunSp')?.value?.trim() || '2026';
+
+  const jabatanPengirim = document.getElementById('inputJabatanPengirimSp')?.value?.trim() || 'Camat Waru,';
+  const namaPengirim = document.getElementById('inputNamaPengirimSp')?.value?.trim() || 'Ahmad Yani, SSTP';
+  const nipPengirim = document.getElementById('inputNipPengirimSp')?.value?.trim() || '198610082006021001';
+  const metodeTte = document.getElementById('selectMetodeTteSp')?.value || 'srikandi';
+
+  const rows = AppState.suratPengantarData.rows || [];
+  const rincianRingkasan = rows.map((r, i) => `${i + 1}. ${r.jenis} (${r.banyak})`).join('; ');
+
+  const id = AppState.suratPengantarData.id || `SP-${Date.now()}`;
+  const nowWita = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Makassar' });
+
+  const record = {
+    id: id,
+    waktuSimpan: nowWita,
+    nomorSuratPengantar: nomorSp,
+    tanggalSurat: tanggalIndo,
+    tujuanYth: tujuanYth,
+    tempatTujuan: tempatTujuan,
+    namaDesa: namaDesa,
+    jenisDana: jenisDana,
+    tahap: tahap,
+    tahunAnggaran: tahunAnggaran,
+    rincianRingkasan: rincianRingkasan,
+    rincianBerkas: rows,
+    jabatanPengirim: jabatanPengirim,
+    namaPengirim: namaPengirim,
+    nipPengirim: nipPengirim,
+    metodeTte: metodeTte,
+    status: 'Diterbitkan'
+  };
+
+  // Simpan ke State & LocalStorage
+  let list = AppState.suratPengantarList || [];
+  const existingIdx = list.findIndex(item => item.id === id || (item.nomorSuratPengantar && item.nomorSuratPengantar === nomorSp));
+  if (existingIdx !== -1) {
+    list[existingIdx] = record;
+  } else {
+    list.unshift(record);
+  }
+  AppState.suratPengantarList = list;
+  localStorage.setItem('sip_arsip_surat_pengantar', JSON.stringify(list));
+
+  AppState.suratPengantarData.id = id;
+  updateBadgeSpCount();
+
+  // Sinkronisasi ke Google Sheets jika online
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    try {
+      showToast('Menyimpan Surat Pengantar ke Google Sheets...', 'info');
+      const res = await fetch(AppState.gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'simpanSuratPengantar',
+          ...record
+        })
+      });
+      const resJson = await res.json();
+      if (resJson.success) {
+        showToast('✅ Surat Pengantar berhasil disimpan ke Google Sheets (Sheet "Surat_Pengantar")!', 'success');
+      } else {
+        showToast('Tersimpan di lokal. ' + (resJson.message || ''), 'warning');
+      }
+    } catch (e) {
+      console.warn('Gagal simpan SP ke Google Sheets:', e);
+      showToast('Surat Pengantar berhasil disimpan di lokal (offline).', 'info');
+    }
+  } else {
+    showToast('Surat Pengantar berhasil disimpan di arsip lokal!', 'success');
+  }
+};
+
+/**
+ * Reset Formulir Surat Pengantar
+ */
+window.resetFormSuratPengantar = function() {
+  AppState.suratPengantarData.id = null;
+  AppState.suratPengantarData.rows = [
+    {
+      no: 1,
+      jenis: 'Kelengkapan berkas Rekomendasi Camat Waru Penyaluran Alokasi Dana Desa (ADD) Tahap II Tahun Anggaran 2026 Desa Sesulu.',
+      banyak: '1 (satu) Berkas',
+      keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
+    }
+  ];
+
+  const inputTanggal = document.getElementById('inputTanggalSp');
+  if (inputTanggal) {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    inputTanggal.value = `${yyyy}-${mm}-${dd}`;
+  }
+
+  const inputTujuan = document.getElementById('inputTujuanYthSp');
+  if (inputTujuan) inputTujuan.value = 'Kepala Badan Keuangan dan Aset Daerah (BKAD) Kab. Penajam Paser Utara';
+
+  const inputTempat = document.getElementById('inputTempatTujuanSp');
+  if (inputTempat) inputTempat.value = 'Tempat';
+
+  autoGenNomorSp();
+  renderRowsSpInputs();
+  updateLivePreviewSp();
+  showToast('Formulir Surat Pengantar telah direset.', 'info');
+};
+
+/**
+ * Kelola Drawer Riwayat Surat Pengantar
+ */
+window.bukaDrawerRiwayatSp = function() {
+  renderTabelArsipSp();
+  document.getElementById('drawerRiwayatSp')?.classList.remove('hidden');
+};
+
+window.tutupDrawerRiwayatSp = function() {
+  document.getElementById('drawerRiwayatSp')?.classList.add('hidden');
+};
+
+window.renderTabelArsipSp = function() {
+  const tbody = document.getElementById('tbodyRiwayatSp');
+  if (!tbody) return;
+
+  const list = AppState.suratPengantarList || [];
+  const keyword = (document.getElementById('inputSearchSp')?.value || '').toLowerCase();
+
+  const filtered = list.filter(item => {
+    if (!keyword) return true;
+    const haystack = [
+      item.nomorSuratPengantar,
+      item.namaDesa,
+      item.tujuanYth,
+      item.jenisDana,
+      item.tahap,
+      item.rincianRingkasan
+    ].join(' ').toLowerCase();
+    return haystack.includes(keyword);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+          ${list.length === 0 ? 'Belum ada arsip Surat Pengantar tersimpan. Klik "Simpan Arsip SP" di formulir untuk menyimpan.' : 'Tidak ditemukan data yang sesuai dengan pencarian.'}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((item, index) => {
+    return `
+      <tr class="border-b border-slate-100 hover:bg-slate-50 transition text-xs">
+        <td class="py-2.5 px-3 text-center font-bold text-slate-500">${index + 1}</td>
+        <td class="py-2.5 px-3">
+          <div class="font-mono font-bold text-teal-800">${escapeHtml(item.nomorSuratPengantar || '-')}</div>
+          <div class="text-[10px] text-slate-500">${escapeHtml(item.tanggalSurat || '-')}</div>
+        </td>
+        <td class="py-2.5 px-3">
+          <span class="inline-block px-2 py-0.5 rounded font-bold text-[10.5px] bg-teal-100 text-teal-800">
+            ${escapeHtml(item.namaDesa || 'Desa')}
+          </span>
+          <div class="text-[10.5px] text-slate-600 mt-0.5">${escapeHtml(item.tahap || '')} - ${escapeHtml(item.tahunAnggaran || '')}</div>
+        </td>
+        <td class="py-2.5 px-3 text-slate-700 max-w-xs truncate" title="${escapeHtml(item.tujuanYth || '')}">
+          ${escapeHtml(item.tujuanYth || '-')}
+        </td>
+        <td class="py-2.5 px-3 text-slate-600 max-w-xs truncate" title="${escapeHtml(item.rincianRingkasan || '')}">
+          ${escapeHtml(item.rincianRingkasan || '-')}
+        </td>
+        <td class="py-2.5 px-3 text-center">
+          <div class="flex items-center justify-center gap-1">
+            <button type="button" onclick="muatArsipSpKeEditor('${item.id}')" class="px-2 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded text-[10.5px] font-bold transition cursor-pointer" title="Muat ke editor">
+              ✏️ Buka
+            </button>
+            <button type="button" onclick="hapusArsipSp('${item.id}')" class="px-1.5 py-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded text-xs transition cursor-pointer" title="Hapus arsip ini">
+              🗑️
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+/**
+ * Muat Arsip Surat Pengantar Tersimpan ke Formulir & Preview
+ */
+window.muatArsipSpKeEditor = function(id) {
+  const item = (AppState.suratPengantarList || []).find(x => x.id === id);
+  if (!item) {
+    showToast('Data arsip Surat Pengantar tidak ditemukan.', 'error');
+    return;
+  }
+
+  AppState.suratPengantarData.id = item.id;
+  AppState.suratPengantarData.nomorSurat = item.nomorSuratPengantar;
+  AppState.suratPengantarData.tujuanYth = item.tujuanYth;
+  AppState.suratPengantarData.tempatTujuan = item.tempatTujuan || 'Tempat';
+  AppState.suratPengantarData.namaDesa = item.namaDesa;
+  AppState.suratPengantarData.jenisDana = item.jenisDana;
+  AppState.suratPengantarData.tahap = item.tahap;
+  AppState.suratPengantarData.tahunAnggaran = item.tahunAnggaran;
+  AppState.suratPengantarData.jabatanPengirim = item.jabatanPengirim || 'Camat Waru,';
+  AppState.suratPengantarData.namaPengirim = item.namaPengirim;
+  AppState.suratPengantarData.nipPengirim = item.nipPengirim;
+  AppState.suratPengantarData.metodeTte = item.metodeTte || 'srikandi';
+
+  if (Array.isArray(item.rincianBerkas) && item.rincianBerkas.length > 0) {
+    AppState.suratPengantarData.rows = JSON.parse(JSON.stringify(item.rincianBerkas));
+  } else if (item.rincianRingkasan) {
+    AppState.suratPengantarData.rows = [
+      {
+        no: 1,
+        jenis: item.rincianRingkasan,
+        banyak: '1 (satu) Berkas',
+        keterangan: 'Dikirim dengan hormat untuk verifikasi dan proses lebih lanjut.'
+      }
+    ];
+  }
+
+  const inpNo = document.getElementById('inputNomorSp');
+  if (inpNo) inpNo.value = item.nomorSuratPengantar || '';
+
+  const inpTujuan = document.getElementById('inputTujuanYthSp');
+  if (inpTujuan) inpTujuan.value = item.tujuanYth || '';
+
+  const inpTempat = document.getElementById('inputTempatTujuanSp');
+  if (inpTempat) inpTempat.value = item.tempatTujuan || 'Tempat';
+
+  const selDesa = document.getElementById('selectDesaSp');
+  if (selDesa && item.namaDesa) selDesa.value = item.namaDesa;
+
+  const selJenis = document.getElementById('selectJenisDanaSp');
+  if (selJenis && item.jenisDana) selJenis.value = item.jenisDana;
+
+  const selTahap = document.getElementById('selectTahapSp');
+  if (selTahap && item.tahap) selTahap.value = item.tahap;
+
+  const inpTahun = document.getElementById('inputTahunSp');
+  if (inpTahun && item.tahunAnggaran) inpTahun.value = item.tahunAnggaran;
+
+  const inpJab = document.getElementById('inputJabatanPengirimSp');
+  if (inpJab) inpJab.value = item.jabatanPengirim || 'Camat Waru,';
+
+  const inpNama = document.getElementById('inputNamaPengirimSp');
+  if (inpNama) inpNama.value = item.namaPengirim || '';
+
+  const inpNip = document.getElementById('inputNipPengirimSp');
+  if (inpNip) inpNip.value = item.nipPengirim || '';
+
+  const selMetode = document.getElementById('selectMetodeTteSp');
+  if (selMetode) selMetode.value = item.metodeTte || 'srikandi';
+
+  renderRowsSpInputs();
+  updateLivePreviewSp();
+  tutupDrawerRiwayatSp();
+  showToast(`Arsip Surat Pengantar "${item.nomorSuratPengantar}" berhasil dimuat ke editor!`, 'success');
+};
+
+/**
+ * Hapus Arsip Surat Pengantar
+ */
+window.hapusArsipSp = function(id) {
+  if (!confirm('Yakin ingin menghapus arsip Surat Pengantar ini?')) return;
+
+  AppState.suratPengantarList = (AppState.suratPengantarList || []).filter(x => x.id !== id);
+  localStorage.setItem('sip_arsip_surat_pengantar', JSON.stringify(AppState.suratPengantarList));
+
+  if (AppState.suratPengantarData.id === id) {
+    AppState.suratPengantarData.id = null;
+  }
+
+  // Hapus dari Google Sheets jika online
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    fetch(AppState.gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'hapusSuratPengantar', id: id })
+    }).catch(e => console.warn(e));
+  }
+
+  renderTabelArsipSp();
+  updateBadgeSpCount();
+  showToast('Arsip Surat Pengantar berhasil dihapus.', 'info');
+};
+
+/**
+ * Update Badge Jumlah Arsip Surat Pengantar
+ */
+window.updateBadgeSpCount = function() {
+  const count = (AppState.suratPengantarList || []).length;
+  const badgeSubtab = document.getElementById('badgeTabSpCount');
+  if (badgeSubtab) {
+    badgeSubtab.textContent = count;
+    if (count > 0) {
+      badgeSubtab.classList.remove('hidden');
+    } else {
+      badgeSubtab.classList.add('hidden');
+    }
+  }
+
+  const badgeBtn = document.getElementById('countArsipSpBadge');
+  if (badgeBtn) {
+    badgeBtn.textContent = count;
+  }
+};
+
 

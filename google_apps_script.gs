@@ -35,6 +35,7 @@ var SHEET_REKOMENDASI     = "Riwayat_Rekomendasi";
 var SHEET_MASTER_DESA     = "Master_Desa";
 var SHEET_USER            = "Data_User";
 var SHEET_KIRIM_REKOM_DESA = "Kirim_Rekom_Desa";
+var SHEET_SURAT_PENGANTAR = "Surat_Pengantar";
 
 // Nama Folder Induk di Google Drive
 var NAMA_FOLDER_UTAMA_DRIVE = "SIP-REKOM APBDES KECAMATAN WARU";
@@ -285,6 +286,38 @@ function initSheets() {
     headerRangeK.setFontColor("#FFFFFF");
     headerRangeK.setFontWeight("bold");
     sheetKirimDesa.setFrozenRows(1);
+  }
+
+  // 6. Sheet Surat Pengantar Kecamatan Waru ke BKAD / Dinas
+  var sheetSP = ss.getSheetByName(SHEET_SURAT_PENGANTAR);
+  if (!sheetSP) {
+    sheetSP = ss.insertSheet(SHEET_SURAT_PENGANTAR);
+    var headersSP = [
+      "ID Surat Pengantar",
+      "Waktu Simpan (WITA)",
+      "Nomor Surat Pengantar",
+      "Tanggal Surat",
+      "Tujuan (Yth)",
+      "Tempat Tujuan (Di)",
+      "Nama Desa Terkait",
+      "Jenis Dana",
+      "Tahap / Bulan",
+      "Tahun Anggaran",
+      "Rincian Berkas (Ringkasan)",
+      "Rincian Berkas (JSON)",
+      "Jabatan Penandatangan",
+      "Nama Penandatangan",
+      "NIP Penandatangan",
+      "Metode TTE",
+      "Status"
+    ];
+    sheetSP.appendRow(headersSP);
+
+    var headerRangeSP = sheetSP.getRange(1, 1, 1, headersSP.length);
+    headerRangeSP.setBackground("#0F766E"); // Teal Dark
+    headerRangeSP.setFontColor("#FFFFFF");
+    headerRangeSP.setFontWeight("bold");
+    sheetSP.setFrozenRows(1);
   }
   } finally {
     try {
@@ -647,6 +680,55 @@ function doGet(e) {
         success: true,
         data: resultK,
         count: resultK.length
+      });
+    }
+
+    // 7. Ambil Data Surat Pengantar Kecamatan Waru
+    if (action === "getSuratPengantar") {
+      var sheetSP = ss.getSheetByName(SHEET_SURAT_PENGANTAR) || ss.getSheetByName("Surat_Pengantar") || ss.getSheetByName("surat_pengantar");
+      if (!sheetSP) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
+      var dataSP = sheetSP.getDataRange().getValues();
+      if (!dataSP || dataSP.length < 2) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
+      var headersSP = dataSP[0];
+      var resultSP = [];
+
+      for (var rSP = 1; rSP < dataSP.length; rSP++) {
+        var rowSP = dataSP[rSP];
+        var hasContentSP = false;
+        for (var cSP = 0; cSP < rowSP.length; cSP++) {
+          if (rowSP[cSP] !== "" && rowSP[cSP] !== null && rowSP[cSP] !== undefined) {
+            hasContentSP = true;
+            break;
+          }
+        }
+        if (!hasContentSP) continue;
+
+        var itemSP = {};
+        for (var cSP2 = 0; cSP2 < headersSP.length; cSP2++) {
+          var hNameSP = String(headersSP[cSP2] || "").trim();
+          if (hNameSP) {
+            itemSP[hNameSP] = rowSP[cSP2];
+          }
+        }
+        resultSP.push(itemSP);
+      }
+
+      return jsonResponse({
+        success: true,
+        data: resultSP,
+        count: resultSP.length
       });
     }
 
@@ -1171,6 +1253,93 @@ function doPost(e) {
         updatedSheet: sheetDesa.getName(),
         updatedRow: rowIndex,
         updatedRekening: rekening
+      });
+    }
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 7: SIMPAN SURAT PENGANTAR KECAMATAN KE SHEET "Surat_Pengantar"
+    // -------------------------------------------------------------------------------------
+    if (action === "simpanSuratPengantar") {
+      var sheetSPPost = ss.getSheetByName(SHEET_SURAT_PENGANTAR);
+      if (!sheetSPPost) {
+        initSheets();
+        sheetSPPost = ss.getSheetByName(SHEET_SURAT_PENGANTAR);
+      }
+      var idSP = payload.id || ("SP-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
+      var timestampSP = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
+
+      var rowSP = [
+        idSP,
+        timestampSP,
+        payload.nomorSuratPengantar || "-",
+        payload.tanggalSurat || "-",
+        payload.tujuanYth || "-",
+        payload.tempatTujuan || "Tempat",
+        payload.namaDesa || "-",
+        payload.jenisDana || "-",
+        payload.tahap || "-",
+        payload.tahunAnggaran || "-",
+        payload.rincianRingkasan || "-",
+        typeof payload.rincianBerkas === "string" ? payload.rincianBerkas : JSON.stringify(payload.rincianBerkas || []),
+        payload.jabatanPengirim || "Camat Waru,",
+        payload.namaPengirim || "-",
+        payload.nipPengirim || "-",
+        payload.metodeTte || "TTE Elektronik BSrE",
+        payload.status || "Diterbitkan"
+      ];
+
+      // Cek apakah mode edit (cocokkan berdasarkan ID SP ATAU Nomor SP)
+      var existingRowIndexSP = -1;
+      var dataSPPost = sheetSPPost.getDataRange().getValues();
+      for (var rSP3 = 1; rSP3 < dataSPPost.length; rSP3++) {
+        var rowIdSP = dataSPPost[rSP3][0] ? dataSPPost[rSP3][0].toString().trim() : "";
+        var rowNoSP = dataSPPost[rSP3][2] ? dataSPPost[rSP3][2].toString().trim() : "";
+        var isSameIdSP = (rowIdSP && idSP && rowIdSP.toLowerCase() === idSP.toString().trim().toLowerCase());
+        var isSameNoSP = (payload.nomorSuratPengantar && rowNoSP && rowNoSP.toLowerCase() === payload.nomorSuratPengantar.toString().trim().toLowerCase());
+        if (isSameIdSP || isSameNoSP) {
+          existingRowIndexSP = rSP3 + 1;
+          break;
+        }
+      }
+
+      if (existingRowIndexSP > 0) {
+        sheetSPPost.getRange(existingRowIndexSP, 1, 1, rowSP.length).setValues([rowSP]);
+      } else {
+        sheetSPPost.appendRow(rowSP);
+      }
+
+      return jsonResponse({
+        success: true,
+        message: existingRowIndexSP > 0 ? "Surat Pengantar Kecamatan berhasil diperbarui di Google Sheets!" : "Surat Pengantar Kecamatan berhasil disimpan ke Google Sheets!",
+        id: idSP
+      });
+    }
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 8: HAPUS SURAT PENGANTAR KECAMATAN
+    // -------------------------------------------------------------------------------------
+    if (action === "hapusSuratPengantar") {
+      var sheetSPHapus = ss.getSheetByName(SHEET_SURAT_PENGANTAR);
+      if (!sheetSPHapus) {
+        return jsonResponse({ success: false, message: "Sheet Surat_Pengantar tidak ditemukan." });
+      }
+      var targetIdSP = payload.id;
+      if (!targetIdSP) {
+        return jsonResponse({ success: false, message: "ID Surat Pengantar wajib disertakan." });
+      }
+      var dataSPHapus = sheetSPHapus.getDataRange().getValues();
+      var deletedSP = false;
+      for (var rSP4 = 1; rSP4 < dataSPHapus.length; rSP4++) {
+        var rowIdSP4 = dataSPHapus[rSP4][0] ? dataSPHapus[rSP4][0].toString().trim() : "";
+        if (rowIdSP4 === targetIdSP.toString().trim()) {
+          sheetSPHapus.deleteRow(rSP4 + 1);
+          deletedSP = true;
+          break;
+        }
+      }
+      return jsonResponse({
+        success: deletedSP,
+        message: deletedSP ? "Surat Pengantar berhasil dihapus dari Google Sheets." : "Data tidak ditemukan."
       });
     }
 
