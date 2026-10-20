@@ -1094,8 +1094,9 @@ function setupEventListeners() {
     showToast('Nomor surat disesuaikan!', 'info');
   });
 
-  // Cetak & Simpan
+  // Cetak & Simpan & Ekspor DOCX
   document.getElementById('btnPrintDoc')?.addEventListener('click', () => triggerPrint());
+  document.getElementById('btnExportDocx')?.addEventListener('click', () => eksporSuratKeDocx());
   document.getElementById('btnSaveToDb')?.addEventListener('click', () => saveRecommendationData());
 
   // Zoom
@@ -2134,6 +2135,326 @@ function triggerPrint() {
 }
 window.triggerPrint = triggerPrint;
 
+/**
+ * Helper Base64 Logo Kabupaten Penajam Paser Utara
+ */
+let LOGO_PPU_BASE64 = '';
+async function getLogoPpuBase64() {
+  if (LOGO_PPU_BASE64) return LOGO_PPU_BASE64;
+  
+  // 1. Ambil dari elemen img yang sudah ter-render di DOM
+  const imgEl = document.querySelector('#previewDocumentContainer img[src*="logo_ppu"]') || document.querySelector('img[src*="logo_ppu"]');
+  if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = imgEl.naturalWidth;
+      canvas.height = imgEl.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imgEl, 0, 0);
+      const dataUrl = canvas.toDataURL('image/png');
+      const b64 = dataUrl.split(',')[1];
+      if (b64 && b64.length > 500) {
+        LOGO_PPU_BASE64 = b64;
+        return LOGO_PPU_BASE64;
+      }
+    } catch (_) {}
+  }
+
+  // 2. Fallback fetch file lokal
+  try {
+    const res = await fetch('logo_ppu.png');
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const b64 = (reader.result || '').split(',')[1] || '';
+        if (b64) LOGO_PPU_BASE64 = b64;
+        resolve(LOGO_PPU_BASE64);
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (_) {}
+
+  return LOGO_PPU_BASE64;
+}
+
+/**
+ * Konversi lembar surat (.surat-sheet) HTML menjadi markup tabel yang 100% kompatibel dengan Microsoft Word
+ */
+function cleanSheetToWordHtml(sheet, logoBase64) {
+  const clone = sheet.cloneNode(true);
+  
+  // Hapus kontrol atau elemen yang tidak dicetak
+  clone.querySelectorAll('.no-print, button, script').forEach(el => el.remove());
+
+  // 1. Transform Kop Surat menjadi Tabel Word Bergaris Ganda
+  const kop = clone.querySelector('.kop-surat');
+  if (kop) {
+    const kopTable = document.createElement('table');
+    kopTable.setAttribute('style', 'width: 100%; border-collapse: collapse; border-bottom: 3.5px double #000000; margin-bottom: 12pt; padding-bottom: 4pt;');
+    
+    const logoImgHtml = logoBase64 
+      ? `<img src="data:image/png;base64,${logoBase64}" width="74" height="86" style="width: 74px; height: 86px;" />`
+      : `<img src="logo_ppu.png" width="74" height="86" style="width: 74px; height: 86px;" />`;
+
+    kopTable.innerHTML = `
+      <tr>
+        <td style="width: 75pt; vertical-align: middle; text-align: center;">
+          ${logoImgHtml}
+        </td>
+        <td style="vertical-align: middle; text-align: center; font-family: Arial, sans-serif;">
+          <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; line-height: 1.15;">
+            PEMERINTAH KABUPATEN PENAJAM PASER UTARA
+          </div>
+          <div style="font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 2pt 0; line-height: 1.15;">
+            KECAMATAN WARU
+          </div>
+          <div style="font-size: 10pt; line-height: 1.2; margin: 0;">
+            Jalan Propinsi Km. 25, WA. 0821-9564-7788<br>
+            Website : <span style="color: #1d4ed8; text-decoration: underline;">https://kecwaru.penajamkab.go.id/</span><br>
+            Email : <span style="color: #1d4ed8; text-decoration: underline;">kecamatanwaru2014@gmail.com</span> Pos 76284
+          </div>
+        </td>
+        <td style="width: 75pt;">&nbsp;</td>
+      </tr>
+    `;
+    kop.parentNode.replaceChild(kopTable, kop);
+  }
+
+  // 2. Transform Header Surat (Nomor/Sifat/Lampiran/Hal & Tanggal/Tujuan Yth)
+  const flexHeaders = clone.querySelectorAll('div.flex.justify-between.items-start');
+  flexHeaders.forEach(fh => {
+    const leftCol = fh.children[0];
+    const rightCol = fh.children[1];
+    const headerTable = document.createElement('table');
+    headerTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 8pt; margin-bottom: 8pt;');
+    
+    if (leftCol) {
+      leftCol.querySelectorAll('table').forEach(tbl => {
+        tbl.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;');
+      });
+    }
+
+    const leftHtml = leftCol ? leftCol.innerHTML : '';
+    const rightHtml = rightCol ? rightCol.innerHTML : '';
+    headerTable.innerHTML = `
+      <tr>
+        <td style="width: 58%; vertical-align: top;">${leftHtml}</td>
+        <td style="width: 42%; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt;">${rightHtml}</td>
+      </tr>
+    `;
+    fh.parentNode.replaceChild(headerTable, fh);
+  });
+
+  // 3. Transform Baris Dasar Hukum (Flex layout menjadi Tabel 3 Kolom)
+  const flexRows = clone.querySelectorAll('div.flex.items-start');
+  flexRows.forEach(fr => {
+    const labelDiv = fr.querySelector('.w-20');
+    const colonDiv = fr.querySelector('.w-3');
+    const contentDiv = fr.querySelector('.flex-1');
+    if (labelDiv || contentDiv) {
+      const dasarTable = document.createElement('table');
+      dasarTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt;');
+      const labelText = labelDiv ? labelDiv.textContent.trim() : '';
+      const colonText = colonDiv ? colonDiv.textContent.trim() : (labelText ? ':' : '');
+      const contentHtml = contentDiv ? contentDiv.innerHTML : '';
+      dasarTable.innerHTML = `
+        <tr>
+          <td style="width: 55pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt;">${labelText}</td>
+          <td style="width: 10pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt;">${colonText}</td>
+          <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt;">${contentHtml}</td>
+        </tr>
+      `;
+      fr.parentNode.replaceChild(dasarTable, fr);
+    }
+  });
+
+  // 4. Transform Tanda Tangan Camat & Tembusan
+  const flexTtd = clone.querySelectorAll('div.flex.justify-end');
+  flexTtd.forEach(ft => {
+    const ttdBox = ft.querySelector('.w-72') || ft.firstElementChild;
+    const ttdTable = document.createElement('table');
+    ttdTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 18pt;');
+    const ttdHtml = ttdBox ? ttdBox.innerHTML : ft.innerHTML;
+    ttdTable.innerHTML = `
+      <tr>
+        <td style="width: 48%; vertical-align: top;">&nbsp;</td>
+        <td style="width: 52%; vertical-align: top; text-align: left; padding-left: 15pt;">${ttdHtml}</td>
+      </tr>
+    `;
+    ft.parentNode.replaceChild(ttdTable, ft);
+  });
+
+  // 5. Standarisasi Format Paragraf
+  clone.querySelectorAll('p').forEach(p => {
+    p.setAttribute('style', 'text-indent: 36pt; text-align: justify; margin: 6pt 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.25;');
+  });
+
+  // 6. Standarisasi Format Tabel
+  clone.querySelectorAll('table').forEach(t => {
+    if (!t.getAttribute('style')) {
+      t.setAttribute('style', 'border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;');
+    }
+  });
+
+  // 7. Standarisasi Format Daftar / List Berkas & Dasar
+  clone.querySelectorAll('ol').forEach(ol => {
+    ol.setAttribute('style', 'margin: 4pt 0 4pt 15pt; padding-left: 18pt; font-family: Arial, sans-serif; font-size: 11pt;');
+  });
+  clone.querySelectorAll('li').forEach(li => {
+    li.setAttribute('style', 'margin-bottom: 2pt; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.25;');
+  });
+
+  return clone.innerHTML;
+}
+
+/**
+ * Ekspor Hasil Cetak Surat Rekomendasi Menjadi Dokumen Microsoft Word (.docx)
+ */
+window.eksporSuratKeDocx = async function() {
+  if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
+    showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
+    return;
+  }
+
+  const container = document.getElementById('previewDocumentContainer');
+  if (!container) {
+    showToast('Dokumen preview tidak ditemukan.', 'error');
+    return;
+  }
+
+  const sheets = container.querySelectorAll('.surat-sheet');
+  if (!sheets || sheets.length === 0) {
+    showToast('Belum ada dokumen yang siap diekspor.', 'warning');
+    return;
+  }
+
+  showToast('Sedang membuat file Microsoft Word (.docx)...', 'info');
+
+  try {
+    const logoBase64 = await getLogoPpuBase64();
+
+    // Dapatkan data surat untuk penamaan file
+    const namaDesa = (document.getElementById('selectNamaDesa')?.value || 'Desa').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const jenisDana = (AppState.activeTemplateKey || 'ADD').toUpperCase();
+    const tahunAnggaran = (document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026').trim();
+    const nomorSurat = (document.getElementById('inputNomorSurat')?.value || '').trim();
+    
+    let safeName = `Rekomendasi_${jenisDana}_${namaDesa}_TA${tahunAnggaran}`;
+    if (nomorSurat && !nomorSurat.includes('${')) {
+      const cleanNo = nomorSurat.replace(/[\/\\:*?"<>|]/g, '-').replace(/\s+/g, '_');
+      safeName = `Rekomendasi_${cleanNo}`;
+    }
+
+    // Bangun HTML per halaman dengan pemisah halaman
+    const pageHtmls = [];
+    sheets.forEach((sheet) => {
+      const cleanHtml = cleanSheetToWordHtml(sheet, logoBase64);
+      pageHtmls.push(cleanHtml);
+    });
+
+    const isFlowMode = document.getElementById('selectPageBreakMode')?.value === 'flow';
+    const pageSeparator = isFlowMode 
+      ? '\n<div style="margin: 20pt 0;"></div>\n'
+      : '\n<div style="page-break-before: always; clear: both; height: 1px;">&nbsp;</div>\n';
+
+    const fullDocumentHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(safeName)}</title>
+        <style>
+          @page {
+            size: 21.5cm 33.0cm; /* Ukuran Kertas Folio / F4 */
+            margin: 2.0cm 2.0cm 2.0cm 2.5cm;
+          }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            color: #000000;
+            line-height: 1.25;
+            background-color: #ffffff;
+          }
+          p {
+            text-align: justify;
+            text-indent: 36pt;
+            margin: 5pt 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.25;
+          }
+          table {
+            border-collapse: collapse;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+          }
+          td {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            vertical-align: top;
+          }
+          ol {
+            margin: 4pt 0 4pt 15pt;
+            padding-left: 18pt;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+          }
+          li {
+            margin-bottom: 2pt;
+            text-align: justify;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.25;
+          }
+        </style>
+      </head>
+      <body>
+        ${pageHtmls.join(pageSeparator)}
+      </body>
+      </html>
+    `;
+
+    // Buat Blob DOCX OpenXML
+    const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
+      orientation: 'portrait',
+      margins: {
+        top: 1134,    // 2.0 cm
+        right: 1134,  // 2.0 cm
+        bottom: 1134, // 2.0 cm
+        left: 1417    // 2.5 cm
+      }
+    });
+
+    // Unduh File
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `${safeName}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    }, 2000);
+
+    showToast(`Dokumen "${safeName}.docx" berhasil dibuat dan diunduh!`, 'success');
+  } catch (err) {
+    console.error('Gagal mengekspor dokumen ke DOCX:', err);
+    showToast('Terjadi kendala saat membuat file DOCX. ' + (err.message || ''), 'error');
+  }
+};
+
+/**
+ * Ekspor Rekomendasi dari Riwayat Database Langsung ke File DOCX
+ */
+window.eksporRekomendasiByIdKeDocx = function(id) {
+  loadHistoryItem(id);
+  setTimeout(() => {
+    eksporSuratKeDocx();
+  }, 150);
+};
+
 // Database Save
 async function saveRecommendationData() {
   const saveBtn = document.getElementById('btnSaveToDb');
@@ -2414,8 +2735,9 @@ function renderHistoryTable(query = '') {
         </span>
       </td>
       <td class="py-3 px-3 text-center space-x-1 whitespace-nowrap">
-        <button onclick="loadHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 rounded border border-blue-200 transition">Muat</button>
-        <button onclick="deleteHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded border border-rose-200 transition">Hapus</button>
+        <button onclick="loadHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 rounded border border-blue-200 transition cursor-pointer">Muat</button>
+        <button onclick="eksporRekomendasiByIdKeDocx('${item.id}')" class="px-2 py-1 text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded border border-emerald-200 transition cursor-pointer" title="Unduh langsung sebagai dokumen Word (.docx)">DOCX</button>
+        <button onclick="deleteHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded border border-rose-200 transition cursor-pointer">Hapus</button>
       </td>
     </tr>
   `).join('');
@@ -3415,6 +3737,7 @@ window.navigateToMenu = function(menuKey) {
   const breadcrumbEl = document.getElementById('topbarBreadcrumb');
   const splitControls = document.getElementById('containerSplitControls');
   const btnPrintDoc = document.getElementById('btnPrintDoc');
+  const btnExportDocx = document.getElementById('btnExportDocx');
   const btnSaveToDb = document.getElementById('btnSaveToDb');
 
   if (menuKey === 'dashboard') {
@@ -3422,6 +3745,7 @@ window.navigateToMenu = function(menuKey) {
     if (breadcrumbEl) breadcrumbEl.textContent = 'SIP-REKOM Waru / 1. Dashboard';
     if (splitControls) splitControls.classList.add('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnExportDocx) btnExportDocx.classList.add('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     renderDashboardSummary();
   } else if (menuKey === 'pengajuan_desa') {
@@ -3429,6 +3753,7 @@ window.navigateToMenu = function(menuKey) {
     if (breadcrumbEl) breadcrumbEl.textContent = 'SIP-REKOM Waru / 2. Pengajuan Desa';
     if (splitControls) splitControls.classList.add('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnExportDocx) btnExportDocx.classList.add('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     renderDashboardDesa();
   } else if (menuKey === 'verifikasi_rekom') {
@@ -3503,6 +3828,7 @@ window.switchKecamatanSubTab = function(tabKey) {
   const tabContentKirim = document.getElementById('tabContentKirimRekomDesa');
   const splitControls = document.getElementById('containerSplitControls');
   const btnPrintDoc = document.getElementById('btnPrintDoc');
+  const btnExportDocx = document.getElementById('btnExportDocx');
   const btnSaveToDb = document.getElementById('btnSaveToDb');
 
   // Reset semua tombol subtab ke inaktif
@@ -3521,6 +3847,7 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (tabContentVerif) tabContentVerif.classList.remove('hidden');
     if (splitControls) splitControls.classList.add('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnExportDocx) btnExportDocx.classList.add('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     renderTabelPengajuanKecamatan();
   } else if (tabKey === 'generator') {
@@ -3528,6 +3855,7 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (tabContentGen) tabContentGen.classList.remove('hidden');
     if (splitControls) splitControls.classList.remove('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.remove('hidden');
+    if (btnExportDocx) btnExportDocx.classList.remove('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.remove('hidden');
     updateLivePreview();
   } else if (tabKey === 'kirim_desa') {
@@ -3535,6 +3863,7 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (tabContentKirim) tabContentKirim.classList.remove('hidden');
     if (splitControls) splitControls.classList.add('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnExportDocx) btnExportDocx.classList.add('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     renderTabelKirimRekomDesa();
   }

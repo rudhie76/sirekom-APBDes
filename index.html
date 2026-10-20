@@ -677,8 +677,12 @@
           <span>💾 Simpan Data</span>
         </button>
 
-        <button id="btnPrintDoc" class="hidden px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+        <button id="btnPrintDoc" class="hidden px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
           <span>🖨️ Cetak / PDF</span>
+        </button>
+
+        <button id="btnExportDocx" onclick="eksporSuratKeDocx()" class="hidden px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="Unduh Dokumen Rekomendasi sebagai Word (.docx)">
+          <span>📄 Unduh DOCX</span>
         </button>
 
         <button id="btnHeaderDriveKecamatan" onclick="openDriveFolderKecamatan()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5 shadow-2xs" title="Buka Folder Google Drive SIP-REKOM">
@@ -1417,6 +1421,11 @@
           <!-- Tombol Cetak Langsung -->
           <button onclick="triggerPrint()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Surat Resmi / Simpan PDF">
             <span>🖨️ Cetak / PDF</span>
+          </button>
+
+          <!-- Tombol Ekspor Word (.docx) -->
+          <button onclick="eksporSuratKeDocx()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Unduh Hasil Cetak sebagai Dokumen Microsoft Word (.docx)">
+            <span>📄 Unduh DOCX</span>
           </button>
 
           <!-- Zoom Controls -->
@@ -2842,7 +2851,10 @@
 
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
+  <!-- Library HTML to DOCX Generator (Standalone Offline Support) -->
+  <script src="html-docx.js"></script>
+
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261020_sync_db_fix"></script>
+  <script src="app.js?v=20261020_docx_export"></script>
 </body>
 </html>
