@@ -2514,11 +2514,11 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   const flexEnds = clone.querySelectorAll('div.flex.justify-end');
   flexEnds.forEach(el => {
     const text = el.textContent || '';
-    const isTopHeaderSp = text.includes('Kepada') || text.includes('Yth.') || text.includes('tempat_tujuan') || text.includes('jabatan_tujuan');
+    const isTopHeaderSp = text.includes('Kepada') || text.includes('Yth.') || text.includes('tempat_tujuan') || text.includes('jabatan_tujuan') || (text.includes('Penajam') && text.includes('Tempat'));
 
     if (isTopHeaderSp) {
-      // Header Tujuan Surat Pengantar (di kanan atas)
-      const box = el.querySelector('.w-80') || el.firstElementChild || el;
+      // Header Tujuan Surat Pengantar (di kanan atas, sejajar dengan kolom 3 & 4: 48%)
+      const box = el.querySelector('.w-80, .w-\\[48\\%\\]') || el.firstElementChild || el;
       const headerSpTable = document.createElement('table');
       headerSpTable.setAttribute('border', '0');
       headerSpTable.setAttribute('cellspacing', '0');
@@ -2534,14 +2534,14 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
 
       headerSpTable.innerHTML = `
         <tr>
-          <td style="width: 50%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
-          <td style="width: 50%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${box.innerHTML}</td>
+          <td style="width: 52%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
+          <td style="width: 48%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${box.innerHTML}</td>
         </tr>
       `;
       el.parentNode.replaceChild(headerSpTable, el);
     } else {
-      // Tanda Tangan Camat (di kanan bawah)
-      const ttdBox = el.querySelector('.w-72') || el.firstElementChild || el;
+      // Tanda Tangan Camat (di kanan bawah, sejajar dengan kolom 3 & 4: 48%)
+      const ttdBox = el.querySelector('.w-72, .w-\\[48\\%\\]') || el.firstElementChild || el;
       const ttdTable = document.createElement('table');
       ttdTable.setAttribute('border', '0');
       ttdTable.setAttribute('cellspacing', '0');
@@ -2557,8 +2557,8 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
 
       ttdTable.innerHTML = `
         <tr>
-          <td style="width: 50%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
-          <td style="width: 50%; vertical-align: top; text-align: left; padding-left: 10pt; line-height: ${lineSpacing};">${ttdBox.innerHTML}</td>
+          <td style="width: 52%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
+          <td style="width: 48%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${ttdBox.innerHTML}</td>
         </tr>
       `;
       el.parentNode.replaceChild(ttdTable, el);
@@ -7530,29 +7530,27 @@ window.updateLivePreviewSp = function(force = false) {
   // 1. Kop Surat Resmi
   const kopHtml = getKopSuratHtml(true);
 
-  // 2. Format Header Tanggal & Tujuan
+  // 2. Format Header Tanggal & Tujuan (Sejajar dengan kolom ke-3 dan ke-4 tabel: 48%)
   let headerTujuanHtml = '';
   if (metodeTte === 'srikandi') {
     headerTujuanHtml = `
       <div class="mt-4 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
-        <div class="w-80 text-left">
+        <div class="w-[48%] text-left">
           <div style="line-height: var(--surat-line-height, 1.15) !important;">Penajam, \${tanggal_naskah}</div>
-          <div class="mt-2" style="line-height: var(--surat-line-height, 1.15) !important;">Kepada</div>
-          <div style="line-height: var(--surat-line-height, 1.15) !important;">Yth. \${jabatan_tujuan}</div>
+          <div class="mt-2" style="line-height: var(--surat-line-height, 1.15) !important;">Yth. \${jabatan_tujuan}</div>
           <div style="line-height: var(--surat-line-height, 1.15) !important;">di -</div>
-          <div class="pl-6" style="line-height: var(--surat-line-height, 1.15) !important;">\${tempat_tujuan}</div>
+          <div class="pl-6 font-bold" style="line-height: var(--surat-line-height, 1.15) !important;">Tempat</div>
         </div>
       </div>
     `;
   } else {
     headerTujuanHtml = `
       <div class="mt-4 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
-        <div class="w-80 text-left">
+        <div class="w-[48%] text-left">
           <div style="line-height: var(--surat-line-height, 1.15) !important;">Penajam, ${tanggalIndo}</div>
-          <div class="mt-2" style="line-height: var(--surat-line-height, 1.15) !important;">Kepada</div>
-          <div style="line-height: var(--surat-line-height, 1.15) !important;">Yth. ${escapeHtml(tujuanYth)}</div>
+          <div class="mt-2" style="line-height: var(--surat-line-height, 1.15) !important;">Yth. ${escapeHtml(tujuanYth)}</div>
           <div style="line-height: var(--surat-line-height, 1.15) !important;">di -</div>
-          <div class="pl-6" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(tempatTujuan)}</div>
+          <div class="pl-6 font-bold" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(tempatTujuan || 'Tempat')}</div>
         </div>
       </div>
     `;
@@ -7606,12 +7604,12 @@ window.updateLivePreviewSp = function(force = false) {
     </table>
   `;
 
-  // 5. Tanda Tangan Camat Waru
+  // 5. Tanda Tangan Camat Waru (Sejajar dengan kolom ke-3 dan ke-4 tabel: 48%)
   let ttdHtml = '';
   if (metodeTte === 'srikandi') {
     ttdHtml = `
       <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
-        <div class="w-72 text-left">
+        <div class="w-[48%] text-left">
           <div class="leading-normal" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(jabatanPengirim)}</div>
           <div class="my-5 py-2 text-center text-slate-800 font-sans tracking-wide font-mono" style="line-height: var(--surat-line-height, 1.15) !important;">
             \${ttd_pengirim}
@@ -7624,7 +7622,7 @@ window.updateLivePreviewSp = function(force = false) {
   } else if (metodeTte === 'tte_lokal') {
     ttdHtml = `
       <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
-        <div class="w-72 text-left">
+        <div class="w-[48%] text-left">
           <div class="leading-normal" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(jabatanPengirim)}</div>
           <div class="my-3 flex items-center justify-center">
             <div class="p-1.5 border border-slate-300 rounded bg-slate-50 flex items-center gap-2">
@@ -7645,7 +7643,7 @@ window.updateLivePreviewSp = function(force = false) {
     // Manual
     ttdHtml = `
       <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
-        <div class="w-72 text-left">
+        <div class="w-[48%] text-left">
           <div class="leading-normal" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(jabatanPengirim)}</div>
           <div class="my-6 h-12"></div>
           <div class="leading-normal font-bold font-sans underline" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(namaPengirim)}</div>
