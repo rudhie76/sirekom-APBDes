@@ -1955,7 +1955,7 @@ function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte
               <tr>
                 <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Lampiran</td>
                 <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
-                <td class="align-top py-0.5 font-sans tracking-wider" style="width: 217pt; max-width: 217pt; vertical-align: top;">....................</td>
+                <td class="align-top py-0.5 font-sans" style="width: 217pt; max-width: 217pt; vertical-align: top;">-</td>
               </tr>
               <tr>
                 <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Hal</td>
@@ -2634,7 +2634,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
         const valHtml = tds.length >= 3 ? tds[2].innerHTML.trim() : (tds.length === 2 ? tds[1].innerHTML.trim() : '');
         if (text.includes('Nomor')) nomorVal = valHtml;
         else if (text.includes('Sifat')) sifatVal = valHtml || 'Penting';
-        else if (text.includes('Lampiran')) lampiranVal = valHtml || '-';
+        else if (text.includes('Lampiran')) lampiranVal = (valHtml && !valHtml.includes('...')) ? valHtml : '-';
         else if (text.includes('Hal')) {
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = valHtml;
