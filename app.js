@@ -1871,32 +1871,43 @@ function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte
     return `
       <div class="mt-4 text-[11pt] leading-snug font-sans text-black">
         <table class="header-surat-table w-full border-collapse" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+          <colgroup>
+            <col width="58%" style="width: 58%;" />
+            <col width="42%" style="width: 42%;" />
+          </colgroup>
           <tr>
-            <td class="header-left-col align-top p-0" style="width: 58%; vertical-align: top;">
+            <td class="header-left-col align-top p-0" style="width: 58%; max-width: 58%; vertical-align: top;">
               <table class="w-full border-collapse text-[11pt]" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                <colgroup>
+                  <col width="60" style="width: 60pt;" />
+                  <col width="14" style="width: 14pt;" />
+                  <col width="217" style="width: 217pt;" />
+                </colgroup>
                 <tr>
-                  <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Nomor</td>
-                  <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
-                  <td class="align-top py-0.5 font-medium" style="vertical-align: top;">${escapeHtml(nomor)}</td>
+                  <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Nomor</td>
+                  <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
+                  <td class="align-top py-0.5 font-medium" style="width: 217pt; max-width: 217pt; vertical-align: top;">${escapeHtml(nomor)}</td>
                 </tr>
                 <tr>
-                  <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Sifat</td>
-                  <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
-                  <td class="align-top py-0.5" style="vertical-align: top;">Penting</td>
+                  <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Sifat</td>
+                  <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
+                  <td class="align-top py-0.5" style="width: 217pt; max-width: 217pt; vertical-align: top;">Penting</td>
                 </tr>
                 <tr>
-                  <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Lampiran</td>
-                  <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
-                  <td class="align-top py-0.5 tracking-widest" style="vertical-align: top;">-</td>
+                  <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Lampiran</td>
+                  <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
+                  <td class="align-top py-0.5 tracking-widest" style="width: 217pt; max-width: 217pt; vertical-align: top;">-</td>
                 </tr>
                 <tr>
-                  <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Hal</td>
-                  <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
-                  <td class="align-top py-0.5 font-medium text-justify leading-snug" style="vertical-align: top; text-align: justify;">${escapeHtml(hal)}</td>
+                  <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Hal</td>
+                  <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
+                  <td class="align-top py-0.5 font-medium text-justify leading-snug" style="width: 217pt; max-width: 217pt; vertical-align: top; text-align: justify; word-wrap: break-word; overflow-wrap: break-word;">
+                    <div style="width: 100%; max-width: 217pt; text-align: justify; word-wrap: break-word; overflow-wrap: break-word;">${escapeHtml(hal)}</div>
+                  </td>
                 </tr>
               </table>
             </td>
-            <td class="header-right-col align-top p-0 text-right font-medium" style="width: 42%; vertical-align: top; text-align: right;">
+            <td class="header-right-col align-top p-0 text-right font-medium" style="width: 42%; min-width: 42%; vertical-align: top; text-align: right;">
               Penajam, ${escapeHtml(tanggal)}
             </td>
           </tr>
@@ -1919,32 +1930,43 @@ function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte
   return `
     <div class="mt-4 text-[11pt] leading-snug font-sans text-black">
       <table class="header-surat-table w-full border-collapse" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+        <colgroup>
+          <col width="58%" style="width: 58%;" />
+          <col width="42%" style="width: 42%;" />
+        </colgroup>
         <tr>
-          <td class="header-left-col align-top p-0" style="width: 58%; vertical-align: top;">
+          <td class="header-left-col align-top p-0" style="width: 58%; max-width: 58%; vertical-align: top;">
             <table class="w-full border-collapse text-[11pt]" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+              <colgroup>
+                <col width="60" style="width: 60pt;" />
+                <col width="14" style="width: 14pt;" />
+                <col width="217" style="width: 217pt;" />
+              </colgroup>
               <tr>
-                <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Nomor</td>
-                <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
-                <td class="align-top py-0.5 font-sans" style="vertical-align: top;">\${nomor_naskah}</td>
+                <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Nomor</td>
+                <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
+                <td class="align-top py-0.5 font-sans" style="width: 217pt; max-width: 217pt; vertical-align: top;">\${nomor_naskah}</td>
               </tr>
               <tr>
-                <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Sifat</td>
-                <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
-                <td class="align-top py-0.5 font-sans" style="vertical-align: top;">\${sifat}</td>
+                <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Sifat</td>
+                <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
+                <td class="align-top py-0.5 font-sans" style="width: 217pt; max-width: 217pt; vertical-align: top;">\${sifat}</td>
               </tr>
               <tr>
-                <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Lampiran</td>
-                <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
-                <td class="align-top py-0.5 font-sans tracking-wider" style="vertical-align: top;">....................</td>
+                <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Lampiran</td>
+                <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
+                <td class="align-top py-0.5 font-sans tracking-wider" style="width: 217pt; max-width: 217pt; vertical-align: top;">....................</td>
               </tr>
               <tr>
-                <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Hal</td>
-                <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
-                <td class="align-top py-0.5 font-sans text-justify leading-snug" style="vertical-align: top; text-align: justify;">\${hal}</td>
+                <td class="align-top py-0.5" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top;">Hal</td>
+                <td class="align-top py-0.5 text-center" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center;">:</td>
+                <td class="align-top py-0.5 font-sans text-justify leading-snug" style="width: 217pt; max-width: 217pt; vertical-align: top; text-align: justify; word-wrap: break-word; overflow-wrap: break-word;">
+                  <div style="width: 100%; max-width: 217pt; text-align: justify; word-wrap: break-word; overflow-wrap: break-word;">\${hal}</div>
+                </td>
               </tr>
             </table>
           </td>
-          <td class="header-right-col align-top p-0 text-right font-sans" style="width: 42%; vertical-align: top; text-align: right;">
+          <td class="header-right-col align-top p-0 text-right font-sans" style="width: 42%; min-width: 42%; vertical-align: top; text-align: right;">
             Penajam, \${tanggal_naskah}
           </td>
         </tr>
@@ -2553,7 +2575,15 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
         if (text.includes('Nomor')) nomorVal = valHtml;
         else if (text.includes('Sifat')) sifatVal = valHtml || 'Penting';
         else if (text.includes('Lampiran')) lampiranVal = valHtml || '-';
-        else if (text.includes('Hal')) halVal = valHtml;
+        else if (text.includes('Hal')) {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = valHtml;
+          if (tempDiv.firstElementChild && tempDiv.children.length === 1 && tempDiv.firstElementChild.tagName === 'DIV') {
+            halVal = tempDiv.firstElementChild.innerHTML.trim();
+          } else {
+            halVal = valHtml;
+          }
+        }
       });
     }
 
@@ -2566,32 +2596,43 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     masterTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
 
     masterTable.innerHTML = `
+      <colgroup>
+        <col width="58%" style="width: 58%;" />
+        <col width="42%" style="width: 42%;" />
+      </colgroup>
       <tr>
-        <td width="58%" style="width: 58%; vertical-align: top; padding: 0;">
+        <td width="58%" style="width: 58%; max-width: 58%; vertical-align: top; padding: 0;">
           <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">
+            <colgroup>
+              <col width="60" style="width: 60pt;" />
+              <col width="14" style="width: 14pt;" />
+              <col width="217" style="width: 217pt;" />
+            </colgroup>
             <tr>
-              <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Nomor</td>
-              <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${nomorVal}</td>
+              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Nomor</td>
+              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${nomorVal}</td>
             </tr>
             <tr>
-              <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Sifat</td>
-              <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${sifatVal}</td>
+              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Sifat</td>
+              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${sifatVal}</td>
             </tr>
             <tr>
-              <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Lampiran</td>
-              <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${lampiranVal}</td>
+              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Lampiran</td>
+              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${lampiranVal}</td>
             </tr>
             <tr>
-              <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Hal</td>
-              <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify;">${halVal}</td>
+              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Hal</td>
+              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify; word-wrap: break-word; overflow-wrap: break-word;">
+                <div style="width: 217pt; max-width: 217pt; word-wrap: break-word; overflow-wrap: break-word; text-align: justify; line-height: ${lineSpacing}; margin: 0; padding: 0;">${halVal}</div>
+              </td>
             </tr>
           </table>
         </td>
-        <td width="42%" style="width: 42%; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 0;">
+        <td width="42%" style="width: 42%; min-width: 42%; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 0;">
           ${tanggalHtml}
         </td>
       </tr>
