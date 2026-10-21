@@ -623,6 +623,20 @@
         <span id="badgeSidebarPengajuanCount" class="bg-rose-500 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px] sidebar-badge hidden">0</span>
       </button>
 
+      <!-- 4. Riwayat Arsip Surat (Tepat di bawah Verifikasi & Rekom) -->
+      <button id="navRiwayatArsip" onclick="navigateToMenu('riwayat_arsip')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition text-xs font-semibold group text-left relative cursor-pointer" title="Riwayat Arsip Rekomendasi, SP & Ceklist">
+        <div class="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-amber-600/30 flex items-center justify-center text-sm transition flex-shrink-0">
+          &#9201;&#65039;
+        </div>
+        <div class="sidebar-text leading-tight truncate flex-1">
+          <div class="font-bold text-white text-xs flex items-center justify-between gap-1">
+            <span>4. Riwayat Arsip Surat</span>
+          </div>
+          <div class="text-[10px] text-slate-400 font-normal">Donlot Rekom, SP & Ceklist</div>
+        </div>
+        <span id="badgeSidebarHistoryCount" class="bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.2 rounded-full text-[10px] sidebar-badge">0</span>
+      </button>
+
       <div class="pt-4 px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 sidebar-text">
         Alat & Basis Data
       </div>
@@ -638,16 +652,6 @@
         </div>
       </button>
 
-      <!-- Riwayat Arsip -->
-      <button id="btnSidebarHistory" onclick="openHistoryDrawer()" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-xs font-medium group text-left">
-        <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-xs flex-shrink-0">
-          ⏱
-        </div>
-        <div class="sidebar-text leading-tight truncate flex-1">
-          <div>Riwayat Arsip Surat</div>
-        </div>
-        <span id="badgeSidebarHistoryCount" class="bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.2 rounded-full text-[10px] sidebar-badge">0</span>
-      </button>
 
       <!-- Konfigurasi Google Sheets & Drive -->
       <button id="btnSidebarSettings" onclick="openSettingsModal()" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-xs font-medium group text-left">
@@ -985,7 +989,7 @@
           </div>
         </div>
 
-        <div onclick="openHistoryDrawer()" class="bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
+        <div onclick="navigateToMenu('riwayat_arsip')" class="bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white p-4 rounded-xl shadow-xs hover:shadow-md cursor-pointer transition flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
             ⏱
           </div>
@@ -1082,6 +1086,10 @@
           <button id="tabBtnKirimDesa" onclick="switchKecamatanSubTab('kirim_desa')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
             <span>📤 4. Kirim Rekom Ke Desa</span>
             <span id="badgeTabKirimDesaCount" class="bg-blue-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+          </button>
+          <button id="tabBtnRiwayatArsipSub" onclick="navigateToMenu('riwayat_arsip')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer" title="Buka Riwayat Arsip Surat Resmi">
+            <span>&#9201;&#65039; 5. Riwayat Arsip Surat</span>
+            <span id="badgeTabHistoryCount" class="bg-amber-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
           </button>
         </div>
         <div class="flex items-center gap-2">
@@ -2311,6 +2319,104 @@
     </div>
     <!-- /#viewPengajuanDesa -->
 
+    <!-- =============================================================================== -->
+    <!-- VIEW 4: RIWAYAT ARSIP SURAT RESMI (REKOMENDASI, SPENGANTAR, CEKLIST) -->
+    <!-- =============================================================================== -->
+    <div id="viewRiwayatArsip" class="hidden flex-1 flex flex-col w-full h-full overflow-hidden bg-slate-50">
+      
+      <!-- Header Bar Riwayat Arsip -->
+      <div class="no-print bg-white border-b border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-lg text-amber-600 flex-shrink-0">
+            &#9201;&#65039;
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+              Riwayat Arsip Surat Resmi APBDes (Kecamatan Waru)
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Daftar arsip Surat Rekomendasi Camat, Surat Pengantar (SP), dan Ceklist Kelengkapan Berkas siap unduh.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="sinkronPengajuanKeGoogleSheets()" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Tarik pembaruan data dari Google Sheets">
+            <span>&#128259; Tarik Data</span>
+          </button>
+          <button onclick="document.getElementById('btnExportCsv')?.click()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Unduh data arsip format CSV / Excel">
+            <span>&#128202; Ekspor Excel / CSV</span>
+          </button>
+          <button onclick="navigateToMenu('verifikasi_rekom'); switchKecamatanSubTab('generator');" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+            <span>&#10133; Buat Rekom Baru</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Bar & Search -->
+      <div class="no-print p-3.5 bg-slate-100/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+        <div class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+          
+          <!-- Filter Desa -->
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs font-semibold text-slate-700">Filter Desa:</label>
+            <select id="filterDesaRiwayatPage" onchange="renderHistoryTable()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 cursor-pointer">
+              <option value="semua">Semua Desa (3 Desa)</option>
+              <option value="Api-Api">Desa Api-Api</option>
+              <option value="Sesulu">Desa Sesulu</option>
+              <option value="Bangun Mulya">Desa Bangun Mulya</option>
+            </select>
+          </div>
+
+          <!-- Filter Jenis Dana -->
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs font-semibold text-slate-700">Jenis Dana:</label>
+            <select id="filterJenisRiwayatPage" onchange="renderHistoryTable()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500 cursor-pointer">
+              <option value="semua">Semua Jenis Dana</option>
+              <option value="siltap">ADD - Siltap & Tunjangan</option>
+              <option value="add_reguler">ADD - Reguler (Operasional & RT)</option>
+              <option value="dbh">PBH / DBH - Pajak & Retribusi</option>
+              <option value="dd">DD - Dana Desa (APBN)</option>
+            </select>
+          </div>
+
+          <!-- Pencarian -->
+          <div class="relative flex-1 min-w-[200px]">
+            <input type="text" id="inputSearchRiwayatPage" oninput="renderHistoryTable()" placeholder="Cari No. Surat, Desa, Tahap, Nominal..."
+                   class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500" />
+            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">&#128269;</span>
+          </div>
+        </div>
+
+        <div class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+          <span>Total Arsip:</span>
+          <span id="badgeTotalRiwayatPage" class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold font-mono text-xs">0</span>
+        </div>
+      </div>
+
+      <!-- Tabel Konten Arsip Surat -->
+      <div class="flex-1 overflow-auto custom-scrollbar p-4">
+        <table class="w-full border-collapse text-left text-xs bg-white rounded-xl shadow-2xs border border-slate-200">
+          <thead>
+            <tr class="bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+              <th class="py-3 px-3 text-center w-10">No</th>
+              <th class="py-3 px-3">No. Surat & Tanggal</th>
+              <th class="py-3 px-3">Desa</th>
+              <th class="py-3 px-3">Jenis Dana & Tahap</th>
+              <th class="py-3 px-3 text-right">Nominal (Rp)</th>
+              <th class="py-3 px-3 text-center min-w-[310px]">Unduh Berkas Resmi (Untuk BKAD)</th>
+              <th class="py-3 px-3 text-center">Status</th>
+              <th class="py-3 px-3 text-center w-24">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyRiwayatPage">
+            <!-- Diisi dinamis oleh JavaScript renderHistoryTable -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
   </main>
   </div>
   <!-- /AREA KONTEN UTAMA -->
@@ -2723,7 +2829,8 @@
               <th class="py-2.5 px-3">Jenis / Perihal</th>
               <th class="py-2.5 px-3 text-right">Nominal (Rp)</th>
               <th class="py-2.5 px-3 text-center">Status</th>
-              <th class="py-2.5 px-3 text-center w-28">Aksi</th>
+              <th class="py-2.5 px-3 text-center min-w-[280px]">Donlot Berkas (Rekom, SP, Ceklist)</th>
+              <th class="py-2.5 px-3 text-center w-20">Aksi</th>
             </tr>
           </thead>
           <tbody id="tbodyRiwayat">
@@ -3347,6 +3454,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261021_login_fixed_syntax_ok"></script>
+  <script src="app.js?v=20261022_riwayat_arsip_unduh_3berkas"></script>
 </body>
 </html>

@@ -72,6 +72,8 @@ const DEFAULT_DASAR_TEMPLATES = {
 
 // TEMPLATE LAMPIRAN BERKAS PERSYARATAN BAKU KECAMATAN WARU
 const DEFAULT_BERKAS_TEMPLATES = {
+// Alias for backwards compatibility
+// (defined after object)
   siltap: [
     { id: 's1', teks: 'Permohonan Pencairan Dari Kepala Desa;', checked: true },
     { id: 's2', teks: 'Rekomendasi Pencairan Dari Camat;', checked: true },
@@ -130,6 +132,7 @@ const DEFAULT_BERKAS_TEMPLATES = {
     { id: 'dd10', teks: 'Fotocopy Nomor Pokok Wajib Pajak (NPWP).', checked: true }
   ]
 };
+const DEFAULT_BERKAS = DEFAULT_BERKAS_TEMPLATES;
 
 // URL Web App Google Apps Script Bawaan Sistem (Otomatis Aktif untuk Semua Komputer & Desa)
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxWdawMLe1ap8wgPIvJMVKgGqIPanvlHxRSSKnZh1cSJNCzfOSmcao6KoMnhzI1gshK/exec';
@@ -3236,6 +3239,563 @@ window.eksporRekomendasiByIdKeDocx = function(id) {
   }, 150);
 };
 
+/**
+ * =============================================================================
+ * FITUR UNDUH 3 BERKAS RESMI (REKOMENDASI, SPENGANTAR, CEKLIST) DARI ARSIP
+ * =============================================================================
+ */
+
+/**
+ * 1. Unduh Berkas Rekomendasi Camat (File TTD jika ada, atau Ekspor Word .docx)
+ */
+window.donlotRekomendasiItem = async function(id) {
+  const item = (AppState.riwayat || []).find(r => String(r.id) === String(id));
+  if (!item) {
+    showToast('Data arsip surat rekomendasi tidak ditemukan.', 'error');
+    return;
+  }
+
+  // Cek apakah ada file Rekomendasi bertanda tangan di kirimRekomDesa
+  const kirimMatch = (AppState.kirimRekomDesa || []).find(k => 
+    (k.riwayatId && String(k.riwayatId) === String(item.id)) ||
+    (k.namaDesa === item.namaDesa && String(k.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() && k.tahap === item.tahap) ||
+    (k.nomorSuratRekom && item.nomorSurat && k.nomorSuratRekom.trim() === item.nomorSurat.trim())
+  );
+
+  if (kirimMatch && (kirimMatch.fileRekomTtdId || kirimMatch.driveRekomTtdUrl)) {
+    showToast('Mengunduh berkas Rekomendasi Camat bertanda tangan...', 'info');
+    downloadDokumenPengajuan(kirimMatch.fileRekomTtdId, kirimMatch.fileRekomTtdName || `Rekomendasi_${item.namaDesa}_TTD.pdf`, kirimMatch.driveRekomTtdUrl);
+    return;
+  }
+
+  // Jika belum ada file TTD yang diunggah, ekspor langsung dokumen Word (.docx) resmi
+  showToast('Membuat dan mengunduh berkas Word Rekomendasi Camat...', 'info');
+  eksporRekomendasiByIdKeDocx(item.id);
+};
+
+/**
+ * 2. Unduh Surat Pengantar Kecamatan (File SP jika ada, atau Ekspor Word .docx)
+ */
+window.donlotSpArsip = async function(id) {
+  const item = (AppState.riwayat || []).find(r => String(r.id) === String(id));
+  if (!item) {
+    showToast('Data arsip tidak ditemukan.', 'error');
+    return;
+  }
+
+  // A. Cek file SP Kecamatan di kirimRekomDesa
+  const kirimMatch = (AppState.kirimRekomDesa || []).find(k => 
+    (k.riwayatId && String(k.riwayatId) === String(item.id)) ||
+    (k.namaDesa === item.namaDesa && String(k.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() && k.tahap === item.tahap) ||
+    (k.nomorSuratRekom && item.nomorSurat && k.nomorSuratRekom.trim() === item.nomorSurat.trim())
+  );
+
+  if (kirimMatch && (kirimMatch.fileSpKecId || kirimMatch.driveSpKecUrl)) {
+    showToast('Mengunduh berkas Surat Pengantar Kecamatan...', 'info');
+    downloadDokumenPengajuan(kirimMatch.fileSpKecId, kirimMatch.fileSpKecName || `Surat_Pengantar_${item.namaDesa}.pdf`, kirimMatch.driveSpKecUrl);
+    return;
+  }
+
+  // B. Cek apakah ada arsip SP tersimpan di suratPengantarList
+  const spMatch = (AppState.suratPengantarList || []).find(sp => 
+    sp.namaDesa === item.namaDesa &&
+    String(sp.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() &&
+    sp.tahap === item.tahap
+  );
+
+  if (spMatch) {
+    showToast('Mengekspor Surat Pengantar Kecamatan ke Word (.docx)...', 'info');
+    muatArsipSpKeEditor(spMatch.id);
+    setTimeout(() => {
+      eksporSuratPengantarKeDocx();
+    }, 150);
+    return;
+  }
+
+  // C. Cek file SP dari pengajuanDesa jika ada
+  const pengajuanMatch = (AppState.pengajuanDesa || []).find(p =>
+    p.namaDesa === item.namaDesa &&
+    String(p.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() &&
+    p.tahap === item.tahap
+  );
+
+  if (pengajuanMatch && (pengajuanMatch.fileSpId || pengajuanMatch.driveSpUrl)) {
+    showToast('Mengunduh berkas Surat Pengantar...', 'info');
+    downloadDokumenPengajuan(pengajuanMatch.fileSpId, pengajuanMatch.fileSpName || `SP_${item.namaDesa}.pdf`, pengajuanMatch.driveSpUrl);
+    return;
+  }
+
+  // D. Generate otomatis Word (.docx) Surat Pengantar Kecamatan untuk item ini
+  await generateSpDocxFromItem(item);
+};
+
+/**
+ * 3. Unduh Ceklist Kelengkapan Berkas (File Ceklist jika ada, atau Ekspor Word .docx)
+ */
+window.donlotCeklistArsip = async function(id) {
+  const item = (AppState.riwayat || []).find(r => String(r.id) === String(id));
+  if (!item) {
+    showToast('Data arsip tidak ditemukan.', 'error');
+    return;
+  }
+
+  // A. Cek file Ceklist Kecamatan di kirimRekomDesa
+  const kirimMatch = (AppState.kirimRekomDesa || []).find(k => 
+    (k.riwayatId && String(k.riwayatId) === String(item.id)) ||
+    (k.namaDesa === item.namaDesa && String(k.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() && k.tahap === item.tahap) ||
+    (k.nomorSuratRekom && item.nomorSurat && k.nomorSuratRekom.trim() === item.nomorSurat.trim())
+  );
+
+  if (kirimMatch && (kirimMatch.fileCeklistKecId || kirimMatch.driveCeklistKecUrl)) {
+    showToast('Mengunduh berkas Ceklist Kecamatan...', 'info');
+    downloadDokumenPengajuan(kirimMatch.fileCeklistKecId, kirimMatch.fileCeklistKecName || `Ceklist_${item.namaDesa}.pdf`, kirimMatch.driveCeklistKecUrl);
+    return;
+  }
+
+  // B. Cek file Ceklist Desa di pengajuanDesa
+  const pengajuanMatch = (AppState.pengajuanDesa || []).find(p =>
+    p.namaDesa === item.namaDesa &&
+    String(p.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() &&
+    p.tahap === item.tahap
+  );
+
+  if (pengajuanMatch && (pengajuanMatch.fileCeklistId || pengajuanMatch.driveCeklistUrl)) {
+    showToast('Mengunduh berkas Ceklist Kelengkapan...', 'info');
+    downloadDokumenPengajuan(pengajuanMatch.fileCeklistId, pengajuanMatch.fileCeklistName || `Ceklist_${item.namaDesa}.pdf`, pengajuanMatch.driveCeklistUrl);
+    return;
+  }
+
+  // C. Generate otomatis Ceklist Kelengkapan Berkas Kecamatan Word (.docx)
+  await generateCeklistDocxFromItem(item);
+};
+
+/**
+ * 4. Generator Ceklist Kelengkapan Berkas Word (.docx) Standar Kedinasan A4
+ */
+window.generateCeklistDocxFromItem = async function(item) {
+  if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
+    showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
+    return;
+  }
+  showToast('Membuat Ceklist Kelengkapan Berkas (.docx)...', 'info');
+  try {
+    const logoBase64 = await getLogoPpuBase64();
+    const safeDesa = (item.namaDesa || 'Desa').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeTahap = (item.tahap || 'Tahap').replace(/\s+/g, '_');
+    const tahun = item.tahunAnggaran || '2026';
+    const safeName = `Ceklist_Kelengkapan_Berkas_${safeDesa}_${safeTahap}_${tahun}`;
+
+    // Tentukan daftar berkas berdasarkan tipe dana
+    const tipe = (item.jenisDana || 'siltap').toLowerCase();
+    let rawList = [];
+    if (tipe.includes('siltap')) rawList = DEFAULT_BERKAS_TEMPLATES.siltap;
+    else if (tipe.includes('reguler') || tipe === 'add_reguler') rawList = DEFAULT_BERKAS_TEMPLATES.add_reguler;
+    else if (tipe.includes('dbh')) rawList = DEFAULT_BERKAS_TEMPLATES.dbh;
+    else if (tipe.includes('dd') || tipe === 'dana desa') rawList = DEFAULT_BERKAS_TEMPLATES.dd;
+    else rawList = DEFAULT_BERKAS_TEMPLATES.siltap;
+
+    const checkedIds = Array.isArray(item.kelengkapanBerkas) ? item.kelengkapanBerkas : [];
+    
+    // Format baris tabel kelengkapan
+    const tableRowsHtml = rawList.map((b, idx) => {
+      const isChecked = checkedIds.length > 0 ? checkedIds.includes(b.id) : b.checked !== false;
+      const statusText = isChecked ? 'Lengkap' : 'Tidak Ada';
+      const checkIcon = isChecked ? '&#10003; (Ada)' : '-';
+      const cleanTeks = b.teks.replace(/;$/, '.');
+      return `
+        <tr>
+          <td width="7%" style="border: 1pt solid #000000; padding: 4pt 3pt; text-align: center; vertical-align: top; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15;">${idx + 1}.</td>
+          <td width="65%" style="border: 1pt solid #000000; padding: 4pt 6pt; text-align: justify; vertical-align: top; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15;">${escapeHtml(cleanTeks)}</td>
+          <td width="14%" style="border: 1pt solid #000000; padding: 4pt 4pt; text-align: center; vertical-align: top; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15; font-weight: bold;">${checkIcon}</td>
+          <td width="14%" style="border: 1pt solid #000000; padding: 4pt 4pt; text-align: center; vertical-align: top; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15;">${statusText}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const logoImgHtml = logoBase64 
+      ? `<img src="data:image/png;base64,${logoBase64}" align="left" width="70" height="82" style="float: left; width: 70px; height: 82px; margin: 0 10pt 0 0;" />`
+      : `<img src="logo_ppu.png" align="left" width="70" height="82" style="float: left; width: 70px; height: 82px; margin: 0 10pt 0 0;" />`;
+
+    const fullDocumentHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(safeName)}</title>
+        <style>
+          @page {
+            size: 21.0cm 29.7cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
+            mso-page-orientation: portrait;
+            mso-header-margin: 0pt;
+            mso-footer-margin: 0pt;
+          }
+          body, p, table, td, th, div, span {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #000000;
+            line-height: 1.15;
+          }
+          body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+          }
+          p, div {
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+            mso-para-margin-top: 0pt;
+            mso-para-margin-bottom: 0pt;
+            line-height: 1.15;
+          }
+          table {
+            border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+            line-height: 1.15;
+          }
+        </style>
+      </head>
+      <body>
+        <!-- KOP SURAT RESMI (BUKAN KOLOM) -->
+        <div style="margin-top: 0pt; margin-bottom: 6pt; padding-bottom: 4pt; border-bottom: 3.0pt double #000000; text-align: center; clear: both;">
+          ${logoImgHtml}
+          <div style="text-align: center; margin: 0; padding: 0;">
+            <div style="font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: 1.15; color: #000000;">
+              PEMERINTAH KABUPATEN PENAJAM PASER UTARA
+            </div>
+            <div style="font-family: Arial, sans-serif; font-size: 15pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 1pt 0 2pt 0; padding: 0; line-height: 1.15; color: #000000;">
+              KECAMATAN WARU
+            </div>
+            <div style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.15; margin: 0; padding: 0; color: #000000;">
+              <span>Jalan Propinsi Km. 25, WA. 0821-9564-7788</span><br>
+              <span>Website : <span style="color: #1d4ed8; text-decoration: underline;">https://kecwaru.penajamkab.go.id/</span></span><br>
+              <span>Email : <span style="color: #1d4ed8; text-decoration: underline;">kecamatanwaru2014@gmail.com</span> Pos 76284</span>
+            </div>
+          </div>
+          <div style="clear: both; font-size: 1pt; line-height: 1pt; height: 1pt;">&nbsp;</div>
+        </div>
+
+        <!-- JUDUL LEMBAR VERIFIKASI -->
+        <div style="text-align: center; margin-top: 6pt; margin-bottom: 8pt; font-family: Arial, sans-serif;">
+          <div style="font-size: 11.5pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; line-height: 1.15;">
+            LEMBAR VERIFIKASI / CEKLIST KELENGKAPAN BERKAS PENGAJUAN
+          </div>
+          <div style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase; line-height: 1.15; margin-top: 2pt;">
+            PENCAIRAN KEUANGAN DESA TAHUN ANGGARAN ${escapeHtml(tahun)}
+          </div>
+        </div>
+
+        <!-- INFORMASI DOKUMEN -->
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15; margin-bottom: 6pt;">
+          <tr>
+            <td width="26%" style="padding: 1pt 0; font-weight: bold;">Nama Desa</td>
+            <td width="3%" style="padding: 1pt 0; text-align: center;">:</td>
+            <td width="71%" style="padding: 1pt 0; font-weight: bold;">Desa ${escapeHtml(item.namaDesa || '-')}</td>
+          </tr>
+          <tr>
+            <td style="padding: 1pt 0;">Jenis Dana / Sumber</td>
+            <td style="padding: 1pt 0; text-align: center;">:</td>
+            <td style="padding: 1pt 0; font-weight: bold;">${escapeHtml(item.jenisDana ? item.jenisDana.toUpperCase() : '-')}</td>
+          </tr>
+          <tr>
+            <td style="padding: 1pt 0;">Tahap / Perihal</td>
+            <td style="padding: 1pt 0; text-align: center;">:</td>
+            <td style="padding: 1pt 0;">${escapeHtml(item.tahap || '-')}</td>
+          </tr>
+          <tr>
+            <td style="padding: 1pt 0;">Jumlah Permohonan</td>
+            <td style="padding: 1pt 0; text-align: center;">:</td>
+            <td style="padding: 1pt 0; font-weight: bold;">Rp ${Number(item.nominalAngka || 0).toLocaleString('id-ID')} (${escapeHtml(item.terbilang || convertTerbilang(Number(item.nominalAngka || 0)))})</td>
+          </tr>
+          <tr>
+            <td style="padding: 1pt 0;">Rekomendasi Camat</td>
+            <td style="padding: 1pt 0; text-align: center;">:</td>
+            <td style="padding: 1pt 0;">Nomor: ${escapeHtml(item.nomorSurat || '-')} &nbsp;|&nbsp; Tanggal: ${formatTanggalIndo(item.tanggalSurat)}</td>
+          </tr>
+        </table>
+
+        <!-- TABEL RINCIAN PERSYARATAN -->
+        <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.15; border: 1pt solid #000000; margin-top: 4pt; margin-bottom: 8pt;">
+          <thead>
+            <tr style="background-color: #f1f5f9;">
+              <th width="7%" style="border: 1pt solid #000000; padding: 4pt 2pt; text-align: center; font-weight: bold;">No</th>
+              <th width="65%" style="border: 1pt solid #000000; padding: 4pt 6pt; text-align: center; font-weight: bold;">Uraian Dokumen / Persyaratan Kelengkapan</th>
+              <th width="14%" style="border: 1pt solid #000000; padding: 4pt 2pt; text-align: center; font-weight: bold;">Keberadaan</th>
+              <th width="14%" style="border: 1pt solid #000000; padding: 4pt 2pt; text-align: center; font-weight: bold;">Hasil Verifikasi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRowsHtml}
+          </tbody>
+        </table>
+
+        <!-- KESIMPULAN VERIFIKASI -->
+        <div style="font-size: 9.5pt; text-align: justify; line-height: 1.15; margin-top: 4pt;">
+          <b>Kesimpulan Tim Verifikasi:</b> Berdasarkan hasil pemeriksaan dokumen kelengkapan administrasi oleh Tim Fasilitasi dan Verifikasi Tingkat Kecamatan Waru, seluruh berkas pengajuan di atas dinyatakan <b>LENGKAP DAN MEMENUHI SYARAT</b> untuk diterbitkan Surat Rekomendasi Camat serta diajukan pencairannya ke Badan Keuangan dan Aset Daerah (BKAD) Kabupaten Penajam Paser Utara.
+        </div>
+
+        <!-- TANDA TANGAN -->
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15; margin-top: 12pt;">
+          <tr>
+            <td width="50%" style="text-align: center; vertical-align: top;">
+              <div>Tim Fasilitasi & Verifikasi ADD/DD,</div>
+              <div>Kasi Pemberdayaan Masyarakat & Desa</div>
+              <div style="height: 40pt; font-size: 40pt; line-height: 40pt;">&nbsp;</div>
+              <div style="font-weight: bold; text-decoration: underline;">KASI PMD KECAMATAN WARU</div>
+              <div>NIP. ........................................</div>
+            </td>
+            <td width="50%" style="text-align: center; vertical-align: top;">
+              <div>Mengetahui,</div>
+              <div>Camat Waru,</div>
+              <div style="height: 40pt; font-size: 40pt; line-height: 40pt;">&nbsp;</div>
+              <div style="font-weight: bold; text-decoration: underline;">${escapeHtml(item.namaCamat || AppState.camat?.nama || 'Ahmad Yani, SSTP')}</div>
+              <div>NIP. ${escapeHtml(item.nipCamat || AppState.camat?.nip || '198610082006021001')}</div>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
+      orientation: 'portrait',
+      margins: { top: 567, right: 567, bottom: 850, left: 567 },
+      width: 11906,
+      height: 16838
+    });
+
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `${safeName}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    }, 2000);
+
+    showToast(`Ceklist Kelengkapan Berkas "${safeName}.docx" berhasil diunduh!`, 'success');
+  } catch (err) {
+    console.error('Gagal generate Ceklist Docx:', err);
+    showToast('Terjadi kendala saat membuat Ceklist DOCX: ' + (err.message || ''), 'error');
+  }
+};
+
+/**
+ * 5. Generator Surat Pengantar Kecamatan Word (.docx) Standar Kedinasan A4
+ */
+window.generateSpDocxFromItem = async function(item) {
+  if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
+    showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
+    return;
+  }
+  showToast('Membuat Surat Pengantar Kecamatan (.docx)...', 'info');
+  try {
+    const logoBase64 = await getLogoPpuBase64();
+    const safeDesa = (item.namaDesa || 'Desa').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeTahap = (item.tahap || 'Tahap').replace(/\s+/g, '_');
+    const tahun = item.tahunAnggaran || '2026';
+    const safeName = `Surat_Pengantar_Kecamatan_${safeDesa}_${safeTahap}_${tahun}`;
+
+    const rawDate = item.tanggalSurat || new Date().toISOString().split('T')[0];
+    const tanggalIndo = formatTanggalIndo(rawDate);
+    const metodeTte = item.metodeTte || 'srikandi';
+
+    const jenisTeks = item.jenisDana ? item.jenisDana.toUpperCase() : 'ADD';
+    const perihalRinci = `Pengajuan Surat Permohonan Penyaluran / Pencairan ${jenisTeks} (${item.tahap || 'Tahap I'}) Desa ${item.namaDesa || '-'} Tahun Anggaran ${tahun} beserta Surat Pengantar Desa, Rekomendasi Camat Waru Nomor: ${item.nomorSurat || '-'} dan Ceklist Kelengkapan Berkas.`;
+
+    const logoImgHtml = logoBase64 
+      ? `<img src="data:image/png;base64,${logoBase64}" align="left" width="70" height="82" style="float: left; width: 70px; height: 82px; margin: 0 10pt 0 0;" />`
+      : `<img src="logo_ppu.png" align="left" width="70" height="82" style="float: left; width: 70px; height: 82px; margin: 0 10pt 0 0;" />`;
+
+    let headerTujuanHtml = '';
+    if (metodeTte === 'srikandi') {
+      headerTujuanHtml = `
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; margin-top: 6pt; margin-bottom: 8pt;">
+          <tr>
+            <td width="52%" style="vertical-align: top;">&nbsp;</td>
+            <td width="48%" style="vertical-align: top; text-align: left;">
+              <div>Penajam, \${tanggal_naskah}</div>
+              <div style="margin-top: 4pt;">Yth. \${jabatan_tujuan}</div>
+              <div>di -</div>
+              <div style="margin-left: 18pt; font-weight: bold; text-decoration: underline;">Tempat</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    } else {
+      headerTujuanHtml = `
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; margin-top: 6pt; margin-bottom: 8pt;">
+          <tr>
+            <td width="52%" style="vertical-align: top;">&nbsp;</td>
+            <td width="48%" style="vertical-align: top; text-align: left;">
+              <div>Penajam, ${tanggalIndo}</div>
+              <div style="margin-top: 4pt;">Yth. Kepala Badan Keuangan dan Aset Daerah (BKAD) Kab. Penajam Paser Utara</div>
+              <div>di -</div>
+              <div style="margin-left: 18pt; font-weight: bold; text-decoration: underline;">Tempat</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    }
+
+    let ttdHtml = '';
+    if (metodeTte === 'srikandi') {
+      ttdHtml = `
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; margin-top: 14pt;">
+          <tr>
+            <td width="52%" style="vertical-align: top;">&nbsp;</td>
+            <td width="48%" style="vertical-align: top; text-align: left;">
+              <div>Camat Waru,</div>
+              <div style="margin: 8pt 0; font-family: monospace;">\${ttd_pengirim}</div>
+              <div style="font-weight: bold;">\${nama_pengirim}</div>
+              <div>NIP. \${nip_pengirim}</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    } else {
+      ttdHtml = `
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; margin-top: 14pt;">
+          <tr>
+            <td width="52%" style="vertical-align: top;">&nbsp;</td>
+            <td width="48%" style="vertical-align: top; text-align: left;">
+              <div>Camat Waru,</div>
+              <div style="height: 44pt; font-size: 44pt; line-height: 44pt;">&nbsp;</div>
+              <div style="font-weight: bold; text-decoration: underline;">${escapeHtml(item.namaCamat || AppState.camat?.nama || 'Ahmad Yani, SSTP')}</div>
+              <div>NIP. ${escapeHtml(item.nipCamat || AppState.camat?.nip || '198610082006021001')}</div>
+            </td>
+          </tr>
+        </table>
+      `;
+    }
+
+    const fullDocumentHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(safeName)}</title>
+        <style>
+          @page {
+            size: 21.0cm 29.7cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
+            mso-page-orientation: portrait;
+            mso-header-margin: 0pt;
+            mso-footer-margin: 0pt;
+          }
+          body, p, table, td, th, div, span {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            color: #000000;
+            line-height: 1.15;
+          }
+          body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+          }
+          p, div {
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+            mso-para-margin-top: 0pt;
+            mso-para-margin-bottom: 0pt;
+            line-height: 1.15;
+          }
+          table {
+            border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+            line-height: 1.15;
+          }
+        </style>
+      </head>
+      <body>
+        <!-- KOP SURAT RESMI (BUKAN KOLOM) -->
+        <div style="margin-top: 0pt; margin-bottom: 6pt; padding-bottom: 4pt; border-bottom: 3.0pt double #000000; text-align: center; clear: both;">
+          ${logoImgHtml}
+          <div style="text-align: center; margin: 0; padding: 0;">
+            <div style="font-family: Arial, sans-serif; font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: 1.15; color: #000000;">
+              PEMERINTAH KABUPATEN PENAJAM PASER UTARA
+            </div>
+            <div style="font-family: Arial, sans-serif; font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 1pt 0 2pt 0; padding: 0; line-height: 1.15; color: #000000;">
+              KECAMATAN WARU
+            </div>
+            <div style="font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15; margin: 0; padding: 0; color: #000000;">
+              <span>Jalan Propinsi Km. 25, WA. 0821-9564-7788</span><br>
+              <span>Website : <span style="color: #1d4ed8; text-decoration: underline;">https://kecwaru.penajamkab.go.id/</span></span><br>
+              <span>Email : <span style="color: #1d4ed8; text-decoration: underline;">kecamatanwaru2014@gmail.com</span> Pos 76284</span>
+            </div>
+          </div>
+          <div style="clear: both; font-size: 1pt; line-height: 1pt; height: 1pt;">&nbsp;</div>
+        </div>
+
+        <!-- HEADER TUJUAN -->
+        ${headerTujuanHtml}
+
+        <!-- JUDUL SURAT PENGANTAR -->
+        <div style="text-align: center; margin-top: 8pt; margin-bottom: 10pt; font-family: Arial, sans-serif;">
+          <div style="font-size: 14pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; line-height: 1.15;">
+            SURAT PENGANTAR
+          </div>
+          <div style="font-size: 11pt; line-height: 1.15; margin-top: 2pt;">
+            Nomor : ${metodeTte === 'srikandi' ? '${nomor_naskah}' : '000.1.5 / 128 / Ekbang / X / ' + escapeHtml(tahun)}
+          </div>
+        </div>
+
+        <!-- TABEL 4 KOLOM RINCIAN -->
+        <table border="1" cellspacing="0" cellpadding="6" style="width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; border: 1pt solid #000000; margin-top: 8pt; margin-bottom: 12pt;">
+          <thead>
+            <tr style="background-color: #f1f5f9;">
+              <th width="8%" style="border: 1pt solid #000000; padding: 5pt 4pt; text-align: center; font-weight: bold;">No</th>
+              <th width="44%" style="border: 1pt solid #000000; padding: 5pt 8pt; text-align: center; font-weight: bold;">Jenis yang dikirim</th>
+              <th width="24%" style="border: 1pt solid #000000; padding: 5pt 8pt; text-align: center; font-weight: bold;">Banyaknya</th>
+              <th width="24%" style="border: 1pt solid #000000; padding: 5pt 8pt; text-align: center; font-weight: bold;">Keterangan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td width="8%" style="border: 1pt solid #000000; padding: 8pt 4pt; text-align: center; vertical-align: top;">1.</td>
+              <td width="44%" style="border: 1pt solid #000000; padding: 8pt 8pt; text-align: justify; vertical-align: top;">${escapeHtml(perihalRinci)}</td>
+              <td width="24%" style="border: 1pt solid #000000; padding: 8pt 8pt; text-align: center; vertical-align: top;">1 (satu) Berkas</td>
+              <td width="24%" style="border: 1pt solid #000000; padding: 8pt 8pt; text-align: justify; vertical-align: top;">Dikirim dengan hormat untuk verifikasi dan proses pencairan lebih lanjut.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- TANDA TANGAN CAMAT -->
+        ${ttdHtml}
+      </body>
+      </html>
+    `;
+
+    const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
+      orientation: 'portrait',
+      margins: { top: 567, right: 567, bottom: 850, left: 567 },
+      width: 11906,
+      height: 16838
+    });
+
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `${safeName}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    }, 2000);
+
+    showToast(`Surat Pengantar "${safeName}.docx" berhasil diunduh!`, 'success');
+  } catch (err) {
+    console.error('Gagal generate SP Docx:', err);
+    showToast('Terjadi kendala saat membuat SP DOCX: ' + (err.message || ''), 'error');
+  }
+};
+
 // Database Save
 async function saveRecommendationData() {
   const saveBtn = document.getElementById('btnSaveToDb');
@@ -3472,57 +4032,162 @@ function setupHistoryDrawerListeners() {
 }
 
 function renderHistoryTable(query = '') {
-  const tbody = document.getElementById('tbodyRiwayat');
+  const tbodyPage = document.getElementById('tbodyRiwayatPage');
+  const tbodyDrawer = document.getElementById('tbodyRiwayat');
   const badge = document.getElementById('badgeHistoryCount');
-  if (badge) badge.textContent = AppState.riwayat.length;
-  const badgeSidebarHistory = document.getElementById('badgeSidebarHistoryCount');
-  if (badgeSidebarHistory) badgeSidebarHistory.textContent = AppState.riwayat.length;
-  renderDashboardSummary();
-  if (!tbody) return;
+  const badgeSidebar = document.getElementById('badgeSidebarHistoryCount');
+  const badgeTotalPage = document.getElementById('badgeTotalRiwayatPage');
+  const badgeTabHistory = document.getElementById('badgeTabHistoryCount');
 
-  let filtered = AppState.riwayat;
-  if (query) {
-    const q = query.toLowerCase();
-    filtered = filtered.filter(item => 
-      (item.namaDesa && item.namaDesa.toLowerCase().includes(q)) ||
-      (item.nomorSurat && item.nomorSurat.toLowerCase().includes(q)) ||
-      (item.jenisDana && item.jenisDana.toLowerCase().includes(q))
-    );
+  const totalAll = (AppState.riwayat || []).length;
+  if (badge) badge.textContent = totalAll;
+  if (badgeSidebar) badgeSidebar.textContent = totalAll;
+  if (badgeTabHistory) badgeTabHistory.textContent = totalAll;
+  renderDashboardSummary();
+
+  const filterDesa = document.getElementById('filterDesaRiwayatPage')?.value || 'semua';
+  const filterJenis = document.getElementById('filterJenisRiwayatPage')?.value || 'semua';
+  const searchPage = document.getElementById('inputSearchRiwayatPage')?.value || '';
+  const searchDrawer = document.getElementById('inputSearchHistory')?.value || '';
+  const q = (query || searchPage || searchDrawer || '').trim().toLowerCase();
+
+  let filtered = AppState.riwayat || [];
+
+  // Filter khusus jika login sebagai Operator Desa
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa' && user.desa) {
+    filtered = filtered.filter(item => (item.namaDesa || '').toLowerCase() === user.desa.toLowerCase());
+  } else if (filterDesa !== 'semua') {
+    filtered = filtered.filter(item => (item.namaDesa || '').toLowerCase() === filterDesa.toLowerCase());
   }
 
+  // Filter Jenis Dana
+  if (filterJenis !== 'semua') {
+    filtered = filtered.filter(item => (item.jenisDana || '').toLowerCase().includes(filterJenis.toLowerCase()));
+  }
+
+  // Filter Pencarian Bebas
+  if (q) {
+    filtered = filtered.filter(item => {
+      const haystack = [
+        item.namaDesa,
+        item.nomorSurat,
+        item.jenisDana,
+        item.tahap,
+        item.nominalAngka,
+        formatTanggalIndo(item.tanggalSurat),
+        item.status
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+
+  if (badgeTotalPage) badgeTotalPage.textContent = filtered.length;
+
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">Belum ada riwayat arsip surat.</td></tr>`;
+    const emptyRow = `<tr><td colspan="8" class="text-center py-10 text-slate-400 font-medium">Belum ada riwayat arsip surat yang sesuai filter pencarian.</td></tr>`;
+    if (tbodyPage) tbodyPage.innerHTML = emptyRow;
+    if (tbodyDrawer) tbodyDrawer.innerHTML = emptyRow;
     return;
   }
 
-  tbody.innerHTML = filtered.map((item, index) => `
-    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-      <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
-      <td class="py-3 px-3">
-        <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nomorSurat || '-')}</div>
-        <div class="text-[11px] text-slate-500">${formatTanggalIndo(item.tanggalSurat)}</div>
-      </td>
-      <td class="py-3 px-3 font-bold text-slate-800 text-xs">Desa ${escapeHtml(item.namaDesa || '-')}</td>
-      <td class="py-3 px-3">
-        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
-          ${escapeHtml(item.jenisDana || '-')}
-        </span>
-        <div class="text-[11px] text-slate-600 mt-0.5 line-clamp-1">${escapeHtml(item.tahap || '')}</div>
-      </td>
-      <td class="py-3 px-3 text-right font-mono font-bold text-xs text-emerald-800">${formatRupiah(item.nominalAngka)}</td>
-      <td class="py-3 px-3 text-center">
-        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800">
-          ${escapeHtml(item.status || 'Diterbitkan')}
-        </span>
-      </td>
-      <td class="py-3 px-3 text-center space-x-1 whitespace-nowrap">
-        <button onclick="loadHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 rounded border border-blue-200 transition cursor-pointer">Muat</button>
-        <button onclick="eksporRekomendasiByIdKeDocx('${item.id}')" class="px-2 py-1 text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded border border-emerald-200 transition cursor-pointer" title="Unduh langsung sebagai dokumen Word (.docx)">DOCX</button>
-        <button onclick="deleteHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded border border-rose-200 transition cursor-pointer">Hapus</button>
-      </td>
-    </tr>
-  `).join('');
+  // 1. Render ke Tabel Halaman Utama (View 4: Riwayat Arsip Surat)
+  if (tbodyPage) {
+    tbodyPage.innerHTML = filtered.map((item, index) => `
+      <tr class="hover:bg-slate-50 transition border-b border-slate-200">
+        <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
+        <td class="py-3 px-3">
+          <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nomorSurat || '-')}</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">${formatTanggalIndo(item.tanggalSurat)}</div>
+        </td>
+        <td class="py-3 px-3">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-xs bg-slate-100 text-slate-800 border border-slate-200">
+            Desa ${escapeHtml(item.namaDesa || '-')}
+          </span>
+        </td>
+        <td class="py-3 px-3">
+          <span class="inline-block px-2 py-0.5 rounded text-[10.5px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+            ${escapeHtml(item.jenisDana ? item.jenisDana.toUpperCase() : '-')}
+          </span>
+          <div class="text-[11px] text-slate-600 mt-0.5 font-medium line-clamp-1">${escapeHtml(item.tahap || '')}</div>
+        </td>
+        <td class="py-3 px-3 text-right font-mono font-bold text-xs text-emerald-800">${formatRupiah(item.nominalAngka)}</td>
+        <td class="py-2.5 px-3 text-center">
+          <div class="flex flex-col gap-1 items-stretch max-w-[280px] mx-auto py-0.5">
+            <button type="button" onclick="donlotRekomendasiItem('${item.id}')" class="px-2.5 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer" title="Unduh Surat Rekomendasi Camat Waru">
+              <span>ðŸ“„ Donlot Rekomendasi</span>
+            </button>
+            <button type="button" onclick="donlotSpArsip('${item.id}')" class="px-2.5 py-1 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer" title="Unduh Surat Pengantar Kecamatan Waru">
+              <span>âœ‰ï¸ Donlot SPengantar</span>
+            </button>
+            <button type="button" onclick="donlotCeklistArsip('${item.id}')" class="px-2.5 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer" title="Unduh Ceklist Kelengkapan Berkas Tim Verifikasi Kecamatan">
+              <span>ðŸ“‹ Donlot Ceklist</span>
+            </button>
+          </div>
+        </td>
+        <td class="py-3 px-3 text-center">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            ${escapeHtml(item.status || 'Diterbitkan')}
+          </span>
+        </td>
+        <td class="py-3 px-3 text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            <button type="button" onclick="loadHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg border border-amber-200 font-semibold transition cursor-pointer" title="Buka dan Edit Formulir Rekomendasi">
+              âœï¸ Edit
+            </button>
+            <button type="button" onclick="deleteHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg border border-rose-200 font-semibold transition cursor-pointer" title="Hapus dari Riwayat Arsip">
+              ðŸ—‘ï¸ Hapus
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // 2. Render ke Tabel Drawer Samping (Drawer History)
+  if (tbodyDrawer) {
+    tbodyDrawer.innerHTML = filtered.map((item, index) => `
+      <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+        <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
+        <td class="py-3 px-3">
+          <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nomorSurat || '-')}</div>
+          <div class="text-[11px] text-slate-500">${formatTanggalIndo(item.tanggalSurat)}</div>
+        </td>
+        <td class="py-3 px-3 font-bold text-slate-800 text-xs">Desa ${escapeHtml(item.namaDesa || '-')}</td>
+        <td class="py-3 px-3">
+          <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+            ${escapeHtml(item.jenisDana || '-')}
+          </span>
+          <div class="text-[11px] text-slate-600 mt-0.5 line-clamp-1">${escapeHtml(item.tahap || '')}</div>
+        </td>
+        <td class="py-3 px-3 text-right font-mono font-bold text-xs text-emerald-800">${formatRupiah(item.nominalAngka)}</td>
+        <td class="py-3 px-3 text-center">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800">
+            ${escapeHtml(item.status || 'Diterbitkan')}
+          </span>
+        </td>
+        <td class="py-2 px-2 text-center">
+          <div class="flex flex-col gap-1 items-stretch max-w-[260px] mx-auto py-0.5">
+            <button type="button" onclick="donlotRekomendasiItem('${item.id}')" class="px-2 py-0.5 text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white rounded shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer" title="Unduh Surat Rekomendasi Camat">
+              <span>ðŸ“„ Donlot Rekomendasi</span>
+            </button>
+            <button type="button" onclick="donlotSpArsip('${item.id}')" class="px-2 py-0.5 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer" title="Unduh Surat Pengantar Kecamatan">
+              <span>âœ‰ï¸ Donlot SPengantar</span>
+            </button>
+            <button type="button" onclick="donlotCeklistArsip('${item.id}')" class="px-2 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer" title="Unduh Ceklist Kelengkapan Berkas">
+              <span>ðŸ“‹ Donlot Ceklist</span>
+            </button>
+          </div>
+        </td>
+        <td class="py-3 px-3 text-center space-x-1 whitespace-nowrap">
+          <button type="button" onclick="loadHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded border border-amber-200 transition font-semibold cursor-pointer" title="Buka Formulir">âœï¸ Edit</button>
+          <button type="button" onclick="deleteHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded border border-rose-200 transition font-semibold cursor-pointer" title="Hapus Arsip">ðŸ—‘ï¸ Hapus</button>
+        </td>
+      </tr>
+    `).join('');
+  }
 }
+window.renderHistoryTable = renderHistoryTable;
 
 function loadHistoryItem(id) {
   const item = (AppState.riwayat || []).find(r => String(r.id) === String(id));
@@ -3607,6 +4272,8 @@ function loadHistoryItem(id) {
   renderEditingRekomBanner();
 
   document.getElementById('drawerHistory')?.classList.add('hidden');
+  navigateToMenu('verifikasi_rekom');
+  switchKecamatanSubTab('generator');
   showToast(`✏️ Mode Edit: Arsip ${item.nomorSurat} dimuat! Perubahan akan memperbarui data arsip ini saat disimpan.`, 'info');
 }
 
@@ -4541,7 +5208,8 @@ window.navigateToMenu = function(menuKey) {
   const navItems = {
     'dashboard': document.getElementById('navDashboard'),
     'pengajuan_desa': document.getElementById('navPengajuanDesa'),
-    'verifikasi_rekom': document.getElementById('navVerifikasiRekom')
+    'verifikasi_rekom': document.getElementById('navVerifikasiRekom'),
+    'riwayat_arsip': document.getElementById('navRiwayatArsip')
   };
 
   Object.entries(navItems).forEach(([key, el]) => {
@@ -4560,7 +5228,8 @@ window.navigateToMenu = function(menuKey) {
   const views = {
     'dashboard': document.getElementById('viewDashboard'),
     'pengajuan_desa': document.getElementById('viewPengajuanDesa') || document.getElementById('dashboardDesaContainer'),
-    'verifikasi_rekom': document.getElementById('viewVerifikasiRekom')
+    'verifikasi_rekom': document.getElementById('viewVerifikasiRekom'),
+    'riwayat_arsip': document.getElementById('viewRiwayatArsip')
   };
 
   Object.entries(views).forEach(([key, el]) => {
@@ -4600,6 +5269,14 @@ window.navigateToMenu = function(menuKey) {
     if (titleEl) titleEl.textContent = 'Verifikasi Berkas & Rekomendasi Camat';
     if (breadcrumbEl) breadcrumbEl.textContent = 'SIP-REKOM Waru / 3. Verifikasi & Rekom Kecamatan';
     switchKecamatanSubTab(AppState.kecamatanSubTab || 'verifikasi');
+  } else if (menuKey === 'riwayat_arsip') {
+    if (titleEl) titleEl.textContent = 'Riwayat Arsip Surat Resmi APBDes';
+    if (breadcrumbEl) breadcrumbEl.textContent = 'SIP-REKOM Waru / 4. Riwayat Arsip Surat';
+    if (splitControls) splitControls.classList.add('hidden');
+    if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnExportDocx) btnExportDocx.classList.add('hidden');
+    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    renderHistoryTable();
   }
 
   // Mobile: tutup drawer sidebar otomatis jika di layar kecil
