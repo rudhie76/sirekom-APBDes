@@ -1870,35 +1870,37 @@ function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte
 
     return `
       <div class="mt-4 text-[11pt] leading-snug font-sans text-black">
-        <div class="flex justify-between items-start">
-          <div class="w-[58%]">
-            <table class="border-collapse text-[11pt]">
-              <tr>
-                <td class="w-24 align-top py-0.5">Nomor</td>
-                <td class="w-3 align-top py-0.5">:</td>
-                <td class="align-top py-0.5 font-medium">${escapeHtml(nomor)}</td>
-              </tr>
-              <tr>
-                <td class="align-top py-0.5">Sifat</td>
-                <td class="align-top py-0.5">:</td>
-                <td class="align-top py-0.5">Penting</td>
-              </tr>
-              <tr>
-                <td class="align-top py-0.5">Lampiran</td>
-                <td class="align-top py-0.5">:</td>
-                <td class="align-top py-0.5 tracking-widest">-</td>
-              </tr>
-              <tr>
-                <td class="align-top py-0.5">Hal</td>
-                <td class="align-top py-0.5">:</td>
-                <td class="align-top py-0.5 font-medium text-justify leading-snug">${escapeHtml(hal)}</td>
-              </tr>
-            </table>
-          </div>
-          <div class="w-[42%] text-right font-medium">
-            Penajam, ${escapeHtml(tanggal)}
-          </div>
-        </div>
+        <table class="header-surat-table w-full border-collapse" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+          <tr>
+            <td class="header-left-col align-top p-0" style="width: 58%; vertical-align: top;">
+              <table class="w-full border-collapse text-[11pt]" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                <tr>
+                  <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Nomor</td>
+                  <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
+                  <td class="align-top py-0.5 font-medium" style="vertical-align: top;">${escapeHtml(nomor)}</td>
+                </tr>
+                <tr>
+                  <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Sifat</td>
+                  <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
+                  <td class="align-top py-0.5" style="vertical-align: top;">Penting</td>
+                </tr>
+                <tr>
+                  <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Lampiran</td>
+                  <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
+                  <td class="align-top py-0.5 tracking-widest" style="vertical-align: top;">-</td>
+                </tr>
+                <tr>
+                  <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Hal</td>
+                  <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
+                  <td class="align-top py-0.5 font-medium text-justify leading-snug" style="vertical-align: top; text-align: justify;">${escapeHtml(hal)}</td>
+                </tr>
+              </table>
+            </td>
+            <td class="header-right-col align-top p-0 text-right font-medium" style="width: 42%; vertical-align: top; text-align: right;">
+              Penajam, ${escapeHtml(tanggal)}
+            </td>
+          </tr>
+        </table>
 
         <div class="mt-6 leading-normal text-left">
           <div>Yth . Kepala Badan Keuangan dan Aset Daerah</div>
@@ -1916,35 +1918,37 @@ function getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte
   // =========================================================================
   return `
     <div class="mt-4 text-[11pt] leading-snug font-sans text-black">
-      <div class="flex justify-between items-start">
-        <div class="w-[58%]">
-          <table class="border-collapse text-[11pt]">
-            <tr>
-              <td class="w-24 align-top py-0.5">Nomor</td>
-              <td class="w-3 align-top py-0.5">:</td>
-              <td class="align-top py-0.5 font-sans">\${nomor_naskah}</td>
-            </tr>
-            <tr>
-              <td class="align-top py-0.5">Sifat</td>
-              <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5 font-sans">\${sifat}</td>
-            </tr>
-            <tr>
-              <td class="align-top py-0.5">Lampiran</td>
-              <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5 font-sans tracking-wider">....................</td>
-            </tr>
-            <tr>
-              <td class="align-top py-0.5">Hal</td>
-              <td class="align-top py-0.5">:</td>
-              <td class="align-top py-0.5 font-sans">\${hal}</td>
-            </tr>
-          </table>
-        </div>
-        <div class="w-[42%] text-right font-sans">
-          Penajam, \${tanggal_naskah}
-        </div>
-      </div>
+      <table class="header-surat-table w-full border-collapse" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+        <tr>
+          <td class="header-left-col align-top p-0" style="width: 58%; vertical-align: top;">
+            <table class="w-full border-collapse text-[11pt]" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+              <tr>
+                <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Nomor</td>
+                <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
+                <td class="align-top py-0.5 font-sans" style="vertical-align: top;">\${nomor_naskah}</td>
+              </tr>
+              <tr>
+                <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Sifat</td>
+                <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
+                <td class="align-top py-0.5 font-sans" style="vertical-align: top;">\${sifat}</td>
+              </tr>
+              <tr>
+                <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Lampiran</td>
+                <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
+                <td class="align-top py-0.5 font-sans tracking-wider" style="vertical-align: top;">....................</td>
+              </tr>
+              <tr>
+                <td class="align-top py-0.5" style="width: 60pt; vertical-align: top;">Hal</td>
+                <td class="align-top py-0.5 text-center" style="width: 14pt; vertical-align: top; text-align: center;">:</td>
+                <td class="align-top py-0.5 font-sans text-justify leading-snug" style="vertical-align: top; text-align: justify;">\${hal}</td>
+              </tr>
+            </table>
+          </td>
+          <td class="header-right-col align-top p-0 text-right font-sans" style="width: 42%; vertical-align: top; text-align: right;">
+            Penajam, \${tanggal_naskah}
+          </td>
+        </tr>
+      </table>
 
       <div class="mt-6 text-left leading-normal font-sans">
         <div>Yth . \${jabatan_tujuan}</div>
@@ -2528,67 +2532,71 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     kop.parentNode.replaceChild(kopTable, kop);
   }
 
-  // 2. Transform Header Surat Rekomendasi (Nomor/Sifat/Lampiran/Hal & Tanggal Penajam) Menjadi Single Flat Table
-  const flexHeaders = clone.querySelectorAll('div.flex.justify-between.items-start');
+  // 2. Transform Header Surat Rekomendasi (Nomor/Sifat/Lampiran/Hal & Tanggal Penajam) Menjadi Master 2-Kolom (58% dan 42%)
+  const flexHeaders = clone.querySelectorAll('.header-surat-table, div.flex.justify-between.items-start');
   flexHeaders.forEach(fh => {
-    const leftCol = fh.children[0];
-    const rightCol = fh.children[1];
-    
     // Cek apakah ini header surat rekomendasi (berisi Nomor, Sifat, Lampiran, Hal)
     const isHeaderSurat = fh.textContent.includes('Nomor') && (fh.textContent.includes('Sifat') || fh.textContent.includes('Hal'));
-    
-    if (isHeaderSurat) {
-      const headerTable = document.createElement('table');
-      headerTable.setAttribute('border', '0');
-      headerTable.setAttribute('cellspacing', '0');
-      headerTable.setAttribute('cellpadding', '0');
-      headerTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
+    if (!isHeaderSurat) return;
 
-      // Ekstrak nilai masing-masing baris dari leftCol (termasuk editan user langsung)
-      let nomorVal = '', sifatVal = 'Penting', lampiranVal = '-', halVal = '';
-      if (leftCol) {
-        const rows = leftCol.querySelectorAll('tr');
-        rows.forEach(tr => {
-          const text = tr.textContent;
-          const tds = tr.children;
-          const valHtml = tds.length >= 3 ? tds[2].innerHTML.trim() : (tds.length === 2 ? tds[1].innerHTML.trim() : '');
-          if (text.includes('Nomor')) nomorVal = valHtml;
-          else if (text.includes('Sifat')) sifatVal = valHtml || 'Penting';
-          else if (text.includes('Lampiran')) lampiranVal = valHtml || '-';
-          else if (text.includes('Hal')) halVal = valHtml;
-        });
-      }
+    let leftCol = fh.querySelector('.header-left-col') || fh.children[0];
+    let rightCol = fh.querySelector('.header-right-col') || fh.children[1];
 
-      const tanggalHtml = rightCol ? rightCol.innerHTML.trim() : '';
-
-      headerTable.innerHTML = `
-        <tr>
-          <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Nomor</td>
-          <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-          <td width="218" style="width: 218pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${nomorVal}</td>
-          <td width="210" style="width: 210pt; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${tanggalHtml}</td>
-        </tr>
-        <tr>
-          <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Sifat</td>
-          <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-          <td width="218" style="width: 218pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${sifatVal}</td>
-          <td width="210" style="width: 210pt; vertical-align: top; padding: 1pt 0;">&nbsp;</td>
-        </tr>
-        <tr>
-          <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Lampiran</td>
-          <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-          <td width="218" style="width: 218pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${lampiranVal}</td>
-          <td width="210" style="width: 210pt; vertical-align: top; padding: 1pt 0;">&nbsp;</td>
-        </tr>
-        <tr>
-          <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Hal</td>
-          <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-          <td width="218" style="width: 218pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify;">${halVal}</td>
-          <td width="210" style="width: 210pt; vertical-align: top; padding: 1pt 0;">&nbsp;</td>
-        </tr>
-      `;
-      fh.parentNode.replaceChild(headerTable, fh);
+    // Ekstrak nilai masing-masing baris dari leftCol (termasuk editan user langsung)
+    let nomorVal = '', sifatVal = 'Penting', lampiranVal = '-', halVal = '';
+    if (leftCol) {
+      const rows = leftCol.querySelectorAll('tr');
+      rows.forEach(tr => {
+        const text = tr.textContent;
+        const tds = tr.children;
+        const valHtml = tds.length >= 3 ? tds[2].innerHTML.trim() : (tds.length === 2 ? tds[1].innerHTML.trim() : '');
+        if (text.includes('Nomor')) nomorVal = valHtml;
+        else if (text.includes('Sifat')) sifatVal = valHtml || 'Penting';
+        else if (text.includes('Lampiran')) lampiranVal = valHtml || '-';
+        else if (text.includes('Hal')) halVal = valHtml;
+      });
     }
+
+    const tanggalHtml = rightCol ? rightCol.innerHTML.trim() : '';
+
+    const masterTable = document.createElement('table');
+    masterTable.setAttribute('border', '0');
+    masterTable.setAttribute('cellspacing', '0');
+    masterTable.setAttribute('cellpadding', '0');
+    masterTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
+
+    masterTable.innerHTML = `
+      <tr>
+        <td width="58%" style="width: 58%; vertical-align: top; padding: 0;">
+          <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">
+            <tr>
+              <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Nomor</td>
+              <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${nomorVal}</td>
+            </tr>
+            <tr>
+              <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Sifat</td>
+              <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${sifatVal}</td>
+            </tr>
+            <tr>
+              <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Lampiran</td>
+              <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${lampiranVal}</td>
+            </tr>
+            <tr>
+              <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Hal</td>
+              <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify;">${halVal}</td>
+            </tr>
+          </table>
+        </td>
+        <td width="42%" style="width: 42%; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 0;">
+          ${tanggalHtml}
+        </td>
+      </tr>
+    `;
+    fh.parentNode.replaceChild(masterTable, fh);
   });
 
   // 3. Transform Elemen Rata Kanan: Header Tujuan Surat Pengantar & Tanda Tangan Camat
