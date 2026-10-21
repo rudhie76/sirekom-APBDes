@@ -1202,14 +1202,36 @@
           <div id="sectionTahapFields" class="hidden space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap Penyaluran</label>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap / Bulan Penyaluran</label>
                 <select id="selectTahapReguler" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900">
-                  <option value="Tahap 1">Tahap 1</option>
-                  <option value="Tahap 2">Tahap 2</option>
-                  <option value="Tahap I">Tahap I</option>
-                  <option value="Tahap II" selected>Tahap II</option>
-                  <option value="Tahap III">Tahap III</option>
-                  <option value="Kurang Salur">Kurang Salur</option>
+                  <optgroup label="Tahapan">
+                    <option value="Tahap 1">Tahap 1</option>
+                    <option value="Tahap 2">Tahap 2</option>
+                    <option value="Tahap I">Tahap I</option>
+                    <option value="Tahap II" selected>Tahap II</option>
+                    <option value="Tahap III">Tahap III</option>
+                    <option value="Kurang Salur">Kurang Salur</option>
+                  </optgroup>
+                  <optgroup label="Triwulan">
+                    <option value="Triwulan I">Triwulan I</option>
+                    <option value="Triwulan II">Triwulan II</option>
+                    <option value="Triwulan III">Triwulan III</option>
+                    <option value="Triwulan IV">Triwulan IV</option>
+                  </optgroup>
+                  <optgroup label="Bulanan">
+                    <option value="Bulan Januari">Bulan Januari</option>
+                    <option value="Bulan Februari">Bulan Februari</option>
+                    <option value="Bulan Maret">Bulan Maret</option>
+                    <option value="Bulan April">Bulan April</option>
+                    <option value="Bulan Mei">Bulan Mei</option>
+                    <option value="Bulan Juni">Bulan Juni</option>
+                    <option value="Bulan Juli">Bulan Juli</option>
+                    <option value="Bulan Agustus">Bulan Agustus</option>
+                    <option value="Bulan September">Bulan September</option>
+                    <option value="Bulan Oktober">Bulan Oktober</option>
+                    <option value="Bulan November">Bulan November</option>
+                    <option value="Bulan Desember">Bulan Desember</option>
+                  </optgroup>
                 </select>
               </div>
               <div>
@@ -1579,15 +1601,34 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap Penyaluran</label>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap / Bulan Penyaluran</label>
                 <select id="selectTahapSp" onchange="onSpDesaChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:bg-white">
-                  <option value="Tahap I">Tahap I</option>
-                  <option value="Tahap II" selected>Tahap II</option>
-                  <option value="Tahap III">Tahap III</option>
-                  <option value="Triwulan I">Triwulan I</option>
-                  <option value="Triwulan II">Triwulan II</option>
-                  <option value="Triwulan III">Triwulan III</option>
-                  <option value="Triwulan IV">Triwulan IV</option>
+                  <optgroup label="Penyaluran Tahapan">
+                    <option value="Tahap I">Tahap I</option>
+                    <option value="Tahap II" selected>Tahap II</option>
+                    <option value="Tahap III">Tahap III</option>
+                    <option value="Kurang Salur">Kurang Salur</option>
+                  </optgroup>
+                  <optgroup label="Penyaluran Triwulan">
+                    <option value="Triwulan I">Triwulan I</option>
+                    <option value="Triwulan II">Triwulan II</option>
+                    <option value="Triwulan III">Triwulan III</option>
+                    <option value="Triwulan IV">Triwulan IV</option>
+                  </optgroup>
+                  <optgroup label="Penyaluran Bulanan (Siltap / Rutin)">
+                    <option value="Bulan Januari">Bulan Januari</option>
+                    <option value="Bulan Februari">Bulan Februari</option>
+                    <option value="Bulan Maret">Bulan Maret</option>
+                    <option value="Bulan April">Bulan April</option>
+                    <option value="Bulan Mei">Bulan Mei</option>
+                    <option value="Bulan Juni">Bulan Juni</option>
+                    <option value="Bulan Juli">Bulan Juli</option>
+                    <option value="Bulan Agustus">Bulan Agustus</option>
+                    <option value="Bulan September">Bulan September</option>
+                    <option value="Bulan Oktober">Bulan Oktober</option>
+                    <option value="Bulan November">Bulan November</option>
+                    <option value="Bulan Desember">Bulan Desember</option>
+                  </optgroup>
                 </select>
               </div>
               <div>
@@ -3167,6 +3208,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261021_sp_perihal"></script>
+  <script src="app.js?v=20261021_bulanan"></script>
 </body>
 </html>

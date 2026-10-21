@@ -6744,7 +6744,7 @@ window.getPerihalRekomAktif = function() {
  */
 window.buildPerihalFromSpParams = function(desa, jenis, tahap, tahun) {
   if (jenis === 'siltap') {
-    const bulan = (tahap || 'Juni').replace(/tahap\s*/i, '').trim();
+    const bulan = (tahap || 'Juni').replace(/^bulan\s*/i, '').replace(/tahap\s*/i, '').trim() || 'Juni';
     return `Rekomendasi Pencairan ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${bulan} Desa ${desa} Tahun ${tahun}`;
   } else if (jenis === 'add_reguler') {
     return `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${tahap} Tahun Anggaran ${tahun} Desa ${desa}`;
@@ -6797,7 +6797,11 @@ window.initSuratPengantarTab = function() {
     const activeDesa = document.getElementById('selectNamaDesa')?.value || data.namaDesa || 'Api-Api';
     const activeTipe = AppState.activeTemplateKey || data.jenisDana || 'add_reguler';
     const activeTahun = (document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || data.tahunAnggaran || '2026').trim();
-    const activeTahap = document.getElementById('selectTahapReguler')?.value || document.getElementById('selectBulanGaji')?.value || data.tahap || 'Tahap II';
+    let activeTahap = document.getElementById('selectTahapReguler')?.value || data.tahap || 'Tahap II';
+    if (activeTipe === 'siltap') {
+      const bulanGaji = document.getElementById('selectBulanGaji')?.value || 'Juni';
+      activeTahap = `Bulan ${bulanGaji}`;
+    }
 
     data.namaDesa = activeDesa;
     data.jenisDana = activeTipe;
@@ -6832,7 +6836,15 @@ window.initSuratPengantarTab = function() {
 
   const selectTahap = document.getElementById('selectTahapSp');
   if (selectTahap && data.tahap) {
-    selectTahap.value = data.tahap;
+    const optMatch = Array.from(selectTahap.options).find(o => 
+      o.value.toLowerCase() === data.tahap.toLowerCase() || 
+      o.value.toLowerCase() === `bulan ${data.tahap.toLowerCase()}`
+    );
+    if (optMatch) {
+      selectTahap.value = optMatch.value;
+    } else {
+      selectTahap.value = data.tahap;
+    }
   }
 
   const inputTahun = document.getElementById('inputTahunSp');
@@ -7037,8 +7049,12 @@ window.salinDataDariRekomAktifKeSp = function() {
   const perihalAktif = getPerihalRekomAktif();
   const desa = document.getElementById('selectNamaDesa')?.value || 'Sesulu';
   const jenisTipe = AppState.activeTemplateKey || 'add_reguler';
-  const tahap = document.getElementById('selectTahapReguler')?.value || document.getElementById('selectBulanGaji')?.value || 'Tahap II';
   const tahun = (document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026').trim();
+  let tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
+  if (jenisTipe === 'siltap') {
+    const bulanGaji = document.getElementById('selectBulanGaji')?.value || 'Juni';
+    tahap = `Bulan ${bulanGaji}`;
+  }
 
   // Update input Form Surat Pengantar
   const selDesaSp = document.getElementById('selectDesaSp');
@@ -7051,12 +7067,20 @@ window.salinDataDariRekomAktifKeSp = function() {
 
   const selTahapSp = document.getElementById('selectTahapSp');
   if (selTahapSp) {
-    if (tahap.toLowerCase().includes('i') && !tahap.toLowerCase().includes('ii') && !tahap.toLowerCase().includes('iii')) {
+    const optMatch = Array.from(selTahapSp.options).find(o => 
+      o.value.toLowerCase() === tahap.toLowerCase() || 
+      o.value.toLowerCase() === `bulan ${tahap.toLowerCase()}`
+    );
+    if (optMatch) {
+      selTahapSp.value = optMatch.value;
+    } else if (tahap.toLowerCase().includes('i') && !tahap.toLowerCase().includes('ii') && !tahap.toLowerCase().includes('iii')) {
       selTahapSp.value = 'Tahap I';
     } else if (tahap.toLowerCase().includes('ii') && !tahap.toLowerCase().includes('iii')) {
       selTahapSp.value = 'Tahap II';
     } else if (tahap.toLowerCase().includes('iii')) {
       selTahapSp.value = 'Tahap III';
+    } else {
+      selTahapSp.value = tahap;
     }
   }
   AppState.suratPengantarData.tahap = selTahapSp?.value || tahap;
@@ -7693,7 +7717,14 @@ window.muatArsipSpKeEditor = function(id) {
   if (selJenis && item.jenisDana) selJenis.value = item.jenisDana;
 
   const selTahap = document.getElementById('selectTahapSp');
-  if (selTahap && item.tahap) selTahap.value = item.tahap;
+  if (selTahap && item.tahap) {
+    const optMatch = Array.from(selTahap.options).find(o => 
+      o.value.toLowerCase() === item.tahap.toLowerCase() || 
+      o.value.toLowerCase() === `bulan ${item.tahap.toLowerCase()}`
+    );
+    if (optMatch) selTahap.value = optMatch.value;
+    else selTahap.value = item.tahap;
+  }
 
   const inpTahun = document.getElementById('inputTahunSp');
   if (inpTahun && item.tahunAnggaran) inpTahun.value = item.tahunAnggaran;
