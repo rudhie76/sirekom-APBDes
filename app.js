@@ -6022,11 +6022,6 @@ window.renderTabelPengajuanKecamatan = function() {
         </div>
       `;
     }
-            <span>📤 Kirim ke Desa</span>
-          </button>
-        </div>
-      `;
-    }
 
     return `
       <tr class="hover:bg-slate-50 transition border-b border-slate-100 ${item.status === 'Dikembalikan' ? 'bg-rose-50/20' : ''}">
