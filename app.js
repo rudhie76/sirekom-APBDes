@@ -2428,7 +2428,7 @@ function convertOlToTable(ol, lineSpacing) {
   table.setAttribute('border', '0');
   table.setAttribute('cellspacing', '0');
   table.setAttribute('cellpadding', '0');
-  table.setAttribute('style', `width: 100%; border-collapse: collapse; margin-top: 2pt; margin-bottom: 2pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+  table.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 2pt; margin-bottom: 3pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
   
   let startNum = 1;
   const startAttr = ol.getAttribute('start');
@@ -2442,13 +2442,21 @@ function convertOlToTable(ol, lineSpacing) {
   lis.forEach(li => {
     rowsHtml += `
       <tr>
-        <td style="width: 38pt; padding-left: 18pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding-top: 1pt; padding-bottom: 1pt;">${currentNum}.</td>
-        <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding-top: 1pt; padding-bottom: 1pt;">${li.innerHTML}</td>
+        <td width="24" style="width: 24pt; min-width: 24pt; max-width: 24pt; vertical-align: top; padding: 1pt 0; line-height: ${lineSpacing}; mso-line-height-rule: exactly;">&nbsp;</td>
+        <td width="18" style="width: 18pt; min-width: 18pt; max-width: 18pt; vertical-align: top; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${currentNum}.</td>
+        <td width="459" style="width: 459pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${li.innerHTML}</td>
       </tr>
     `;
     currentNum++;
   });
-  table.innerHTML = rowsHtml;
+  table.innerHTML = `
+    <colgroup>
+      <col width="24" style="width: 24pt;">
+      <col width="18" style="width: 18pt;">
+      <col width="459" style="width: 459pt;">
+    </colgroup>
+    ${rowsHtml}
+  `;
   return table;
 }
 
@@ -2600,7 +2608,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
         <td style="width: 15%; vertical-align: middle; padding: 0 0 6pt 0;">&nbsp;</td>
       </tr>
       <tr>
-        <td colspan="3" style="padding: 0; border-top: 3pt double #000000; height: 1pt; font-size: 1pt; line-height: 1pt;">&nbsp;</td>
+        <td colspan="3" style="padding: 0; border-top: 3.0pt double #000000; mso-border-top-alt: double windowtext 3.0pt; height: 1pt; font-size: 1pt; line-height: 1pt;">&nbsp;</td>
       </tr>
     `;
     kop.parentNode.replaceChild(kopTable, kop);
@@ -2645,7 +2653,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     masterTable.setAttribute('border', '0');
     masterTable.setAttribute('cellspacing', '0');
     masterTable.setAttribute('cellpadding', '0');
-    masterTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
+    masterTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt; mso-table-tspace: 0pt; mso-table-bspace: 0pt;`);
 
     masterTable.innerHTML = `
       <colgroup>
@@ -2653,32 +2661,32 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
         <col width="42%" style="width: 42%;" />
       </colgroup>
       <tr>
-        <td width="58%" style="width: 58%; max-width: 58%; vertical-align: top; padding: 0;">
-          <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">
+        <td width="58%" style="width: 58%; max-width: 58%; vertical-align: top; padding: 0; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+          <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
             <colgroup>
               <col width="60" style="width: 60pt;" />
               <col width="14" style="width: 14pt;" />
               <col width="217" style="width: 217pt;" />
             </colgroup>
             <tr>
-              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Nomor</td>
-              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${nomorVal}</td>
+              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">Nomor</td>
+              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">:</td>
+              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${nomorVal}</td>
             </tr>
             <tr>
-              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Sifat</td>
-              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${sifatVal}</td>
+              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">Sifat</td>
+              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">:</td>
+              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${sifatVal}</td>
             </tr>
             <tr>
-              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Lampiran</td>
-              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${lampiranVal}</td>
+              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">Lampiran</td>
+              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">:</td>
+              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${lampiranVal}</td>
             </tr>
             <tr>
-              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Hal</td>
-              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify; word-wrap: break-word; overflow-wrap: break-word;">
+              <td width="60" style="width: 60pt; min-width: 60pt; max-width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">Hal</td>
+              <td width="14" style="width: 14pt; min-width: 14pt; max-width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">:</td>
+              <td width="217" style="width: 217pt; max-width: 217pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify; word-wrap: break-word; overflow-wrap: break-word; mso-line-height-rule: exactly;">
                 <div style="width: 217pt; max-width: 217pt; word-wrap: break-word; overflow-wrap: break-word; text-align: justify; line-height: ${lineSpacing}; margin: 0; padding: 0;">${halVal}</div>
               </td>
             </tr>
@@ -2690,6 +2698,22 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       </tr>
     `;
     fh.parentNode.replaceChild(masterTable, fh);
+  });
+
+  // 2b. Transform Blok Tujuan Surat (Yth / Di - / Tempat) Agar Terindentasi Presisi di Word
+  clone.querySelectorAll('div').forEach(d => {
+    const text = d.textContent || '';
+    if ((text.includes('Yth') || text.includes('Kepada')) && text.includes('Di -') && text.includes('Tempat') && !d.closest('table')) {
+      d.setAttribute('style', `margin-top: 10pt; margin-bottom: 8pt; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+      d.querySelectorAll('div').forEach(sub => {
+        const subText = sub.textContent.trim();
+        if (subText.toLowerCase() === 'tempat') {
+          sub.setAttribute('style', `margin: 0 0 0 18pt; mso-para-margin-left: 18pt; padding: 0; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; text-decoration: underline; line-height: ${lineSpacing}; text-indent: 0;`);
+        } else {
+          sub.setAttribute('style', `margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; text-indent: 0;`);
+        }
+      });
+    }
   });
 
   // 3. Transform Elemen Rata Kanan: Header Tujuan Surat Pengantar & Tanda Tangan Camat
@@ -2705,10 +2729,10 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       headerSpTable.setAttribute('border', '0');
       headerSpTable.setAttribute('cellspacing', '0');
       headerSpTable.setAttribute('cellpadding', '0');
-      headerSpTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 8pt; line-height: ${lineSpacing};`);
+      headerSpTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 8pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
       
       box.querySelectorAll('.pl-6').forEach(p => {
-        p.setAttribute('style', `padding-left: 18pt; line-height: ${lineSpacing}; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;`);
+        p.setAttribute('style', `margin-left: 18pt; mso-para-margin-left: 18pt; line-height: ${lineSpacing}; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;`);
       });
       box.querySelectorAll('div').forEach(d => {
         d.style.lineHeight = lineSpacing;
@@ -2717,9 +2741,13 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       });
 
       headerSpTable.innerHTML = `
+        <colgroup>
+          <col width="52%" style="width: 52%;">
+          <col width="48%" style="width: 48%;">
+        </colgroup>
         <tr>
-          <td style="width: 52%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
-          <td style="width: 48%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${box.innerHTML}</td>
+          <td width="52%" style="width: 52%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
+          <td width="48%" style="width: 48%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${box.innerHTML}</td>
         </tr>
       `;
       el.parentNode.replaceChild(headerSpTable, el);
@@ -2730,22 +2758,37 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       ttdTable.setAttribute('border', '0');
       ttdTable.setAttribute('cellspacing', '0');
       ttdTable.setAttribute('cellpadding', '0');
-      ttdTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 14pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
+      ttdTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 14pt; margin-bottom: 6pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
       
-      ttdBox.querySelectorAll('div').forEach(d => {
-        d.style.lineHeight = lineSpacing;
-        d.style.fontFamily = 'Arial, sans-serif';
-        d.style.fontSize = '11pt';
-      });
       ttdBox.querySelectorAll('.h-16, .h-12').forEach(sp => {
         sp.innerHTML = '&nbsp;';
         sp.setAttribute('style', `height: 48pt; line-height: 48pt; font-size: 48pt; margin: 0; padding: 0;`);
       });
+      ttdBox.querySelectorAll('.my-6, .my-4, .my-3').forEach(sp => {
+        sp.setAttribute('style', `height: 36pt; line-height: 36pt; margin: 12pt 0; text-align: center; font-family: Arial, sans-serif; font-size: 11pt;`);
+      });
+
+      ttdBox.querySelectorAll('div').forEach(d => {
+        if (!d.style.height) {
+          d.style.lineHeight = lineSpacing;
+          d.style.fontFamily = 'Arial, sans-serif';
+          d.style.fontSize = '11pt';
+          d.style.margin = '0';
+          d.style.padding = '0';
+        }
+        if (d.textContent.includes('nama_pengirim') || d.classList.contains('font-bold') || d.classList.contains('underline')) {
+          d.style.fontWeight = 'bold';
+        }
+      });
 
       ttdTable.innerHTML = `
+        <colgroup>
+          <col width="52%" style="width: 52%;">
+          <col width="48%" style="width: 48%;">
+        </colgroup>
         <tr>
-          <td style="width: 52%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
-          <td style="width: 48%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${ttdBox.innerHTML}</td>
+          <td width="52%" style="width: 52%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
+          <td width="48%" style="width: 48%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${ttdBox.innerHTML}</td>
         </tr>
       `;
       el.parentNode.replaceChild(ttdTable, el);
@@ -2781,7 +2824,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       dasarTable.setAttribute('border', '0');
       dasarTable.setAttribute('cellspacing', '0');
       dasarTable.setAttribute('cellpadding', '0');
-      dasarTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 3pt; margin-bottom: 3pt; line-height: ${lineSpacing};`);
+      dasarTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 3pt; margin-bottom: 3pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
       
       const labelText = labelDiv ? labelDiv.textContent.trim() : '';
       const colonText = colonDiv ? colonDiv.textContent.trim() : (labelText ? ':' : '');
@@ -2796,21 +2839,34 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
           const isFirst = idx === 0;
           rowsHtml += `
             <tr>
-              <td style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${isFirst && labelText ? labelText : '&nbsp;'}</td>
-              <td style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${isFirst && colonText ? colonText : '&nbsp;'}</td>
-              <td style="width: 18pt; vertical-align: top; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${curNum}.</td>
-              <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${li.innerHTML}</td>
+              <td width="52" style="width: 52pt; min-width: 52pt; max-width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${isFirst && labelText ? labelText : '&nbsp;'}</td>
+              <td width="12" style="width: 12pt; min-width: 12pt; max-width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${isFirst && colonText ? colonText : '&nbsp;'}</td>
+              <td width="18" style="width: 18pt; min-width: 18pt; max-width: 18pt; vertical-align: top; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${curNum}.</td>
+              <td width="419" style="width: 419pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${li.innerHTML}</td>
             </tr>
           `;
         });
-        dasarTable.innerHTML = rowsHtml;
+        dasarTable.innerHTML = `
+          <colgroup>
+            <col width="52" style="width: 52pt;">
+            <col width="12" style="width: 12pt;">
+            <col width="18" style="width: 18pt;">
+            <col width="419" style="width: 419pt;">
+          </colgroup>
+          ${rowsHtml}
+        `;
       } else {
         const cHtml = contentDiv ? contentDiv.innerHTML : '';
         dasarTable.innerHTML = `
+          <colgroup>
+            <col width="52" style="width: 52pt;">
+            <col width="12" style="width: 12pt;">
+            <col width="437" style="width: 437pt;">
+          </colgroup>
           <tr>
-            <td style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${labelText || '&nbsp;'}</td>
-            <td style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${colonText || '&nbsp;'}</td>
-            <td colspan="2" style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${cHtml}</td>
+            <td width="52" style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${labelText || '&nbsp;'}</td>
+            <td width="12" style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${colonText || '&nbsp;'}</td>
+            <td width="437" style="width: 437pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${cHtml}</td>
           </tr>
         `;
       }
@@ -2822,11 +2878,15 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       tTable.setAttribute('border', '0');
       tTable.setAttribute('cellspacing', '0');
       tTable.setAttribute('cellpadding', '0');
-      tTable.setAttribute('style', `border-collapse: collapse; margin-top: 1pt; margin-bottom: 1pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+      tTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 1pt; margin-bottom: 1pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
       tTable.innerHTML = `
+        <colgroup>
+          <col width="18" style="width: 18pt;">
+          <col width="483" style="width: 483pt;">
+        </colgroup>
         <tr>
-          <td style="width: 18pt; vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${numSpan.innerHTML}</td>
-          <td style="vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${textSpan ? textSpan.innerHTML : ''}</td>
+          <td width="18" style="width: 18pt; vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${numSpan.innerHTML}</td>
+          <td width="483" style="width: 483pt; vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${textSpan ? textSpan.innerHTML : ''}</td>
         </tr>
       `;
       fr.parentNode.replaceChild(tTable, fr);
@@ -2842,33 +2902,45 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   });
 
   // 7. Format Tabel Data Rekomendasi (Nama, Jabatan, Nomor Rekening Kas Desa) dengan Kolom Indent
-  const pl8Containers = clone.querySelectorAll('div.pl-8');
-  pl8Containers.forEach(div => {
-    const innerTable = div.querySelector('table');
-    if (innerTable && !innerTable.querySelector('th')) {
-      const dataTable = document.createElement('table');
-      dataTable.setAttribute('border', '0');
-      dataTable.setAttribute('cellspacing', '0');
-      dataTable.setAttribute('cellpadding', '0');
-      dataTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 4pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
-      
-      let rowsHtml = '';
-      innerTable.querySelectorAll('tr').forEach(tr => {
-        const tds = tr.children;
-        if (tds.length >= 3) {
-          rowsHtml += `
-            <tr>
-              <td style="width: 24pt; vertical-align: top; padding: 1.5pt 0;">&nbsp;</td>
-              <td style="width: 140pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0;">${tds[0].innerHTML}</td>
-              <td style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0;">:</td>
-              <td style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0;">${tds[2].innerHTML}</td>
-            </tr>
-          `;
-        }
-      });
-      dataTable.innerHTML = rowsHtml;
-      div.parentNode.replaceChild(dataTable, div);
+  const candidateTables = [];
+  clone.querySelectorAll('table').forEach(t => {
+    if (t.textContent.includes('Nomor Rekening Kas Desa') && !t.closest('.header-surat-table')) {
+      candidateTables.push(t);
     }
+  });
+
+  candidateTables.forEach(innerTable => {
+    const dataTable = document.createElement('table');
+    dataTable.setAttribute('border', '0');
+    dataTable.setAttribute('cellspacing', '0');
+    dataTable.setAttribute('cellpadding', '0');
+    dataTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 4pt; margin-bottom: 6pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
+    
+    let rowsHtml = '';
+    innerTable.querySelectorAll('tr').forEach(tr => {
+      const tds = tr.children;
+      if (tds.length >= 3) {
+        rowsHtml += `
+          <tr>
+            <td width="24" style="width: 24pt; min-width: 24pt; max-width: 24pt; vertical-align: top; padding: 1.5pt 0; line-height: ${lineSpacing}; mso-line-height-rule: exactly;">&nbsp;</td>
+            <td width="160" style="width: 160pt; min-width: 160pt; max-width: 160pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0; mso-line-height-rule: exactly;">${tds[0].innerHTML}</td>
+            <td width="12" style="width: 12pt; min-width: 12pt; max-width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0; mso-line-height-rule: exactly;">:</td>
+            <td width="305" style="width: 305pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0; mso-line-height-rule: exactly;">${tds[2].innerHTML}</td>
+          </tr>
+        `;
+      }
+    });
+    dataTable.innerHTML = `
+      <colgroup>
+        <col width="24" style="width: 24pt;">
+        <col width="160" style="width: 160pt;">
+        <col width="12" style="width: 12pt;">
+        <col width="305" style="width: 305pt;">
+      </colgroup>
+      ${rowsHtml}
+    `;
+    const targetReplace = innerTable.closest('div.pl-8') || innerTable;
+    targetReplace.parentNode.replaceChild(dataTable, targetReplace);
   });
 
   // 8. Format Tabel 4 Kolom Surat Pengantar (Presisi Lebar Kolom & Border Word)
@@ -2910,18 +2982,18 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   clone.querySelectorAll('p, div.indent-10').forEach(p => {
     if (p.closest('.kop-surat') || p.closest('table')) return;
     if (isSp) {
-      p.setAttribute('style', `margin-top: 0; margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; text-align: left;`);
+      p.setAttribute('style', `margin-top: 0; margin-bottom: ${paraMargin}; mso-para-margin-top: 0pt; mso-para-margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-line-height-rule: exactly; text-align: left;`);
     } else {
-      p.setAttribute('style', `text-indent: 30pt; text-align: justify; margin-top: 0; margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+      p.setAttribute('style', `text-indent: 30pt; mso-char-indent-count: 3; mso-text-indent-alt: 30pt; text-align: justify; margin-top: 0; margin-bottom: ${paraMargin}; mso-para-margin-top: 0pt; mso-para-margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-line-height-rule: exactly;`);
     }
   });
 
-  // 10. Format Indentasi pl-6 di luar tabel (seperti pada Yth/Di/Tempat)
+  // 10. Format Indentasi pl-6 di luar tabel (seperti pada Yth/Di/Tempat jika belum terformat)
   clone.querySelectorAll('.pl-6').forEach(el => {
     if (!el.closest('table')) {
       const isBold = el.classList.contains('font-bold') || el.classList.contains('font-semibold') || el.innerHTML.includes('strong') || el.textContent.trim().toLowerCase() === 'tempat';
       const isUnderline = el.classList.contains('underline');
-      el.setAttribute('style', `padding-left: 18pt; line-height: ${lineSpacing}; font-family: Arial, sans-serif; font-size: 11pt; ${isBold ? 'font-weight: bold;' : ''} ${isUnderline ? 'text-decoration: underline;' : ''}`);
+      el.setAttribute('style', `margin-left: 18pt; mso-para-margin-left: 18pt; padding-left: 18pt; line-height: ${lineSpacing}; font-family: Arial, sans-serif; font-size: 11pt; ${isBold ? 'font-weight: bold;' : ''} ${isUnderline ? 'text-decoration: underline;' : ''}`);
     }
   });
 
@@ -2990,7 +3062,7 @@ window.eksporSuratKeDocx = async function() {
     const isFlowMode = document.getElementById('selectPageBreakMode')?.value === 'flow';
     const pageSeparator = isFlowMode 
       ? '\n<p style="margin: 16pt 0; font-size: 1pt; line-height: 1pt;">&nbsp;</p>\n'
-      : '\n<p style="page-break-before: always; margin: 0; padding: 0; font-size: 1pt; line-height: 1pt; mso-line-height-rule: exactly; height: 1pt;"></p>\n';
+      : '\n<br clear="all" style="page-break-before: always; mso-break-type: section-break;" />\n';
 
     const paperSize = document.getElementById('selectPaperSize')?.value || AppState.paperSize || 'a4';
     const isA4 = paperSize === 'a4';
@@ -3019,6 +3091,8 @@ window.eksporSuratKeDocx = async function() {
             size: ${pageCssSize};
             margin: 1.2cm 1.5cm 1.5cm 1.8cm;
             mso-page-orientation: portrait;
+            mso-header-margin: 36pt;
+            mso-footer-margin: 36pt;
           }
           body, p, table, td, th, ol, li, div, span {
             font-family: Arial, Helvetica, sans-serif;
@@ -3039,9 +3113,11 @@ window.eksporSuratKeDocx = async function() {
             mso-line-height-rule: exactly;
             line-height: ${lineSpacing};
           }
-          p {
+          p, p.indent-10, div.indent-10 {
             text-align: justify;
             text-indent: 30pt;
+            mso-char-indent-count: 3;
+            mso-text-indent-alt: 30pt;
           }
           table {
             border-collapse: collapse;
@@ -3077,7 +3153,7 @@ window.eksporSuratKeDocx = async function() {
           .text-left { text-align: left; }
           .align-top { vertical-align: top; }
           .align-middle { vertical-align: middle; }
-          .indent-10 { text-indent: 30pt; }
+          .indent-10 { text-indent: 30pt; mso-char-indent-count: 3; mso-text-indent-alt: 30pt; }
         </style>
       </head>
       <body>
