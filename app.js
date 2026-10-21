@@ -318,6 +318,7 @@ const AppState = {
   paperSize: 'a4',
   pageBreakMode: 'separated',
   viewMode: 'split',
+  lineSpacing: '1.15',
   isDirectEditMode: false,
   isDirectEditModeSp: false,
 
@@ -337,6 +338,7 @@ const AppState = {
     nipPengirim: '198610082006021001',
     metodeTte: 'srikandi',
     paperSize: 'a4',
+    lineSpacing: '1.15',
     zoomPercent: 100,
     rows: [
       {
@@ -1335,6 +1337,15 @@ function updateLivePreview(force = false) {
   applyPaperSize();
   applyPageBreakMode();
 
+  // Terapkan spasi baris aktif
+  const lineSpacing = AppState.lineSpacing || document.getElementById('selectLineSpacing')?.value || '1.15';
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+  previewDoc.style.setProperty('--surat-line-height', lineSpacing);
+  previewDoc.style.setProperty('--surat-para-margin', paraMargin);
+
   // Jika render ulang saat mode edit sedang aktif, pasang kembali atribut contentEditable
   if (AppState.isDirectEditMode) {
     const sheets = previewDoc.querySelectorAll('.surat-sheet');
@@ -2100,6 +2111,34 @@ function applyPageBreakMode() {
 }
 window.applyPageBreakMode = applyPageBreakMode;
 
+/**
+ * Terapkan Pilihan Jarak Spasi Baris Dokumen (Line Spacing)
+ */
+window.applyLineSpacing = function(val) {
+  const select = document.getElementById('selectLineSpacing');
+  const lineSpacing = val || select?.value || '1.15';
+  AppState.lineSpacing = lineSpacing;
+
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+
+  const container = document.getElementById('previewDocumentContainer');
+  if (container) {
+    container.style.setProperty('--surat-line-height', lineSpacing);
+    container.style.setProperty('--surat-para-margin', paraMargin);
+  }
+
+  const sheets = document.querySelectorAll('#previewDocumentContainer .surat-sheet');
+  sheets.forEach(sheet => {
+    sheet.style.setProperty('--surat-line-height', lineSpacing);
+    sheet.style.setProperty('--surat-para-margin', paraMargin);
+  });
+
+  showToast(`Jarak spasi baris dokumen diatur ke: ${lineSpacing}`, 'info');
+};
+
 function changeZoom(delta) {
   AppState.currentZoom = Math.max(50, Math.min(150, AppState.currentZoom + delta));
   const el = document.getElementById('previewDocumentContainer');
@@ -2313,6 +2352,16 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   // Hapus kontrol atau elemen yang tidak dicetak
   clone.querySelectorAll('.no-print, button, script').forEach(el => el.remove());
 
+  // Tentukan spasi baris yang aktif (1.0, 1.15, 1.25, 1.5)
+  const lineSpacing = AppState.activeTab === 'surat-pengantar' || AppState.activeTemplateKey === 'surat_pengantar'
+    ? (document.getElementById('selectLineSpacingSp')?.value || AppState.suratPengantarData?.lineSpacing || '1.15')
+    : (document.getElementById('selectLineSpacing')?.value || AppState.lineSpacing || '1.15');
+
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+
   // 1. Transform Kop Surat menjadi Tabel Word Bergaris Ganda yang rapi dan presisi
   const kop = clone.querySelector('.kop-surat');
   if (kop) {
@@ -2329,13 +2378,13 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
           ${logoImgHtml}
         </td>
         <td style="vertical-align: middle; text-align: center; font-family: Arial, sans-serif; padding: 0 8pt 5pt 8pt; border-bottom: 3pt double #000000;">
-          <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: 1.15; color: #000000;">
+          <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: ${lineSpacing}; color: #000000;">
             PEMERINTAH KABUPATEN PENAJAM PASER UTARA
           </div>
-          <div style="font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 1pt 0 2pt 0; padding: 0; line-height: 1.15; color: #000000;">
+          <div style="font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 1pt 0 2pt 0; padding: 0; line-height: ${lineSpacing}; color: #000000;">
             KECAMATAN WARU
           </div>
-          <div style="font-size: 10pt; line-height: 1.15; margin: 0; padding: 0; color: #000000;">
+          <div style="font-size: 10pt; line-height: ${lineSpacing}; margin: 0; padding: 0; color: #000000;">
             <span>Jalan Propinsi Km. 25, WA. 0821-9564-7788</span><br>
             <span>Website : <span style="color: #1d4ed8; text-decoration: underline;">https://kecwaru.penajamkab.go.id/</span></span><br>
             <span>Email : <span style="color: #1d4ed8; text-decoration: underline;">kecamatanwaru2014@gmail.com</span> Pos 76284</span>
@@ -2353,14 +2402,14 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     const leftCol = fh.children[0];
     const rightCol = fh.children[1];
     const headerTable = document.createElement('table');
-    headerTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: 1.15;');
+    headerTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
     
     if (leftCol) {
       leftCol.querySelectorAll('table').forEach(tbl => {
-        tbl.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
+        tbl.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
       });
       leftCol.querySelectorAll('td').forEach(td => {
-        td.style.lineHeight = '1.15';
+        td.style.lineHeight = lineSpacing;
       });
     }
 
@@ -2368,8 +2417,8 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     const rightHtml = rightCol ? rightCol.innerHTML : '';
     headerTable.innerHTML = `
       <tr>
-        <td style="width: 58%; vertical-align: top; line-height: 1.15;">${leftHtml}</td>
-        <td style="width: 42%; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;">${rightHtml}</td>
+        <td style="width: 58%; vertical-align: top; line-height: ${lineSpacing};">${leftHtml}</td>
+        <td style="width: 42%; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">${rightHtml}</td>
       </tr>
     `;
     fh.parentNode.replaceChild(headerTable, fh);
@@ -2383,15 +2432,15 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     const contentDiv = fr.querySelector('.flex-1');
     if (labelDiv || contentDiv) {
       const dasarTable = document.createElement('table');
-      dasarTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 4pt; margin-bottom: 4pt; line-height: 1.15;');
+      dasarTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 4pt; margin-bottom: 4pt; line-height: ${lineSpacing};`);
       const labelText = labelDiv ? labelDiv.textContent.trim() : '';
       const colonText = colonDiv ? colonDiv.textContent.trim() : (labelText ? ':' : '');
       const contentHtml = contentDiv ? contentDiv.innerHTML : '';
       dasarTable.innerHTML = `
         <tr>
-          <td style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;">${labelText}</td>
-          <td style="width: 8pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;">${colonText}</td>
-          <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;">${contentHtml}</td>
+          <td style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">${labelText}</td>
+          <td style="width: 8pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">${colonText}</td>
+          <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">${contentHtml}</td>
         </tr>
       `;
       fr.parentNode.replaceChild(dasarTable, fr);
@@ -2403,50 +2452,50 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   flexTtd.forEach(ft => {
     const ttdBox = ft.querySelector('.w-72') || ft.firstElementChild;
     const ttdTable = document.createElement('table');
-    ttdTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 14pt; line-height: 1.15;');
+    ttdTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 14pt; line-height: ${lineSpacing};`);
     const ttdHtml = ttdBox ? ttdBox.innerHTML : ft.innerHTML;
     ttdTable.innerHTML = `
       <tr>
-        <td style="width: 48%; vertical-align: top; line-height: 1.15;">&nbsp;</td>
-        <td style="width: 52%; vertical-align: top; text-align: left; padding-left: 15pt; line-height: 1.15;">${ttdHtml}</td>
+        <td style="width: 48%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
+        <td style="width: 52%; vertical-align: top; text-align: left; padding-left: 15pt; line-height: ${lineSpacing};">${ttdHtml}</td>
       </tr>
     `;
     ft.parentNode.replaceChild(ttdTable, ft);
   });
 
-  // 5. Standarisasi Format Paragraf (Spasi 1.15)
+  // 5. Standarisasi Format Paragraf (Sesuai lineSpacing yang dipilih)
   clone.querySelectorAll('p').forEach(p => {
-    p.setAttribute('style', 'text-indent: 36pt; text-align: justify; margin: 4pt 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
+    p.setAttribute('style', `text-indent: 36pt; text-align: justify; margin: ${paraMargin} 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
   });
 
-  // 6. Standarisasi Format Tabel (Spasi 1.15)
+  // 6. Standarisasi Format Tabel (Sesuai lineSpacing yang dipilih)
   clone.querySelectorAll('table').forEach(t => {
     if (!t.getAttribute('style')) {
-      t.setAttribute('style', 'border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
+      t.setAttribute('style', `border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
     }
     // Jika tabel berbingkai data (seperti tabel 4 kolom Surat Pengantar)
     if (t.querySelector('th')) {
       t.setAttribute('border', '1');
-      t.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; border: 1pt solid #000000; margin-top: 10pt; margin-bottom: 10pt;');
+      t.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; border: 1pt solid #000000; margin-top: 10pt; margin-bottom: 10pt;`);
       t.querySelectorAll('th').forEach(th => {
-        th.setAttribute('style', 'border: 1pt solid #000000; padding: 5pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; text-align: center; background-color: #f1f5f9; line-height: 1.15;');
+        th.setAttribute('style', `border: 1pt solid #000000; padding: 5pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; text-align: center; background-color: #f1f5f9; line-height: ${lineSpacing};`);
       });
       t.querySelectorAll('td').forEach(td => {
         const align = td.style.textAlign || 'left';
-        td.setAttribute('style', `border: 1pt solid #000000; padding: 6pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15; vertical-align: top; text-align: ${align};`);
+        td.setAttribute('style', `border: 1pt solid #000000; padding: 6pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; vertical-align: top; text-align: ${align};`);
       });
     }
   });
   clone.querySelectorAll('td').forEach(td => {
-    td.style.lineHeight = '1.15';
+    td.style.lineHeight = lineSpacing;
   });
 
-  // 7. Standarisasi Format Daftar / List Berkas & Dasar (Spasi 1.15)
+  // 7. Standarisasi Format Daftar / List Berkas & Dasar (Sesuai lineSpacing yang dipilih)
   clone.querySelectorAll('ol').forEach(ol => {
-    ol.setAttribute('style', 'margin: 3pt 0 3pt 15pt; padding-left: 18pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
+    ol.setAttribute('style', `margin: 3pt 0 3pt 15pt; padding-left: 18pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
   });
   clone.querySelectorAll('li').forEach(li => {
-    li.setAttribute('style', 'margin-bottom: 2pt; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15;');
+    li.setAttribute('style', `margin-bottom: 2pt; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
   });
 
   return clone.innerHTML;
@@ -2512,6 +2561,12 @@ window.eksporSuratKeDocx = async function() {
       left: 1020   // 1.8 cm
     };
 
+    const lineSpacing = AppState.lineSpacing || document.getElementById('selectLineSpacing')?.value || '1.15';
+    let paraMargin = '4pt';
+    if (lineSpacing === '1.0') paraMargin = '2pt';
+    else if (lineSpacing === '1.5') paraMargin = '6pt';
+    else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+
     const fullDocumentHtml = `
       <!DOCTYPE html>
       <html>
@@ -2527,7 +2582,7 @@ window.eksporSuratKeDocx = async function() {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 11pt;
             color: #000000;
-            line-height: 1.15;
+            line-height: ${lineSpacing};
           }
           body {
             background-color: #ffffff;
@@ -2537,26 +2592,26 @@ window.eksporSuratKeDocx = async function() {
           p {
             text-align: justify;
             text-indent: 36pt;
-            margin: 4pt 0;
-            line-height: 1.15;
+            margin: ${paraMargin} 0;
+            line-height: ${lineSpacing};
           }
           table {
             border-collapse: collapse;
-            line-height: 1.15;
+            line-height: ${lineSpacing};
           }
           td {
             vertical-align: top;
-            line-height: 1.15;
+            line-height: ${lineSpacing};
           }
           ol {
             margin: 3pt 0 3pt 15pt;
             padding-left: 18pt;
-            line-height: 1.15;
+            line-height: ${lineSpacing};
           }
           li {
             margin-bottom: 2pt;
             text-align: justify;
-            line-height: 1.15;
+            line-height: ${lineSpacing};
           }
         </style>
       </head>
@@ -7242,6 +7297,15 @@ window.updateLivePreviewSp = function(force = false) {
 
   const rows = AppState.suratPengantarData.rows || [];
 
+  // Terapkan spasi baris aktif
+  const lineSpacing = AppState.suratPengantarData.lineSpacing || document.getElementById('selectLineSpacingSp')?.value || '1.15';
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+  container.style.setProperty('--surat-line-height', lineSpacing);
+  container.style.setProperty('--surat-para-margin', paraMargin);
+
   // 1. Kop Surat Resmi
   const kopHtml = getKopSuratHtml(true);
 
@@ -7249,25 +7313,25 @@ window.updateLivePreviewSp = function(force = false) {
   let headerTujuanHtml = '';
   if (metodeTte === 'srikandi') {
     headerTujuanHtml = `
-      <div class="mt-4 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+      <div class="mt-4 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
         <div class="w-80 text-left">
-          <div style="line-height: 1.15 !important;">Penajam, \${tanggal_naskah}</div>
-          <div class="mt-2" style="line-height: 1.15 !important;">Kepada</div>
-          <div style="line-height: 1.15 !important;">Yth. \${jabatan_tujuan}</div>
-          <div style="line-height: 1.15 !important;">di -</div>
-          <div class="pl-6" style="line-height: 1.15 !important;">\${tempat_tujuan}</div>
+          <div style="line-height: var(--surat-line-height, 1.15) !important;">Penajam, \${tanggal_naskah}</div>
+          <div class="mt-2" style="line-height: var(--surat-line-height, 1.15) !important;">Kepada</div>
+          <div style="line-height: var(--surat-line-height, 1.15) !important;">Yth. \${jabatan_tujuan}</div>
+          <div style="line-height: var(--surat-line-height, 1.15) !important;">di -</div>
+          <div class="pl-6" style="line-height: var(--surat-line-height, 1.15) !important;">\${tempat_tujuan}</div>
         </div>
       </div>
     `;
   } else {
     headerTujuanHtml = `
-      <div class="mt-4 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+      <div class="mt-4 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
         <div class="w-80 text-left">
-          <div style="line-height: 1.15 !important;">Penajam, ${tanggalIndo}</div>
-          <div class="mt-2" style="line-height: 1.15 !important;">Kepada</div>
-          <div style="line-height: 1.15 !important;">Yth. ${escapeHtml(tujuanYth)}</div>
-          <div style="line-height: 1.15 !important;">di -</div>
-          <div class="pl-6" style="line-height: 1.15 !important;">${escapeHtml(tempatTujuan)}</div>
+          <div style="line-height: var(--surat-line-height, 1.15) !important;">Penajam, ${tanggalIndo}</div>
+          <div class="mt-2" style="line-height: var(--surat-line-height, 1.15) !important;">Kepada</div>
+          <div style="line-height: var(--surat-line-height, 1.15) !important;">Yth. ${escapeHtml(tujuanYth)}</div>
+          <div style="line-height: var(--surat-line-height, 1.15) !important;">di -</div>
+          <div class="pl-6" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(tempatTujuan)}</div>
         </div>
       </div>
     `;
@@ -7275,11 +7339,11 @@ window.updateLivePreviewSp = function(force = false) {
 
   // 3. Judul Surat Pengantar
   const judulSuratHtml = `
-    <div class="mt-6 text-center text-black font-sans" style="line-height: 1.15 !important;">
-      <div class="text-[14pt] font-bold tracking-wider uppercase underline" style="line-height: 1.15 !important;">
+    <div class="mt-6 text-center text-black font-sans" style="line-height: var(--surat-line-height, 1.15) !important;">
+      <div class="text-[14pt] font-bold tracking-wider uppercase underline" style="line-height: var(--surat-line-height, 1.15) !important;">
         SURAT PENGANTAR
       </div>
-      <div class="text-[11pt] mt-1" style="line-height: 1.15 !important;">
+      <div class="text-[11pt] mt-1" style="line-height: var(--surat-line-height, 1.15) !important;">
         Nomor : ${metodeTte === 'srikandi' ? '${nomor_naskah}' : escapeHtml(nomorSp)}
       </div>
     </div>
@@ -7289,16 +7353,16 @@ window.updateLivePreviewSp = function(force = false) {
   const tableRowsHtml = rows.map((r, i) => {
     return `
       <tr>
-        <td style="border: 1px solid #000000; padding: 8px 4px; text-align: center; vertical-align: top; line-height: 1.15 !important;">
+        <td style="border: 1px solid #000000; padding: 8px 4px; text-align: center; vertical-align: top; line-height: var(--surat-line-height, 1.15) !important;">
           ${i + 1}.
         </td>
-        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: left; vertical-align: top; white-space: pre-wrap; line-height: 1.15 !important;">
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: left; vertical-align: top; white-space: pre-wrap; line-height: var(--surat-line-height, 1.15) !important;">
           ${escapeHtml(r.jenis || '-')}
         </td>
-        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: center; vertical-align: top; white-space: pre-wrap; line-height: 1.15 !important;">
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: center; vertical-align: top; white-space: pre-wrap; line-height: var(--surat-line-height, 1.15) !important;">
           ${escapeHtml(r.banyak || '-')}
         </td>
-        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: justify; vertical-align: top; white-space: pre-wrap; line-height: 1.15 !important;">
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: justify; vertical-align: top; white-space: pre-wrap; line-height: var(--surat-line-height, 1.15) !important;">
           ${escapeHtml(r.keterangan || '-')}
         </td>
       </tr>
@@ -7306,13 +7370,13 @@ window.updateLivePreviewSp = function(force = false) {
   }).join('');
 
   const tableHtml = `
-    <table class="w-full mt-6 border-collapse text-[11pt] font-sans text-black" style="line-height: 1.15 !important; border: 1.5px solid #000000;">
+    <table class="w-full mt-6 border-collapse text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important; border: 1.5px solid #000000;">
       <thead>
         <tr style="background-color: #f8fafc; border-bottom: 1.5px solid #000000;">
-          <th style="border: 1px solid #000000; padding: 6px 4px; text-align: center; width: 8%; font-weight: bold; line-height: 1.15 !important;">No</th>
-          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 44%; font-weight: bold; line-height: 1.15 !important;">Jenis yang dikirim</th>
-          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 24%; font-weight: bold; line-height: 1.15 !important;">Banyaknya</th>
-          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 24%; font-weight: bold; line-height: 1.15 !important;">Keterangan</th>
+          <th style="border: 1px solid #000000; padding: 6px 4px; text-align: center; width: 8%; font-weight: bold; line-height: var(--surat-line-height, 1.15) !important;">No</th>
+          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 44%; font-weight: bold; line-height: var(--surat-line-height, 1.15) !important;">Jenis yang dikirim</th>
+          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 24%; font-weight: bold; line-height: var(--surat-line-height, 1.15) !important;">Banyaknya</th>
+          <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 24%; font-weight: bold; line-height: var(--surat-line-height, 1.15) !important;">Keterangan</th>
         </tr>
       </thead>
       <tbody>
@@ -7325,22 +7389,22 @@ window.updateLivePreviewSp = function(force = false) {
   let ttdHtml = '';
   if (metodeTte === 'srikandi') {
     ttdHtml = `
-      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
         <div class="w-72 text-left">
-          <div class="leading-normal" style="line-height: 1.15 !important;">${escapeHtml(jabatanPengirim)}</div>
-          <div class="my-5 py-2 text-center text-slate-800 font-sans tracking-wide font-mono" style="line-height: 1.15 !important;">
+          <div class="leading-normal" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(jabatanPengirim)}</div>
+          <div class="my-5 py-2 text-center text-slate-800 font-sans tracking-wide font-mono" style="line-height: var(--surat-line-height, 1.15) !important;">
             \${ttd_pengirim}
           </div>
-          <div class="leading-normal font-bold font-sans" style="line-height: 1.15 !important;">\${nama_pengirim}</div>
-          <div class="leading-normal font-sans" style="line-height: 1.15 !important;">NIP. \${nip_pengirim}</div>
+          <div class="leading-normal font-bold font-sans" style="line-height: var(--surat-line-height, 1.15) !important;">\${nama_pengirim}</div>
+          <div class="leading-normal font-sans" style="line-height: var(--surat-line-height, 1.15) !important;">NIP. \${nip_pengirim}</div>
         </div>
       </div>
     `;
   } else if (metodeTte === 'tte_lokal') {
     ttdHtml = `
-      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
         <div class="w-72 text-left">
-          <div class="leading-normal" style="line-height: 1.15 !important;">${escapeHtml(jabatanPengirim)}</div>
+          <div class="leading-normal" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(jabatanPengirim)}</div>
           <div class="my-3 flex items-center justify-center">
             <div class="p-1.5 border border-slate-300 rounded bg-slate-50 flex items-center gap-2">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=TTE-KECAMATAN-WARU-${encodeURIComponent(nomorSp)}" alt="QR TTE" class="w-14 h-14" />
@@ -7351,20 +7415,20 @@ window.updateLivePreviewSp = function(force = false) {
               </div>
             </div>
           </div>
-          <div class="leading-normal font-bold font-sans underline" style="line-height: 1.15 !important;">${escapeHtml(namaPengirim)}</div>
-          <div class="leading-normal font-sans" style="line-height: 1.15 !important;">NIP. ${escapeHtml(nipPengirim)}</div>
+          <div class="leading-normal font-bold font-sans underline" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(namaPengirim)}</div>
+          <div class="leading-normal font-sans" style="line-height: var(--surat-line-height, 1.15) !important;">NIP. ${escapeHtml(nipPengirim)}</div>
         </div>
       </div>
     `;
   } else {
     // Manual
     ttdHtml = `
-      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: 1.15 !important;">
+      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
         <div class="w-72 text-left">
-          <div class="leading-normal" style="line-height: 1.15 !important;">${escapeHtml(jabatanPengirim)}</div>
+          <div class="leading-normal" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(jabatanPengirim)}</div>
           <div class="my-6 h-12"></div>
-          <div class="leading-normal font-bold font-sans underline" style="line-height: 1.15 !important;">${escapeHtml(namaPengirim)}</div>
-          <div class="leading-normal font-sans" style="line-height: 1.15 !important;">NIP. ${escapeHtml(nipPengirim)}</div>
+          <div class="leading-normal font-bold font-sans underline" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(namaPengirim)}</div>
+          <div class="leading-normal font-sans" style="line-height: var(--surat-line-height, 1.15) !important;">NIP. ${escapeHtml(nipPengirim)}</div>
         </div>
       </div>
     `;
@@ -7372,7 +7436,7 @@ window.updateLivePreviewSp = function(force = false) {
 
   // 6. Satukan Lembar Dokumen Surat Pengantar
   const fullSheetHtml = `
-    <div class="${paperClass}" style="box-sizing: border-box; background: white; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1.2cm 1.5cm 1.5cm 1.8cm; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.15 !important; color: #000000;">
+    <div class="${paperClass}" style="box-sizing: border-box; background: white; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1.2cm 1.5cm 1.5cm 1.8cm; font-family: Arial, sans-serif; font-size: 11pt; line-height: var(--surat-line-height, 1.15) !important; color: #000000;">
       ${kopHtml}
       ${headerTujuanHtml}
       ${judulSuratHtml}
@@ -7399,6 +7463,34 @@ window.updateLivePreviewSp = function(force = false) {
  */
 window.applyPaperSizeSp = function() {
   updateLivePreviewSp();
+};
+
+/**
+ * Terapkan Pilihan Jarak Spasi Baris pada Surat Pengantar
+ */
+window.applyLineSpacingSp = function(val) {
+  const select = document.getElementById('selectLineSpacingSp');
+  const lineSpacing = val || select?.value || '1.15';
+  AppState.suratPengantarData.lineSpacing = lineSpacing;
+
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+
+  const container = document.getElementById('previewSpContainer');
+  if (container) {
+    container.style.setProperty('--surat-line-height', lineSpacing);
+    container.style.setProperty('--surat-para-margin', paraMargin);
+  }
+
+  const sheets = document.querySelectorAll('#previewSpContainer .surat-sheet');
+  sheets.forEach(sheet => {
+    sheet.style.setProperty('--surat-line-height', lineSpacing);
+    sheet.style.setProperty('--surat-para-margin', paraMargin);
+  });
+
+  showToast(`Jarak spasi baris Surat Pengantar diatur ke: ${lineSpacing}`, 'info');
 };
 
 /**
@@ -7563,6 +7655,12 @@ window.eksporSuratPengantarKeDocx = async function() {
       left: 1020   // 1.8 cm
     };
 
+    const lineSpacing = AppState.suratPengantarData.lineSpacing || document.getElementById('selectLineSpacingSp')?.value || '1.15';
+    let paraMargin = '4pt';
+    if (lineSpacing === '1.0') paraMargin = '2pt';
+    else if (lineSpacing === '1.5') paraMargin = '6pt';
+    else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+
     const fullDocumentHtml = `
       <!DOCTYPE html>
       <html>
@@ -7578,7 +7676,7 @@ window.eksporSuratPengantarKeDocx = async function() {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 11pt;
             color: #000000;
-            line-height: 1.15;
+            line-height: ${lineSpacing};
           }
           body {
             background-color: #ffffff;
@@ -7586,15 +7684,15 @@ window.eksporSuratPengantarKeDocx = async function() {
             padding: 0;
           }
           p {
-            margin: 4pt 0;
-            line-height: 1.15;
+            margin: ${paraMargin} 0;
+            line-height: ${lineSpacing};
           }
           table {
             border-collapse: collapse;
-            line-height: 1.15;
+            line-height: ${lineSpacing};
           }
           td, th {
-            line-height: 1.15;
+            line-height: ${lineSpacing};
           }
         </style>
       </head>
