@@ -339,7 +339,7 @@ const AppState = {
     rows: [
       {
         no: 1,
-        jenis: 'Kelengkapan berkas permohonan Rekomendasi Camat Waru Penyaluran Alokasi Dana Desa (ADD) Tahap II Tahun Anggaran 2026 Desa Sesulu.',
+        jenis: 'Rekomendasi Pencairan Alokasi Dana Desa (ADD) Tahap II (25 %) Tahun Anggaran 2026 Desa Sesulu',
         banyak: '1 (satu) Berkas',
         keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
       }
@@ -6701,6 +6701,62 @@ window.simpanDataProfileCamat = async function(event) {
 // =========================================================================================
 
 /**
+ * Mengambil Perihal Rekomendasi Camat yang Sedang Aktif di Generator
+ */
+window.getPerihalRekomAktif = function() {
+  const inputPerihal = document.getElementById('inputPerihalSurat');
+  if (inputPerihal && inputPerihal.value && inputPerihal.value.trim()) {
+    return inputPerihal.value.trim();
+  }
+
+  const desa = document.getElementById('selectNamaDesa')?.value || AppState.activeDesa || 'Api-Api';
+  const tipe = AppState.activeTemplateKey || AppState.tipeRekomendasi || 'add_reguler';
+  const tahun = (document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026').trim();
+
+  if (tipe === 'siltap') {
+    const bulan = document.getElementById('selectBulanGaji')?.value || 'Juni';
+    return `Rekomendasi Pencairan ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${bulan} Desa ${desa} Tahun ${tahun}`;
+  } else if (tipe === 'add_reguler') {
+    const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
+    const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '25';
+    const persen = String(rawPersen).replace('%', '').trim();
+    const persenStr = persen ? `(${persen} %)` : '';
+    return `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${tahap} ${persenStr} Tahun Anggaran ${tahun} Desa ${desa}`.replace(/\s+/g, ' ').trim();
+  } else if (tipe === 'dbh') {
+    const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
+    const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '50';
+    const persen = String(rawPersen).replace('%', '').trim();
+    const persenStr = persen ? `(${persen}%)` : '';
+    return `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${tahap} ${persenStr} Tahun Anggaran ${tahun} Desa ${desa}`.replace(/\s+/g, ' ').trim();
+  } else if (tipe === 'dd') {
+    const tahap = document.getElementById('selectTahapReguler')?.value || 'Tahap 1';
+    const rawPersen = document.getElementById('inputPersentaseTahap')?.value || '60';
+    const persen = String(rawPersen).replace('%', '').trim();
+    const persenStr = persen ? `${persen} %` : '';
+    return `Rekomendasi Pencairan Dana Desa (DD) ${tahap} ${persenStr} Tahun Anggaran ${tahun} Desa ${desa}`.replace(/\s+/g, ' ').trim();
+  }
+
+  return `Rekomendasi Pencairan Alokasi Dana Desa (ADD) Tahun Anggaran ${tahun} Desa ${desa}`;
+};
+
+/**
+ * Format Perihal berdasarkan parameter pilihan di tab Surat Pengantar
+ */
+window.buildPerihalFromSpParams = function(desa, jenis, tahap, tahun) {
+  if (jenis === 'siltap') {
+    const bulan = (tahap || 'Juni').replace(/tahap\s*/i, '').trim();
+    return `Rekomendasi Pencairan ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${bulan} Desa ${desa} Tahun ${tahun}`;
+  } else if (jenis === 'add_reguler') {
+    return `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${tahap} Tahun Anggaran ${tahun} Desa ${desa}`;
+  } else if (jenis === 'dbh') {
+    return `Rekomendasi Pencairan Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${tahap} Tahun Anggaran ${tahun} Desa ${desa}`;
+  } else if (jenis === 'dd') {
+    return `Rekomendasi Pencairan Dana Desa (DD) ${tahap} Tahun Anggaran ${tahun} Desa ${desa}`;
+  }
+  return `Rekomendasi Pencairan ${jenis} ${tahap} Tahun Anggaran ${tahun} Desa ${desa}`;
+};
+
+/**
  * Inisialisasi Tab Surat Pengantar saat pertama kali dibuka
  */
 window.initSuratPengantarTab = function() {
@@ -6734,6 +6790,34 @@ window.initSuratPengantarTab = function() {
   const inputTempat = document.getElementById('inputTempatTujuanSp');
   if (inputTempat && !inputTempat.value) {
     inputTempat.value = data.tempatTujuan || 'Tempat';
+  }
+
+  // Jika bukan sedang mengedit arsip lama tersimpan, sinkronkan otomatis dari Rekomendasi yang aktif di Generator
+  if (!data.id) {
+    const activeDesa = document.getElementById('selectNamaDesa')?.value || data.namaDesa || 'Api-Api';
+    const activeTipe = AppState.activeTemplateKey || data.jenisDana || 'add_reguler';
+    const activeTahun = (document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || data.tahunAnggaran || '2026').trim();
+    const activeTahap = document.getElementById('selectTahapReguler')?.value || document.getElementById('selectBulanGaji')?.value || data.tahap || 'Tahap II';
+
+    data.namaDesa = activeDesa;
+    data.jenisDana = activeTipe;
+    data.tahunAnggaran = activeTahun;
+    data.tahap = activeTahap;
+
+    autoUpdatePerihal();
+    const perihalAktif = getPerihalRekomAktif();
+
+    if (!data.rows || data.rows.length === 0) {
+      data.rows = [{
+        no: 1,
+        jenis: perihalAktif,
+        banyak: '1 (satu) Berkas',
+        keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
+      }];
+    } else {
+      // Ambil otomatis perihal rekom aktif sebagai isi jenis surat yang dikirim
+      data.rows[0].jenis = perihalAktif;
+    }
   }
 
   const selectDesa = document.getElementById('selectDesaSp');
@@ -6790,10 +6874,11 @@ window.renderRowsSpInputs = function() {
 
   const rows = AppState.suratPengantarData.rows || [];
   if (rows.length === 0) {
+    const perihalAwal = getPerihalRekomAktif();
     AppState.suratPengantarData.rows = [
       {
         no: 1,
-        jenis: 'Kelengkapan berkas Rekomendasi Camat Waru Penyaluran Alokasi Dana Desa (ADD) Tahap II Tahun Anggaran 2026 Desa Sesulu.',
+        jenis: perihalAwal,
         banyak: '1 (satu) Berkas',
         keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
       }
@@ -6818,8 +6903,15 @@ window.renderRowsSpInputs = function() {
         </div>
 
         <div>
-          <label class="block text-[10.5px] font-semibold text-slate-700 mb-0.5">Jenis yang dikirim (Kolom 2)</label>
-          <textarea rows="2" oninput="onSpRowInputChange(${index}, 'jenis', this.value)" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500" placeholder="Uraian berkas atau naskah dinas...">${escapeHtml(row.jenis || '')}</textarea>
+          <div class="flex items-center justify-between mb-0.5">
+            <label class="block text-[10.5px] font-semibold text-slate-700">Jenis yang dikirim (Kolom 2)</label>
+            ${index === 0 ? `
+              <button type="button" onclick="sinkronPerihalKeRowSp(0)" class="text-[10px] text-teal-700 font-bold hover:underline cursor-pointer flex items-center gap-1" title="Samakan otomatis dengan Perihal Rekomendasi yang aktif di Generator">
+                <span>🔄 Ambil dari Perihal Rekom</span>
+              </button>
+            ` : ''}
+          </div>
+          <textarea rows="2" oninput="onSpRowInputChange(${index}, 'jenis', this.value)" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500" placeholder="Uraian jenis surat yang dikirim...">${escapeHtml(row.jenis || '')}</textarea>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -6835,6 +6927,20 @@ window.renderRowsSpInputs = function() {
       </div>
     `;
   }).join('');
+};
+
+/**
+ * Samakan isi jenis surat pada baris tertentu dengan Perihal Rekomendasi Aktif
+ */
+window.sinkronPerihalKeRowSp = function(index = 0) {
+  autoUpdatePerihal();
+  const perihal = getPerihalRekomAktif();
+  if (AppState.suratPengantarData.rows[index]) {
+    AppState.suratPengantarData.rows[index].jenis = perihal;
+    renderRowsSpInputs();
+    updateLivePreviewSp();
+    showToast('Jenis surat berhasil disamakan dengan Perihal Rekomendasi aktif!', 'success');
+  }
 };
 
 /**
@@ -6927,31 +7033,21 @@ window.autoGenNomorSp = function() {
  */
 window.salinDataDariRekomAktifKeSp = function() {
   // Ambil data dari Form Generator Rekomendasi (Tab 2)
+  autoUpdatePerihal();
+  const perihalAktif = getPerihalRekomAktif();
   const desa = document.getElementById('selectNamaDesa')?.value || 'Sesulu';
   const jenisTipe = AppState.activeTemplateKey || 'add_reguler';
-  const tahap = document.getElementById('inputTahapPenyaluran')?.value || document.getElementById('inputBulanPenyaluran')?.value || 'Tahap II';
+  const tahap = document.getElementById('selectTahapReguler')?.value || document.getElementById('selectBulanGaji')?.value || 'Tahap II';
   const tahun = (document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026').trim();
-  const nomorRekom = (document.getElementById('inputNomorSurat')?.value || '').trim();
-  const rawTanggalRekom = document.getElementById('inputTanggalSurat')?.value || '';
-  const tanggalRekomIndo = rawTanggalRekom ? formatTanggalIndo(rawTanggalRekom) : 'Oktober 2026';
-  const nominalStr = document.getElementById('inputNominalAngkaReguler')?.value || document.getElementById('inputNominalAngka')?.value || '0';
-  const nominalFormatted = formatRupiah(parseCurrencyInput(nominalStr));
-
-  // Pemetaan Label Jenis Dana
-  const labelDanaMap = {
-    siltap: 'Penghasilan Tetap dan Tunjangan (Siltap)',
-    add_reguler: 'Alokasi Dana Desa (ADD) Reguler',
-    dbh: 'Bagi Hasil Pajak dan Retribusi Daerah (PBH/DBH)',
-    dd: 'Dana Desa (DD)'
-  };
-  const labelDana = labelDanaMap[jenisTipe] || 'Alokasi Dana Desa (ADD)';
 
   // Update input Form Surat Pengantar
   const selDesaSp = document.getElementById('selectDesaSp');
   if (selDesaSp) selDesaSp.value = desa;
+  AppState.suratPengantarData.namaDesa = desa;
 
   const selJenisSp = document.getElementById('selectJenisDanaSp');
   if (selJenisSp) selJenisSp.value = jenisTipe;
+  AppState.suratPengantarData.jenisDana = jenisTipe;
 
   const selTahapSp = document.getElementById('selectTahapSp');
   if (selTahapSp) {
@@ -6963,17 +7059,17 @@ window.salinDataDariRekomAktifKeSp = function() {
       selTahapSp.value = 'Tahap III';
     }
   }
+  AppState.suratPengantarData.tahap = selTahapSp?.value || tahap;
 
   const inpTahunSp = document.getElementById('inputTahunSp');
   if (inpTahunSp) inpTahunSp.value = tahun;
+  AppState.suratPengantarData.tahunAnggaran = tahun;
 
-  // Bangun narasi baris 1 tabel pengantar secara otomatis
-  const uraianBerkas = `Kelengkapan berkas Rekomendasi Camat Waru Penyaluran ${labelDana} ${tahap} Tahun Anggaran ${tahun} Pemerintah Desa ${desa} (Nomor Rekomendasi: ${nomorRekom || '${nomor_naskah}'}, Tanggal: ${tanggalRekomIndo}, Nominal: ${nominalFormatted}).`;
-
+  // Samakan jenis yang dikirim langsung dengan Perihal Rekomendasi yang aktif
   AppState.suratPengantarData.rows = [
     {
       no: 1,
-      jenis: uraianBerkas,
+      jenis: perihalAktif,
       banyak: '1 (satu) Berkas',
       keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
     }
@@ -6981,7 +7077,7 @@ window.salinDataDariRekomAktifKeSp = function() {
 
   renderRowsSpInputs();
   updateLivePreviewSp();
-  showToast(`⚡ Berhasil menyalin data Rekomendasi Desa ${desa} (${tahap}) ke Surat Pengantar!`, 'success');
+  showToast(`⚡ Jenis Surat Pengantar berhasil disamakan dengan Perihal Rekomendasi aktif!`, 'success');
 };
 
 /**
@@ -6997,6 +7093,12 @@ window.onSpDesaChange = function() {
   AppState.suratPengantarData.jenisDana = jenis;
   AppState.suratPengantarData.tahap = tahap;
   AppState.suratPengantarData.tahunAnggaran = tahun;
+
+  // Jika sedang membuat surat pengantar baru, perbarui baris 1 agar selalu sesuai perihal
+  if (!AppState.suratPengantarData.id && AppState.suratPengantarData.rows && AppState.suratPengantarData.rows.length > 0) {
+    AppState.suratPengantarData.rows[0].jenis = buildPerihalFromSpParams(desa, jenis, tahap, tahun);
+    renderRowsSpInputs();
+  }
 
   updateLivePreviewSp();
 };
