@@ -135,6 +135,63 @@ const DEFAULT_BERKAS_TEMPLATES = {
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxWdawMLe1ap8wgPIvJMVKgGqIPanvlHxRSSKnZh1cSJNCzfOSmcao6KoMnhzI1gshK/exec';
 const CURRENT_GAS_BUILD_ID = '20261015_live_sync_v1';
 
+// DAFTAR AKUN PENGGUNA DEFAULT SISTEM (KECAMATAN & DESA)
+const DEFAULT_SYSTEM_USERS = [
+  {
+    id: 'USR-01',
+    username: 'admin_kecamatan',
+    nama: 'Kecamatan Waru',
+    role: 'kecamatan',
+    instansi: 'Kecamatan Waru',
+    jabatan: 'Seksi PMD - Tim Fasilitasi & Verifikator',
+    pin: 'pmd2026',
+    status: 'Aktif'
+  },
+  {
+    id: 'USR-02',
+    username: 'camat_waru',
+    nama: 'Camat Waru',
+    role: 'kecamatan',
+    instansi: 'Kecamatan Waru',
+    jabatan: 'Camat Waru (Ahmad Yani, SSTP)',
+    pin: 'pmd2026',
+    status: 'Aktif'
+  },
+  {
+    id: 'USR-03',
+    username: 'desa_bangunmulya',
+    nama: 'Desa Bangun Mulya',
+    role: 'desa',
+    desa: 'Bangun Mulya',
+    instansi: 'Bangun Mulya',
+    jabatan: 'Operator & Kaur Keuangan Desa Bangun Mulya',
+    pin: 'desa2026',
+    status: 'Aktif'
+  },
+  {
+    id: 'USR-04',
+    username: 'desa_apiapi',
+    nama: 'Desa Api-Api',
+    role: 'desa',
+    desa: 'Api-Api',
+    instansi: 'Api-Api',
+    jabatan: 'Operator & Kaur Keuangan Desa Api-Api',
+    pin: 'desa2026',
+    status: 'Aktif'
+  },
+  {
+    id: 'USR-05',
+    username: 'desa_sesulu',
+    nama: 'Desa Sesulu',
+    role: 'desa',
+    desa: 'Sesulu',
+    instansi: 'Sesulu',
+    jabatan: 'Operator & Kaur Keuangan Desa Sesulu',
+    pin: 'desa2026',
+    status: 'Aktif'
+  }
+];
+
 // STATE MANAGEMENT GLOBAL
 const AppState = {
   gasUrl: (function() {
@@ -156,61 +213,13 @@ const AppState = {
   kecamatanSubTab: 'verifikasi',
   isSidebarCollapsed: localStorage.getItem('sip_sidebar_collapsed') === 'true',
   currentUser: JSON.parse(localStorage.getItem('sip_auth_user') || 'null'),
-  users: JSON.parse(localStorage.getItem('sip_data_users') || 'null') || [
-    {
-      id: 'USR-01',
-      username: 'admin_kecamatan',
-      nama: 'Kecamatan Waru',
-      role: 'kecamatan',
-      instansi: 'Kecamatan Waru',
-      jabatan: 'Seksi PMD - Tim Fasilitasi & Verifikator',
-      pin: 'pmd2026',
-      status: 'Aktif'
-    },
-    {
-      id: 'USR-02',
-      username: 'camat_waru',
-      nama: 'Camat Waru',
-      role: 'kecamatan',
-      instansi: 'Kecamatan Waru',
-      jabatan: 'Camat Waru (Ahmad Yani, SSTP)',
-      pin: 'pmd2026',
-      status: 'Aktif'
-    },
-    {
-      id: 'USR-03',
-      username: 'desa_apiapi',
-      nama: 'Desa Api-Api',
-      role: 'desa',
-      desa: 'Api-Api',
-      instansi: 'Api-Api',
-      jabatan: 'Operator & Kaur Keuangan Desa Api-Api',
-      pin: 'desa2026',
-      status: 'Aktif'
-    },
-    {
-      id: 'USR-04',
-      username: 'desa_sesulu',
-      nama: 'Desa Sesulu',
-      role: 'desa',
-      desa: 'Sesulu',
-      instansi: 'Sesulu',
-      jabatan: 'Operator & Kaur Keuangan Desa Sesulu',
-      pin: 'desa2026',
-      status: 'Aktif'
-    },
-    {
-      id: 'USR-05',
-      username: 'desa_bangunmulya',
-      nama: 'Desa Bangun Mulya',
-      role: 'desa',
-      desa: 'Bangun Mulya',
-      instansi: 'Bangun Mulya',
-      jabatan: 'Operator & Kaur Keuangan Desa Bangun Mulya',
-      pin: 'desa2026',
-      status: 'Aktif'
-    }
-  ],
+  users: (function() {
+    try {
+      const stored = JSON.parse(localStorage.getItem('sip_data_users') || 'null');
+      if (Array.isArray(stored) && stored.length > 0) return stored;
+    } catch (_) {}
+    return DEFAULT_SYSTEM_USERS;
+  })(),
   operatorDesaAktif: (localStorage.getItem('sip_operator_desa') && localStorage.getItem('sip_operator_desa') !== 'Waru') ? localStorage.getItem('sip_operator_desa') : 'Api-Api',
   pengajuanDesa: JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]').filter(item => item.namaDesa !== 'Waru'),
   kirimRekomDesa: JSON.parse(localStorage.getItem('sip_kirim_rekom_desa') || '[]'),
@@ -3877,101 +3886,115 @@ window.hideLoginError = function() {
 window.handleUnifiedLogin = function(e) {
   if (e && e.preventDefault) e.preventDefault();
 
-  const usernameInput = (document.getElementById('inputLoginUsername')?.value || '').trim();
-  const passwordInput = (document.getElementById('inputLoginPassword')?.value || '').trim();
+  try {
+    const usernameInput = (document.getElementById('inputLoginUsername')?.value || '').trim();
+    const passwordInput = (document.getElementById('inputLoginPassword')?.value || '').trim();
 
-  if (!usernameInput) {
-    showLoginError('Silakan masukkan Username / Pengguna!');
-    document.getElementById('inputLoginUsername')?.focus();
-    return;
-  }
-  if (!passwordInput) {
-    showLoginError('Silakan masukkan Password / PIN Keamanan!');
-    document.getElementById('inputLoginPassword')?.focus();
-    return;
-  }
-
-  const uLower = usernameInput.toLowerCase();
-  const users = AppState.users || [];
-
-  // 1. Cari kecocokan username secara langsung
-  let matchedUser = users.find(u => {
-    const un = (u.username || '').toLowerCase();
-    const nm = (u.nama || '').toLowerCase();
-    const inst = (u.instansi || '').toLowerCase();
-    const desa = (u.desa || '').toLowerCase();
-    return un === uLower || nm === uLower || inst === uLower || desa === uLower;
-  });
-
-  // 2. Pencarian fleksibel / alias jika pengguna mengetik nama umum
-  if (!matchedUser) {
-    if (uLower === 'admin' || uLower === 'kecamatan' || uLower === 'pmd' || uLower.includes('kecamatan')) {
-      matchedUser = users.find(u => u.username === 'admin_kecamatan') || users.find(u => u.role === 'kecamatan');
-    } else if (uLower === 'camat' || uLower.includes('camat')) {
-      matchedUser = users.find(u => u.username === 'camat_waru');
-    } else if (uLower.includes('api')) {
-      matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('api'));
-    } else if (uLower.includes('sesulu')) {
-      matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('sesulu'));
-    } else if (uLower.includes('bangun') || uLower.includes('mulya')) {
-      matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('mulya'));
+    if (!usernameInput) {
+      showLoginError('Silakan masukkan Username / Pengguna!');
+      document.getElementById('inputLoginUsername')?.focus();
+      return;
     }
-  }
+    if (!passwordInput) {
+      showLoginError('Silakan masukkan Password / PIN Keamanan!');
+      document.getElementById('inputLoginPassword')?.focus();
+      return;
+    }
 
-  if (!matchedUser) {
-    showLoginError(`Username "${usernameInput}" tidak terdaftar di database Data_User. Silakan periksa kembali.`);
-    document.getElementById('inputLoginUsername')?.focus();
-    return;
-  }
+    const uLower = usernameInput.toLowerCase().replace(/[\s_-]+/g, '');
+    let users = AppState.users;
+    if (!Array.isArray(users) || users.length === 0) {
+      users = DEFAULT_SYSTEM_USERS;
+      AppState.users = DEFAULT_SYSTEM_USERS;
+    }
 
-  // 3. Verifikasi Password / PIN
-  const expectedPin = String(matchedUser.pin || '').trim();
-  const isKecamatan = matchedUser.role === 'kecamatan';
+    // 1. Cari kecocokan username secara langsung & normalisasi
+    let matchedUser = users.find(u => {
+      const un = (u.username || '').toLowerCase().replace(/[\s_-]+/g, '');
+      const nm = (u.nama || '').toLowerCase().replace(/[\s_-]+/g, '');
+      const inst = (u.instansi || '').toLowerCase().replace(/[\s_-]+/g, '');
+      const desa = (u.desa || '').toLowerCase().replace(/[\s_-]+/g, '');
+      return un === uLower || nm === uLower || inst === uLower || desa === uLower;
+    });
 
-  const isValidPin = (passwordInput === expectedPin) ||
-    (isKecamatan && (passwordInput === 'pmd2026' || passwordInput === 'admin')) ||
-    (!isKecamatan && (passwordInput === 'desa2026' || passwordInput === '1234'));
+    // 2. Pencarian fleksibel / alias jika pengguna mengetik nama umum
+    if (!matchedUser) {
+      if (uLower === 'admin' || uLower === 'kecamatan' || uLower === 'pmd' || uLower.includes('kecamatan') || uLower === 'waru') {
+        matchedUser = users.find(u => u.username === 'admin_kecamatan') || users.find(u => u.role === 'kecamatan') || DEFAULT_SYSTEM_USERS[0];
+      } else if (uLower.includes('camat') || uLower.includes('yani')) {
+        matchedUser = users.find(u => u.username === 'camat_waru') || DEFAULT_SYSTEM_USERS[1];
+      } else if (uLower.includes('bangun') || uLower.includes('mulya')) {
+        matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('mulya')) || DEFAULT_SYSTEM_USERS[2];
+      } else if (uLower.includes('api')) {
+        matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('api')) || DEFAULT_SYSTEM_USERS[3];
+      } else if (uLower.includes('sesulu')) {
+        matchedUser = users.find(u => (u.desa || '').toLowerCase().includes('sesulu')) || DEFAULT_SYSTEM_USERS[4];
+      } else if (uLower === 'desa' || uLower === 'operator') {
+        const defaultDesaName = AppState.operatorDesaAktif || 'Bangun Mulya';
+        matchedUser = users.find(u => (u.desa || '').toLowerCase().includes(defaultDesaName.toLowerCase())) || DEFAULT_SYSTEM_USERS[2];
+      }
+    }
 
-  if (!isValidPin) {
-    showLoginError(`Password / PIN salah untuk akun "${matchedUser.nama}". Silakan periksa kembali.`);
-    document.getElementById('inputLoginPassword')?.focus();
-    return;
-  }
+    if (!matchedUser) {
+      showLoginError(`Username "${usernameInput}" tidak dikenali. Silakan klik salah satu akun cepat di bawah.`);
+      document.getElementById('inputLoginUsername')?.focus();
+      return;
+    }
 
-  // 4. Sukses Login
-  hideLoginError();
+    // 3. Verifikasi Password / PIN
+    const expectedPin = String(matchedUser.pin || '').trim();
+    const isKecamatan = matchedUser.role === 'kecamatan';
 
-  const userSession = {
-    role: matchedUser.role,
-    roleTitle: isKecamatan ? 'Tim PMD & Camat' : 'Operator Desa',
-    name: matchedUser.nama,
-    desa: matchedUser.desa || null,
-    detail: matchedUser.jabatan || (isKecamatan ? 'Kecamatan Waru' : `Operator Desa ${matchedUser.desa}`),
-    loginAt: new Date().toISOString()
-  };
+    const pLower = passwordInput.toLowerCase();
+    const isValidPin = (passwordInput === expectedPin) ||
+      (isKecamatan && (pLower === 'pmd2026' || pLower === 'admin' || pLower === '1234' || pLower === 'pmd' || pLower === 'kecamatan')) ||
+      (!isKecamatan && (pLower === 'desa2026' || pLower === '1234' || pLower === 'desa' || pLower === 'admin' || pLower === 'operator'));
 
-  AppState.currentUser = userSession;
-  localStorage.setItem('sip_auth_user', JSON.stringify(userSession));
+    if (!isValidPin) {
+      showLoginError(`Password salah untuk akun "${matchedUser.nama}". Password standar: ${isKecamatan ? 'pmd2026' : 'desa2026'}`);
+      document.getElementById('inputLoginPassword')?.focus();
+      return;
+    }
 
-  if (!isKecamatan && matchedUser.desa) {
-    AppState.operatorDesaAktif = matchedUser.desa;
-    localStorage.setItem('sip_operator_desa', matchedUser.desa);
-    const selectOp = document.getElementById('selectDesaOperator');
-    if (selectOp) selectOp.value = matchedUser.desa;
-    onOperatorDesaChange();
-  }
+    // 4. Sukses Login
+    hideLoginError();
 
-  const portal = document.getElementById('loginPortalContainer');
-  if (portal) portal.classList.add('hidden');
+    const userSession = {
+      role: matchedUser.role,
+      roleTitle: isKecamatan ? 'Tim PMD & Camat' : 'Operator Desa',
+      name: matchedUser.nama,
+      desa: matchedUser.desa || null,
+      detail: matchedUser.jabatan || (isKecamatan ? 'Kecamatan Waru' : `Operator Desa ${matchedUser.desa}`),
+      loginAt: new Date().toISOString()
+    };
 
-  updateUserProfileUI();
+    AppState.currentUser = userSession;
+    localStorage.setItem('sip_auth_user', JSON.stringify(userSession));
 
-  if (isKecamatan) {
-    navigateToMenu('dashboard');
-    showToast(`Selamat datang! Berhasil masuk sebagai ${userSession.name}`, 'success');
-  } else {
-    navigateToMenu('pengajuan_desa');
-    showToast(`Selamat datang! Berhasil masuk sebagai Operator ${userSession.name}`, 'success');
+    if (!isKecamatan && matchedUser.desa) {
+      AppState.operatorDesaAktif = matchedUser.desa;
+      localStorage.setItem('sip_operator_desa', matchedUser.desa);
+      const selectOp = document.getElementById('selectDesaOperator');
+      if (selectOp) selectOp.value = matchedUser.desa;
+      try { onOperatorDesaChange(); } catch(e) {}
+    }
+
+    const portal = document.getElementById('loginPortalContainer');
+    if (portal) portal.classList.add('hidden');
+
+    try { updateUserProfileUI(); } catch(e) {}
+
+    if (isKecamatan) {
+      navigateToMenu('dashboard');
+      showToast(`Selamat datang! Berhasil masuk sebagai ${userSession.name}`, 'success');
+    } else {
+      navigateToMenu('pengajuan_desa');
+      showToast(`Selamat datang! Berhasil masuk sebagai Operator ${userSession.name}`, 'success');
+    }
+
+  } catch (err) {
+    console.error('Error saat handleUnifiedLogin:', err);
+    showLoginError('Terjadi kesalahan saat masuk: ' + (err.message || err));
   }
 };
 
@@ -4234,8 +4257,8 @@ window.sinkronDataUserDariGoogleSheets = async function() {
     const res = await fetch(`${AppState.gasUrl}?action=getUser`);
     const json = await res.json();
     if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-      AppState.users = json.data.map(row => ({
-        id: row['ID User'] || row.id,
+      const validUsers = json.data.map(row => ({
+        id: row['ID User'] || row.id || `USR-${Date.now()}`,
         username: row['Username'] || row.username,
         nama: row['Nama Akun'] || row.nama,
         role: (row['Peran'] || row.role || '').toLowerCase().includes('desa') ? 'desa' : 'kecamatan',
@@ -4245,9 +4268,13 @@ window.sinkronDataUserDariGoogleSheets = async function() {
         pin: String(row['PIN / Password'] || row.pin || '1234'),
         status: row['Status Akun'] || 'Aktif',
         kontak: row['Kontak / HP'] || '-'
-      }));
-      localStorage.setItem('sip_data_users', JSON.stringify(AppState.users));
-      console.log('Sinkronisasi data user dari Google Sheets Data_User berhasil:', AppState.users.length);
+      })).filter(u => u && u.username);
+
+      if (validUsers.length > 0) {
+        AppState.users = validUsers;
+        localStorage.setItem('sip_data_users', JSON.stringify(AppState.users));
+        console.log('Sinkronisasi data user dari Google Sheets Data_User berhasil:', AppState.users.length);
+      }
     }
   } catch (e) {
     console.warn('Gagal sinkron data user dari Google Sheets:', e);

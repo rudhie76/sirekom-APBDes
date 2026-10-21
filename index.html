@@ -478,11 +478,41 @@
             <input 
               type="text" 
               id="inputLoginUsername" 
-              placeholder="Masukkan username akun Anda" 
+              list="listLoginUsernames"
+              placeholder="Masukkan username atau nama desa" 
               autocomplete="username" 
               required
               class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
             />
+            <datalist id="listLoginUsernames">
+              <option value="admin_kecamatan">Kecamatan Waru (Tim PMD)</option>
+              <option value="camat_waru">Camat Waru</option>
+              <option value="desa_bangunmulya">Desa Bangun Mulya</option>
+              <option value="desa_apiapi">Desa Api-Api</option>
+              <option value="desa_sesulu">Desa Sesulu</option>
+            </datalist>
+          </div>
+
+          <!-- Pilihan Cepat Masuk Akun -->
+          <div class="mt-2.5 space-y-1.5">
+            <div class="text-[10px] font-semibold text-slate-400 flex items-center justify-between">
+              <span>Pilihan Cepat Masuk:</span>
+              <span class="text-[9.5px] text-slate-500">Klik untuk isi otomatis</span>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button type="button" onclick="quickFillUser('admin_kecamatan', 'pmd2026')" class="py-1.5 px-2 rounded-lg bg-blue-950/70 hover:bg-blue-800/80 border border-blue-600/50 text-blue-200 text-[10.5px] font-bold text-left transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <span>🏛️</span> <span class="truncate">Kecamatan Waru</span>
+              </button>
+              <button type="button" onclick="quickFillUser('desa_bangunmulya', 'desa2026')" class="py-1.5 px-2 rounded-lg bg-emerald-950/70 hover:bg-emerald-800/80 border border-emerald-600/50 text-emerald-200 text-[10.5px] font-bold text-left transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <span>🏡</span> <span class="truncate">Desa Bangun Mulya</span>
+              </button>
+              <button type="button" onclick="quickFillUser('desa_apiapi', 'desa2026')" class="py-1.5 px-2 rounded-lg bg-emerald-950/70 hover:bg-emerald-800/80 border border-emerald-600/50 text-emerald-200 text-[10.5px] font-bold text-left transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <span>🏡</span> <span class="truncate">Desa Api-Api</span>
+              </button>
+              <button type="button" onclick="quickFillUser('desa_sesulu', 'desa2026')" class="py-1.5 px-2 rounded-lg bg-emerald-950/70 hover:bg-emerald-800/80 border border-emerald-600/50 text-emerald-200 text-[10.5px] font-bold text-left transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                <span>🏡</span> <span class="truncate">Desa Sesulu</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -523,6 +553,17 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
               </svg>
             </button>
+          </div>
+        </div>
+
+        <!-- Panduan Password Default -->
+        <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[10.5px] text-slate-400 space-y-1">
+          <div class="font-bold text-slate-300 flex items-center gap-1 text-[10px]">
+            <span>🔑 Panduan Password / PIN Default:</span>
+          </div>
+          <div class="flex items-center justify-between text-[10px] text-slate-300">
+            <span>Kecamatan: <code class="text-blue-300 font-bold bg-blue-950/80 px-1.5 py-0.5 rounded">pmd2026</code></span>
+            <span>Desa: <code class="text-emerald-300 font-bold bg-emerald-950/80 px-1.5 py-0.5 rounded">desa2026</code></span>
           </div>
         </div>
 
@@ -3342,6 +3383,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261021_fix_badge_selesai_kirim_desa"></script>
+  <script src="app.js?v=20261021_fix_unified_login_robust"></script>
 </body>
 </html>
