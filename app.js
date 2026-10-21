@@ -2563,25 +2563,28 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
 
       headerTable.innerHTML = `
         <tr>
-          <td style="width: 65pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Nomor</td>
-          <td style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-          <td style="width: 230pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${nomorVal}</td>
-          <td style="vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${tanggalHtml}</td>
+          <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Nomor</td>
+          <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+          <td width="218" style="width: 218pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${nomorVal}</td>
+          <td width="210" style="width: 210pt; vertical-align: top; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${tanggalHtml}</td>
         </tr>
         <tr>
-          <td style="width: 65pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Sifat</td>
-          <td style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-          <td colspan="2" style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${sifatVal}</td>
+          <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Sifat</td>
+          <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+          <td width="218" style="width: 218pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${sifatVal}</td>
+          <td width="210" style="width: 210pt; vertical-align: top; padding: 1pt 0;">&nbsp;</td>
         </tr>
         <tr>
-          <td style="width: 65pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Lampiran</td>
-          <td style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-          <td colspan="2" style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${lampiranVal}</td>
+          <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Lampiran</td>
+          <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+          <td width="218" style="width: 218pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${lampiranVal}</td>
+          <td width="210" style="width: 210pt; vertical-align: top; padding: 1pt 0;">&nbsp;</td>
         </tr>
         <tr>
-          <td style="width: 65pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Hal</td>
-          <td style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
-          <td colspan="2" style="vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify;">${halVal}</td>
+          <td width="60" style="width: 60pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">Hal</td>
+          <td width="14" style="width: 14pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">:</td>
+          <td width="218" style="width: 218pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify;">${halVal}</td>
+          <td width="210" style="width: 210pt; vertical-align: top; padding: 1pt 0;">&nbsp;</td>
         </tr>
       `;
       fh.parentNode.replaceChild(headerTable, fh);
