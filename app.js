@@ -2953,7 +2953,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       t.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; border: 1pt solid #000000; margin-top: 10pt; margin-bottom: 12pt; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
       
       const colWidths = ['8%', '44%', '24%', '24%'];
-      const colAligns = ['center', 'left', 'center', 'justify'];
+      const colAligns = ['center', 'justify', 'center', 'justify'];
 
       t.querySelectorAll('tr').forEach(tr => {
         const ths = tr.querySelectorAll('th');
@@ -2961,8 +2961,9 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
           tr.setAttribute('style', 'background-color: #f1f5f9;');
           ths.forEach((th, cIdx) => {
             const w = colWidths[cIdx] || '25%';
+            th.innerHTML = th.innerHTML.trim();
             th.setAttribute('width', w);
-            th.setAttribute('style', `border: 1pt solid #000000; mso-border-alt: solid windowtext .5pt; padding: 5pt 4pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; text-align: center; background-color: #f1f5f9; line-height: ${lineSpacing}; width: ${w}; vertical-align: middle;`);
+            th.setAttribute('style', `border: 1pt solid #000000; mso-border-alt: solid windowtext .5pt; padding: 5pt 4pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; text-align: center; background-color: #f1f5f9; line-height: ${lineSpacing}; width: ${w}; vertical-align: middle; text-indent: 0; mso-char-indent-count: 0; mso-text-indent-alt: 0pt;`);
           });
         }
         
@@ -2970,9 +2971,15 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
         if (tds.length > 0) {
           tds.forEach((td, cIdx) => {
             const w = colWidths[cIdx] || '25%';
-            const align = colAligns[cIdx] || 'left';
+            const align = colAligns[cIdx] || (cIdx === 1 || cIdx === 3 ? 'justify' : 'left');
+            td.innerHTML = td.innerHTML.trim();
+            td.querySelectorAll('p, div, span').forEach(child => {
+              child.style.textIndent = '0';
+              child.style.margin = '0';
+              child.style.padding = '0';
+            });
             td.setAttribute('width', w);
-            td.setAttribute('style', `border: 1pt solid #000000; mso-border-alt: solid windowtext .5pt; padding: 6pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; vertical-align: top; text-align: ${align}; width: ${w};`);
+            td.setAttribute('style', `border: 1pt solid #000000; mso-border-alt: solid windowtext .5pt; padding: 6pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; vertical-align: top; text-align: ${align}; text-justify: inter-word; width: ${w}; text-indent: 0; mso-char-indent-count: 0; mso-text-indent-alt: 0pt;`);
           });
         }
       });
@@ -3119,6 +3126,11 @@ window.eksporSuratKeDocx = async function() {
             text-indent: 30pt;
             mso-char-indent-count: 3;
             mso-text-indent-alt: 30pt;
+          }
+          table p, table div, td, th {
+            text-indent: 0 !important;
+            mso-char-indent-count: 0 !important;
+            mso-text-indent-alt: 0pt !important;
           }
           table {
             border-collapse: collapse;
@@ -7893,22 +7905,15 @@ window.updateLivePreviewSp = function(force = false) {
 
   // 4. Tabel 4 Kolom Rincian Berkas
   const tableRowsHtml = rows.map((r, i) => {
-    return `
-      <tr>
-        <td style="border: 1px solid #000000; padding: 8px 4px; text-align: center; vertical-align: top; line-height: var(--surat-line-height, 1.15) !important;">
-          ${i + 1}.
-        </td>
-        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: left; vertical-align: top; white-space: pre-wrap; line-height: var(--surat-line-height, 1.15) !important;">
-          ${escapeHtml(r.jenis || '-')}
-        </td>
-        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: center; vertical-align: top; white-space: pre-wrap; line-height: var(--surat-line-height, 1.15) !important;">
-          ${escapeHtml(r.banyak || '-')}
-        </td>
-        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: justify; vertical-align: top; white-space: pre-wrap; line-height: var(--surat-line-height, 1.15) !important;">
-          ${escapeHtml(r.keterangan || '-')}
-        </td>
-      </tr>
-    `;
+    const cleanJenis = String(r.jenis || '-').trim();
+    const cleanBanyak = String(r.banyak || '-').trim();
+    const cleanKet = String(r.keterangan || '-').trim();
+    return `<tr>
+        <td style="border: 1px solid #000000; padding: 8px 4px; text-align: center; vertical-align: top; line-height: var(--surat-line-height, 1.15) !important;">${i + 1}.</td>
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: justify; text-justify: inter-word; text-indent: 0; vertical-align: top; line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(cleanJenis)}</td>
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: center; text-indent: 0; vertical-align: top; line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(cleanBanyak)}</td>
+        <td style="border: 1px solid #000000; padding: 8px 10px; text-align: justify; text-justify: inter-word; text-indent: 0; vertical-align: top; line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(cleanKet)}</td>
+      </tr>`;
   }).join('');
 
   const tableHtml = `
@@ -8293,6 +8298,11 @@ window.eksporSuratPengantarKeDocx = async function() {
             mso-table-tspace: 0pt;
             mso-table-bspace: 0pt;
             line-height: ${lineSpacing};
+          }
+          table p, table div, td, th {
+            text-indent: 0 !important;
+            mso-char-indent-count: 0 !important;
+            mso-text-indent-alt: 0pt !important;
           }
           td, th {
             line-height: ${lineSpacing};
