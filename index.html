@@ -411,6 +411,11 @@
       align-items: center !important;
       gap: 2px !important;
     }
+    #loginPortalContainer.hidden {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
     #containerSplitControls.hidden {
       display: none !important;
     }
@@ -529,7 +534,7 @@
         <!-- Tombol Masuk -->
         <button 
           type="submit" 
-          id="btnLoginSubmit" 
+          id="btnLoginSubmit" onclick="handleUnifiedLogin(event)" 
           class="w-full mt-2 py-3 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:via-indigo-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 group cursor-pointer"
         >
           <span>Masuk ke Sistem SIP-REKOM</span>
@@ -3342,6 +3347,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261021_fix_badge_selesai_kirim_desa"></script>
+  <script src="app.js?v=20261021_unified_login_portal_fix"></script>
 </body>
 </html>
