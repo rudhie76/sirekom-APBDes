@@ -397,6 +397,8 @@ function parseCurrencyInput(value) {
   const clean = value.toString().replace(/[^0-9]/g, '');
   return parseInt(clean, 10) || 0;
 }
+window.parseCurrencyInput = parseCurrencyInput;
+window.parseNominal = parseCurrencyInput;
 
 function formatTanggalIndo(dateStr) {
   if (!dateStr) return '';
@@ -6558,159 +6560,190 @@ window.bukaModalKirimDariPengajuan = function(pengajuanId) {
 window.simpanKirimRekomDesa = async function(event) {
   if (event) event.preventDefault();
 
-  const editId = document.getElementById('inputKirimEditId')?.value || '';
-  const desa = document.getElementById('selectKirimDesa')?.value || 'Api-Api';
-  const jenisDana = document.getElementById('selectKirimJenisDana')?.value || 'add_reguler';
-  const tahap = document.getElementById('selectKirimTahap')?.value || 'Tahap II';
-  const tahun = document.getElementById('inputKirimTahun')?.value || '2026';
-  const nominalStr = document.getElementById('inputKirimNominal')?.value || '0';
-  const nominalAngka = parseNominal(nominalStr);
-
-  const noRekom = document.getElementById('inputKirimNomorRekom')?.value?.trim() || '';
-  const tglRekom = document.getElementById('inputKirimTanggalRekom')?.value || '';
-  const noSpKec = document.getElementById('inputKirimNomorSpKec')?.value?.trim() || '';
-  const tglSpKec = document.getElementById('inputKirimTanggalSpKec')?.value || '';
-  const catatan = document.getElementById('inputKirimCatatan')?.value?.trim() || '';
-
-  if (!noRekom || !tglRekom) {
-    showToast('Nomor dan Tanggal Surat Rekomendasi Camat wajib diisi!', 'warning');
-    return;
-  }
-  if (!noSpKec || !tglSpKec) {
-    showToast('Nomor dan Tanggal Surat Pengantar Kecamatan wajib diisi!', 'warning');
-    return;
-  }
-
   const btnSubmit = document.getElementById('btnSubmitKirimRekomDesa');
   const origBtnHtml = btnSubmit ? btnSubmit.innerHTML : '';
-  if (btnSubmit) {
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = '<span>⏳ Menyimpan & Menyiapkan Berkas...</span>';
-  }
 
-  const isEditing = Boolean(editId);
-  const existingItem = isEditing ? (AppState.kirimRekomDesa || []).find(k => k.id === editId) : null;
-  const draft = AppState.draftKirimKecamatan || {};
+  try {
+    const editId = document.getElementById('inputKirimEditId')?.value || '';
+    const desa = document.getElementById('selectKirimDesa')?.value || 'Api-Api';
+    const jenisDana = document.getElementById('selectKirimJenisDana')?.value || 'add_reguler';
+    const tahap = document.getElementById('selectKirimTahap')?.value || 'Tahap II';
+    const tahun = document.getElementById('inputKirimTahun')?.value || '2026';
+    const nominalStr = document.getElementById('inputKirimNominal')?.value || '0';
+    const nominalAngka = parseCurrencyInput(nominalStr);
 
-  // 1. Simpan ke IndexedDB lokal
-  const fileRekomTtdId = draft.rekomTtd ? draft.rekomTtd.id : (existingItem ? existingItem.fileRekomTtdId : `file_krm_rekom_${Date.now()}`);
-  const fileRekomTtdName = draft.rekomTtd ? draft.rekomTtd.name : (existingItem ? existingItem.fileRekomTtdName : `Rekom_TTD_${desa.replace(/\s+/g, '_')}.pdf`);
-  if (draft.rekomTtd) await FileStorage.saveFile(draft.rekomTtd);
+    const noRekom = document.getElementById('inputKirimNomorRekom')?.value?.trim() || '';
+    const tglRekom = document.getElementById('inputKirimTanggalRekom')?.value || '';
+    const noSpKec = document.getElementById('inputKirimNomorSpKec')?.value?.trim() || '';
+    const tglSpKec = document.getElementById('inputKirimTanggalSpKec')?.value || '';
+    const catatan = document.getElementById('inputKirimCatatan')?.value?.trim() || '';
 
-  const fileSpKecId = draft.spKec ? draft.spKec.id : (existingItem ? existingItem.fileSpKecId : `file_krm_sp_${Date.now()}`);
-  const fileSpKecName = draft.spKec ? draft.spKec.name : (existingItem ? existingItem.fileSpKecName : `SP_Kecamatan_${desa.replace(/\s+/g, '_')}.pdf`);
-  if (draft.spKec) await FileStorage.saveFile(draft.spKec);
+    if (!noRekom || !tglRekom) {
+      showToast('Nomor dan Tanggal Surat Rekomendasi Camat wajib diisi!', 'warning');
+      return;
+    }
+    if (!noSpKec || !tglSpKec) {
+      showToast('Nomor dan Tanggal Surat Pengantar Kecamatan wajib diisi!', 'warning');
+      return;
+    }
 
-  const fileCeklistKecId = draft.ceklistKec ? draft.ceklistKec.id : (existingItem ? existingItem.fileCeklistKecId : `file_krm_cek_${Date.now()}`);
-  const fileCeklistKecName = draft.ceklistKec ? draft.ceklistKec.name : (existingItem ? existingItem.fileCeklistKecName : `Ceklist_Kecamatan_${desa.replace(/\s+/g, '_')}.pdf`);
-  if (draft.ceklistKec) await FileStorage.saveFile(draft.ceklistKec);
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = '<span>⏳ Menyimpan & Menyiapkan Berkas...</span>';
+    }
 
-  let recordToSave;
-  if (isEditing && existingItem) {
-    existingItem.namaDesa = desa;
-    existingItem.jenisDana = jenisDana;
-    existingItem.tahap = tahap;
-    existingItem.tahunAnggaran = tahun;
-    existingItem.nominal = nominalAngka;
-    existingItem.nomorRekom = noRekom;
-    existingItem.tanggalRekom = tglRekom;
-    existingItem.nomorSpKec = noSpKec;
-    existingItem.tanggalSpKec = tglSpKec;
-    existingItem.catatan = catatan;
-    existingItem.fileRekomTtdId = fileRekomTtdId;
-    existingItem.fileRekomTtdName = fileRekomTtdName;
-    existingItem.fileSpKecId = fileSpKecId;
-    existingItem.fileSpKecName = fileSpKecName;
-    existingItem.fileCeklistKecId = fileCeklistKecId;
-    existingItem.fileCeklistKecName = fileCeklistKecName;
-    existingItem.waktuKirim = new Date().toISOString();
-    existingItem.status = 'Siap Kirim ke BKAD';
-    recordToSave = existingItem;
-  } else {
-    recordToSave = {
-      id: `KRM-${new Date().toISOString().replace(/\D/g, '').substring(0, 14)}`,
-      namaDesa: desa,
-      jenisDana: jenisDana,
-      tahap: tahap,
-      tahunAnggaran: tahun,
-      nominal: nominalAngka,
-      nomorRekom: noRekom,
-      tanggalRekom: tglRekom,
-      nomorSpKec: noSpKec,
-      tanggalSpKec: tglSpKec,
-      catatan: catatan,
-      fileRekomTtdId: fileRekomTtdId,
-      fileRekomTtdName: fileRekomTtdName,
-      fileSpKecId: fileSpKecId,
-      fileSpKecName: fileSpKecName,
-      fileCeklistKecId: fileCeklistKecId,
-      fileCeklistKecName: fileCeklistKecName,
-      waktuKirim: new Date().toISOString(),
-      status: 'Siap Kirim ke BKAD'
-    };
-    if (!Array.isArray(AppState.kirimRekomDesa)) AppState.kirimRekomDesa = [];
-    AppState.kirimRekomDesa.unshift(recordToSave);
-  }
+    const isEditing = Boolean(editId);
+    const existingItem = isEditing ? (AppState.kirimRekomDesa || []).find(k => k.id === editId) : null;
+    const draft = AppState.draftKirimKecamatan || {};
 
-  localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
-
-  // 2. Upload berkas ke subfolder 'kecamatan' di Google Drive & simpan ke Google Sheets
-  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
-    try {
-      if (btnSubmit) btnSubmit.innerHTML = '<span>☁️ Mengunggah ke Google Drive (subfolder kecamatan)...</span>';
-      const payloadGas = {
-        action: 'simpanKirimRekomDesa',
-        id: recordToSave.id,
-        namaDesa: recordToSave.namaDesa,
-        jenisDana: recordToSave.jenisDana,
-        tahap: recordToSave.tahap,
-        tahunAnggaran: recordToSave.tahunAnggaran,
-        nominal: recordToSave.nominal,
-        nomorRekom: recordToSave.nomorRekom,
-        tanggalRekom: recordToSave.tanggalRekom,
-        nomorSpKec: recordToSave.nomorSpKec,
-        tanggalSpKec: recordToSave.tanggalSpKec,
-        catatan: recordToSave.catatan,
-        status: recordToSave.status,
-        fileRekomTtd: draft.rekomTtd ? { name: draft.rekomTtd.name, type: draft.rekomTtd.type, dataUrl: draft.rekomTtd.dataUrl } : null,
-        fileSpKecamatan: draft.spKec ? { name: draft.spKec.name, type: draft.spKec.type, dataUrl: draft.spKec.dataUrl } : null,
-        fileCeklistKecamatan: draft.ceklistKec ? { name: draft.ceklistKec.name, type: draft.ceklistKec.type, dataUrl: draft.ceklistKec.dataUrl } : null,
-        existingRekomTtd: existingItem ? { name: existingItem.fileRekomTtdName, url: existingItem.driveRekomTtdUrl || '-' } : null,
-        existingSpKecamatan: existingItem ? { name: existingItem.fileSpKecName, url: existingItem.driveSpKecUrl || '-' } : null,
-        existingCeklistKecamatan: existingItem ? { name: existingItem.fileCeklistKecName, url: existingItem.driveCeklistKecUrl || '-' } : null
-      };
-
-      const res = await fetch(AppState.gasUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payloadGas)
-      });
-      const resJson = await res.json();
-      if (resJson.success) {
-        recordToSave.driveFolderUrl = resJson.driveFolderUrl;
-        if (resJson.driveFiles) {
-          if (resJson.driveFiles.rekomTtd && resJson.driveFiles.rekomTtd.url !== '-') recordToSave.driveRekomTtdUrl = resJson.driveFiles.rekomTtd.url;
-          if (resJson.driveFiles.spKecamatan && resJson.driveFiles.spKecamatan.url !== '-') recordToSave.driveSpKecUrl = resJson.driveFiles.spKecamatan.url;
-          if (resJson.driveFiles.ceklistKecamatan && resJson.driveFiles.ceklistKecamatan.url !== '-') recordToSave.driveCeklistKecUrl = resJson.driveFiles.ceklistKecamatan.url;
-        }
-        localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
-        showToast('Berkas berhasil diunggah ke Google Drive subfolder kecamatan & dicatat di Google Sheets!', 'success');
+    // 1. Simpan ke IndexedDB lokal jika ada file baru di-upload
+    const fileRekomTtdId = draft.rekomTtd ? draft.rekomTtd.id : (existingItem ? existingItem.fileRekomTtdId : `file_krm_rekom_${Date.now()}`);
+    const fileRekomTtdName = draft.rekomTtd ? draft.rekomTtd.name : (existingItem ? existingItem.fileRekomTtdName : `Rekom_TTD_${desa.replace(/\s+/g, '_')}.pdf`);
+    if (draft.rekomTtd) {
+      try {
+        await FileStorage.saveFile(draft.rekomTtd);
+      } catch (fErr) {
+        console.warn('Gagal simpan file rekomTtd ke IndexedDB:', fErr);
       }
-    } catch (gasErr) {
-      console.warn('Gagal sinkron ke Google Drive kecamatan:', gasErr);
-      showToast('Data tersimpan di database lokal (Offline Google Sheets).', 'info');
+    }
+
+    const fileSpKecId = draft.spKec ? draft.spKec.id : (existingItem ? existingItem.fileSpKecId : `file_krm_sp_${Date.now()}`);
+    const fileSpKecName = draft.spKec ? draft.spKec.name : (existingItem ? existingItem.fileSpKecName : `SP_Kecamatan_${desa.replace(/\s+/g, '_')}.pdf`);
+    if (draft.spKec) {
+      try {
+        await FileStorage.saveFile(draft.spKec);
+      } catch (fErr) {
+        console.warn('Gagal simpan file spKec ke IndexedDB:', fErr);
+      }
+    }
+
+    const fileCeklistKecId = draft.ceklistKec ? draft.ceklistKec.id : (existingItem ? existingItem.fileCeklistKecId : `file_krm_cek_${Date.now()}`);
+    const fileCeklistKecName = draft.ceklistKec ? draft.ceklistKec.name : (existingItem ? existingItem.fileCeklistKecName : `Ceklist_Kecamatan_${desa.replace(/\s+/g, '_')}.pdf`);
+    if (draft.ceklistKec) {
+      try {
+        await FileStorage.saveFile(draft.ceklistKec);
+      } catch (fErr) {
+        console.warn('Gagal simpan file ceklistKec ke IndexedDB:', fErr);
+      }
+    }
+
+    let recordToSave;
+    if (isEditing && existingItem) {
+      existingItem.namaDesa = desa;
+      existingItem.jenisDana = jenisDana;
+      existingItem.tahap = tahap;
+      existingItem.tahunAnggaran = tahun;
+      existingItem.nominal = nominalAngka;
+      existingItem.nomorRekom = noRekom;
+      existingItem.tanggalRekom = tglRekom;
+      existingItem.nomorSpKec = noSpKec;
+      existingItem.tanggalSpKec = tglSpKec;
+      existingItem.catatan = catatan;
+      existingItem.fileRekomTtdId = fileRekomTtdId;
+      existingItem.fileRekomTtdName = fileRekomTtdName;
+      existingItem.fileSpKecId = fileSpKecId;
+      existingItem.fileSpKecName = fileSpKecName;
+      existingItem.fileCeklistKecId = fileCeklistKecId;
+      existingItem.fileCeklistKecName = fileCeklistKecName;
+      existingItem.waktuKirim = new Date().toISOString();
+      existingItem.status = 'Siap Kirim ke BKAD';
+      recordToSave = existingItem;
+    } else {
+      recordToSave = {
+        id: `KRM-${new Date().toISOString().replace(/\D/g, '').substring(0, 14)}`,
+        namaDesa: desa,
+        jenisDana: jenisDana,
+        tahap: tahap,
+        tahunAnggaran: tahun,
+        nominal: nominalAngka,
+        nomorRekom: noRekom,
+        tanggalRekom: tglRekom,
+        nomorSpKec: noSpKec,
+        tanggalSpKec: tglSpKec,
+        catatan: catatan,
+        fileRekomTtdId: fileRekomTtdId,
+        fileRekomTtdName: fileRekomTtdName,
+        fileSpKecId: fileSpKecId,
+        fileSpKecName: fileSpKecName,
+        fileCeklistKecId: fileCeklistKecId,
+        fileCeklistKecName: fileCeklistKecName,
+        waktuKirim: new Date().toISOString(),
+        status: 'Siap Kirim ke BKAD'
+      };
+      if (!Array.isArray(AppState.kirimRekomDesa)) AppState.kirimRekomDesa = [];
+      AppState.kirimRekomDesa.unshift(recordToSave);
+    }
+
+    try {
+      localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
+    } catch (lsErr) {
+      console.warn('Gagal simpan ke localStorage:', lsErr);
+    }
+
+    // 2. Upload berkas ke subfolder 'kecamatan' di Google Drive & simpan ke Google Sheets (jika GAS configured)
+    if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+      try {
+        if (btnSubmit) btnSubmit.innerHTML = '<span>☁️ Mengunggah ke Google Drive (subfolder kecamatan)...</span>';
+        const payloadGas = {
+          action: 'simpanKirimRekomDesa',
+          id: recordToSave.id,
+          namaDesa: recordToSave.namaDesa,
+          jenisDana: recordToSave.jenisDana,
+          tahap: recordToSave.tahap,
+          tahunAnggaran: recordToSave.tahunAnggaran,
+          nominal: recordToSave.nominal,
+          nomorRekom: recordToSave.nomorRekom,
+          tanggalRekom: recordToSave.tanggalRekom,
+          nomorSpKec: recordToSave.nomorSpKec,
+          tanggalSpKec: recordToSave.tanggalSpKec,
+          catatan: recordToSave.catatan,
+          status: recordToSave.status,
+          fileRekomTtd: draft.rekomTtd ? { name: draft.rekomTtd.name, type: draft.rekomTtd.type, dataUrl: draft.rekomTtd.dataUrl } : null,
+          fileSpKecamatan: draft.spKec ? { name: draft.spKec.name, type: draft.spKec.type, dataUrl: draft.spKec.dataUrl } : null,
+          fileCeklistKecamatan: draft.ceklistKec ? { name: draft.ceklistKec.name, type: draft.ceklistKec.type, dataUrl: draft.ceklistKec.dataUrl } : null,
+          existingRekomTtd: existingItem ? { name: existingItem.fileRekomTtdName, url: existingItem.driveRekomTtdUrl || '-' } : null,
+          existingSpKecamatan: existingItem ? { name: existingItem.fileSpKecName, url: existingItem.driveSpKecUrl || '-' } : null,
+          existingCeklistKecamatan: existingItem ? { name: existingItem.fileCeklistKecName, url: existingItem.driveCeklistKecUrl || '-' } : null
+        };
+
+        const res = await fetch(AppState.gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payloadGas)
+        });
+        const resJson = await res.json();
+        if (resJson.success) {
+          recordToSave.driveFolderUrl = resJson.driveFolderUrl;
+          if (resJson.driveFiles) {
+            if (resJson.driveFiles.rekomTtd && resJson.driveFiles.rekomTtd.url !== '-') recordToSave.driveRekomTtdUrl = resJson.driveFiles.rekomTtd.url;
+            if (resJson.driveFiles.spKecamatan && resJson.driveFiles.spKecamatan.url !== '-') recordToSave.driveSpKecUrl = resJson.driveFiles.spKecamatan.url;
+            if (resJson.driveFiles.ceklistKecamatan && resJson.driveFiles.ceklistKecamatan.url !== '-') recordToSave.driveCeklistKecUrl = resJson.driveFiles.ceklistKecamatan.url;
+          }
+          try {
+            localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
+          } catch(e) {}
+          showToast('Berkas berhasil diunggah ke Google Drive subfolder kecamatan & dicatat di Google Sheets!', 'success');
+        }
+      } catch (gasErr) {
+        console.warn('Gagal sinkron ke Google Drive kecamatan:', gasErr);
+        showToast('Data tersimpan di database lokal (Offline Google Sheets).', 'info');
+      }
+    }
+
+    tutupModalKirimRekomDesa();
+    renderTabelKirimRekomDesa();
+    renderDokumenKecamatanUntukDesa();
+    showToast(`Dokumen Rekomendasi untuk Desa ${desa} berhasil disimpan & dikirim!`, 'success');
+
+  } catch (err) {
+    console.error('Error saat simpanKirimRekomDesa:', err);
+    showToast('Gagal menyimpan: ' + (err.message || err), 'error');
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = origBtnHtml || '<span>🚀 Simpan & Kirim ke Desa</span>';
     }
   }
-
-  if (btnSubmit) {
-    btnSubmit.disabled = false;
-    btnSubmit.innerHTML = origBtnHtml;
-  }
-
-  tutupModalKirimRekomDesa();
-  renderTabelKirimRekomDesa();
-  renderDokumenKecamatanUntukDesa();
-  showToast(`Dokumen Rekomendasi untuk Desa ${desa} berhasil disimpan & dikirim!`, 'success');
 };
 
 // Hapus Kiriman Rekomendasi
