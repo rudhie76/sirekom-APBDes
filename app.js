@@ -4708,9 +4708,15 @@ window.renderDashboardSummary = function() {
   const riwayat = AppState.riwayat || [];
 
   const totalPengajuan = list.length;
-  const menungguCount = list.filter(item => item.status === 'Menunggu Verifikasi').length;
+  const menungguCount = list.filter(item => {
+    if (typeof isPengajuanSelesai === 'function' && isPengajuanSelesai(item)) return false;
+    return item.status === 'Menunggu Verifikasi' || !item.status;
+  }).length;
   const diverifikasiCount = list.filter(item => item.status === 'Diverifikasi').length;
-  const diterbitkanCount = list.filter(item => item.status === 'Diterbitkan').length;
+  const diterbitkanCount = list.filter(item => {
+    if (typeof isPengajuanSelesai === 'function' && isPengajuanSelesai(item)) return true;
+    return item.status === 'Diterbitkan' || item.status === 'Selesai';
+  }).length;
 
   const totalRekomTerbit = riwayat.length;
 
@@ -5212,6 +5218,36 @@ window.submitPengajuanDesa = async function() {
 };
 
 /**
+ * Memeriksa apakah suatu berkas pengajuan desa sudah selesai diproses oleh kecamatan
+ * (yaitu Surat Rekomendasi, SP Kecamatan, dan Ceklist sudah ditandatangani dan dikirim ke desa)
+ */
+function isPengajuanSelesai(item) {
+  if (!item) return false;
+  const statusStr = String(item.status || '').toLowerCase().trim();
+  if (statusStr === 'selesai' || statusStr === 'terkirim' || statusStr === 'terkirim ke desa') {
+    return true;
+  }
+  const kirimList = AppState.kirimRekomDesa || [];
+  const itemDesa = (item.namaDesa || '').toLowerCase().trim();
+  const itemJenis = (item.jenisDana || '').toLowerCase().trim();
+  const itemTahap = (item.tahap || '').toLowerCase().trim();
+  const itemTahun = String(item.tahunAnggaran || '').trim();
+
+  return kirimList.some(k => {
+    const kDesa = (k.namaDesa || '').toLowerCase().trim();
+    const kJenis = (k.jenisDana || '').toLowerCase().trim();
+    const kTahap = (k.tahap || '').toLowerCase().trim();
+    const kTahun = String(k.tahunAnggaran || '').trim();
+
+    return kDesa === itemDesa &&
+           kJenis === itemJenis &&
+           kTahap === itemTahap &&
+           kTahun === itemTahun;
+  });
+}
+window.isPengajuanSelesai = isPengajuanSelesai;
+
+/**
  * Merender Tabel Riwayat Pengajuan di Dashboard Operator Desa
  */
 function renderTabelPengajuanDesa() {
@@ -5235,11 +5271,14 @@ function renderTabelPengajuanDesa() {
   }
 
   tbody.innerHTML = list.map((item, index) => {
+    const isSelesai = isPengajuanSelesai(item);
     let statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Menunggu</span>`;
-    if (item.status === 'Diverifikasi') {
+    if (isSelesai) {
+      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Selesai (Rekom Siap BKAD)</span>`;
+    } else if (item.status === 'Diverifikasi') {
       statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Diverifikasi</span>`;
     } else if (item.status === 'Diterbitkan') {
-      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Rekom Terbit</span>`;
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Rekom Camat Terbit</span>`;
     } else if (item.status === 'Dikembalikan') {
       statusBadge = `
         <div class="flex flex-col items-center gap-1.5">
@@ -5268,7 +5307,15 @@ function renderTabelPengajuanDesa() {
       </div>
     `;
 
-    if (item.status === 'Dikembalikan') {
+    if (isSelesai) {
+      aksiHtml = `
+        <div class="flex flex-col gap-1 items-center justify-center min-w-[72px]">
+          <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+            ✅ Terkirim
+          </span>
+        </div>
+      `;
+    } else if (item.status === 'Dikembalikan') {
       aksiHtml = `
         <div class="flex flex-col gap-1 items-center justify-center min-w-[72px]">
           <button onclick="bukaModalEditPengajuanDesa('${item.id}')" class="w-full px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer" title="Perbaiki berkas sesuai catatan kecamatan">
@@ -5694,7 +5741,23 @@ window.hapusPengajuanDesa = function(id) {
  * Update Badge Notifikasi Berkas Masuk di Sidebar & Sub-Tab & Navbar
  */
 function updateBadgePengajuanDesa() {
-  const count = (AppState.pengajuanDesa || []).length;
+  // 1. Sinkronkan status lokal pengajuan jika berkas rekom sudah pernah dikirim ke desa
+  let changed = false;
+  (AppState.pengajuanDesa || []).forEach(p => {
+    if (isPengajuanSelesai(p) && p.status !== 'Selesai') {
+      p.status = 'Selesai';
+      changed = true;
+    }
+  });
+  if (changed) {
+    try {
+      localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+    } catch (_) {}
+  }
+
+  // 2. Hitung berkas yang MASIH butuh tindakan verifikasi dari kecamatan (belum selesai & belum dikembalikan)
+  const pendingList = (AppState.pengajuanDesa || []).filter(item => !isPengajuanSelesai(item) && item.status !== 'Dikembalikan');
+  const count = pendingList.length;
   const riwayatCount = (AppState.riwayat || []).length;
 
   // Badge navbar modal lama (jika ada)
@@ -5774,6 +5837,8 @@ window.renderTabelPengajuanKecamatan = function() {
   }
 
   tbody.innerHTML = list.map((item, index) => {
+    const isSelesai = isPengajuanSelesai(item);
+
     // Status Badge & Keterangan Catatan
     let statusBadge = `
       <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
@@ -5781,7 +5846,13 @@ window.renderTabelPengajuanKecamatan = function() {
       </span>
     `;
 
-    if (item.status === 'Dikembalikan') {
+    if (isSelesai) {
+      statusBadge = `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+          <span>✅ Rekom Dikirim ke Desa</span>
+        </span>
+      `;
+    } else if (item.status === 'Dikembalikan') {
       statusBadge = `
         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
           <span>↩️ Dikembalikan</span>
@@ -5789,14 +5860,14 @@ window.renderTabelPengajuanKecamatan = function() {
       `;
     } else if (item.status === 'Diterbitkan') {
       statusBadge = `
-        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
           <span>✓ Rekom Diterbitkan</span>
         </span>
       `;
     }
 
     let catatanBox = '';
-    if (item.catatanKecamatan) {
+    if (item.catatanKecamatan && !isSelesai) {
       catatanBox = `
         <div class="mt-2 p-1.5 bg-rose-50 border border-rose-200 rounded text-[10px] text-rose-900 text-left">
           <div class="font-bold flex items-center gap-1 text-[9px] uppercase tracking-wide text-rose-700">
@@ -5811,7 +5882,18 @@ window.renderTabelPengajuanKecamatan = function() {
 
     // Pilihan Tindakan Kecamatan (Data OK -> Buat Rekom Camat | Tidak OK -> Kembalikan dengan Catatan)
     let tindakanHtml = '';
-    if (item.status === 'Dikembalikan') {
+    if (isSelesai) {
+      tindakanHtml = `
+        <div class="flex flex-col gap-1.5">
+          <button onclick="switchKecamatanSubTab('kirim_desa')" class="w-full px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[11px] font-bold transition shadow-xs flex items-center justify-center gap-1 cursor-pointer" title="Lihat Berkas Resmi di Tab Kirim ke Desa">
+            <span>📤 Berkas Terkirim</span>
+          </button>
+          <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka formulir data rekomendasi camat">
+            <span>⚡ Buka Rekom</span>
+          </button>
+        </div>
+      `;
+    } else if (item.status === 'Dikembalikan') {
       tindakanHtml = `
         <div class="flex flex-col gap-1.5">
           <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="w-full px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-bold transition shadow-xs flex items-center justify-center gap-1 cursor-pointer" title="Data berkas sudah diperbaiki & OK: Lanjutkan pembuatan Rekomendasi Camat">
@@ -5852,6 +5934,11 @@ window.renderTabelPengajuanKecamatan = function() {
 
           <!-- Pilihan 3: Kirim Langsung Dokumen ke Desa -->
           <button onclick="bukaModalKirimDariPengajuan('${item.id}')" class="w-full px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer" title="Unggah 3 Berkas & Kirim ke Desa untuk BKAD">
+            <span>📤 Kirim ke Desa</span>
+          </button>
+        </div>
+      `;
+    }
             <span>📤 Kirim ke Desa</span>
           </button>
         </div>
@@ -6730,7 +6817,53 @@ window.simpanKirimRekomDesa = async function(event) {
       }
     }
 
+    // 3. Sinkronkan status pengajuan desa terkait menjadi 'Selesai'
+    let updatedPengajuan = false;
+    (AppState.pengajuanDesa || []).forEach(p => {
+      const matchDesa = (p.namaDesa || '').toLowerCase().trim() === desa.toLowerCase().trim();
+      const matchJenis = (p.jenisDana || '').toLowerCase().trim() === jenisDana.toLowerCase().trim();
+      const matchTahap = (p.tahap || '').toLowerCase().trim() === tahap.toLowerCase().trim();
+      const matchTahun = String(p.tahunAnggaran || '').trim() === String(tahun).trim();
+
+      if (matchDesa && matchJenis && matchTahap && matchTahun) {
+        p.status = 'Selesai';
+        p.waktuSelesai = new Date().toISOString();
+        updatedPengajuan = true;
+      }
+    });
+
+    if (updatedPengajuan) {
+      try {
+        localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+      } catch (e) {}
+
+      // Sinkronkan status ke Google Sheets jika online
+      if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+        const targetP = (AppState.pengajuanDesa || []).find(p =>
+          (p.namaDesa || '').toLowerCase().trim() === desa.toLowerCase().trim() &&
+          (p.jenisDana || '').toLowerCase().trim() === jenisDana.toLowerCase().trim() &&
+          (p.tahap || '').toLowerCase().trim() === tahap.toLowerCase().trim() &&
+          String(p.tahunAnggaran || '').trim() === String(tahun).trim()
+        );
+        if (targetP) {
+          fetch(AppState.gasUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'updateStatusPengajuan',
+              id: targetP.id,
+              status: 'Selesai',
+              catatan: 'Dokumen Rekomendasi, SP Kecamatan, dan Ceklist telah dikirim ke Desa'
+            })
+          }).catch(e => console.warn('Gagal sync status selesai ke gas:', e));
+        }
+      }
+    }
+
     tutupModalKirimRekomDesa();
+    updateBadgePengajuanDesa();
+    renderTabelPengajuanKecamatan();
+    renderTabelPengajuanDesa();
     renderTabelKirimRekomDesa();
     renderDokumenKecamatanUntukDesa();
     showToast(`Dokumen Rekomendasi untuk Desa ${desa} berhasil disimpan & dikirim!`, 'success');
@@ -6749,8 +6882,24 @@ window.simpanKirimRekomDesa = async function(event) {
 // Hapus Kiriman Rekomendasi
 window.hapusKirimRekomDesa = async function(id) {
   if (!confirm('Apakah Anda yakin ingin menghapus data kiriman rekomendasi ini?')) return;
+  const deletedItem = (AppState.kirimRekomDesa || []).find(k => k.id === id);
   AppState.kirimRekomDesa = (AppState.kirimRekomDesa || []).filter(k => k.id !== id);
   localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
+
+  if (deletedItem) {
+    (AppState.pengajuanDesa || []).forEach(p => {
+      const matchDesa = (p.namaDesa || '').toLowerCase().trim() === (deletedItem.namaDesa || '').toLowerCase().trim();
+      const matchJenis = (p.jenisDana || '').toLowerCase().trim() === (deletedItem.jenisDana || '').toLowerCase().trim();
+      const matchTahap = (p.tahap || '').toLowerCase().trim() === (deletedItem.tahap || '').toLowerCase().trim();
+      const matchTahun = String(p.tahunAnggaran || '').trim() === String(deletedItem.tahunAnggaran || '').trim();
+      if (matchDesa && matchJenis && matchTahap && matchTahun) {
+        p.status = 'Diterbitkan';
+      }
+    });
+    try {
+      localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+    } catch (_) {}
+  }
 
   if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
     try {
@@ -6762,6 +6911,9 @@ window.hapusKirimRekomDesa = async function(id) {
     } catch (_) {}
   }
 
+  updateBadgePengajuanDesa();
+  renderTabelPengajuanKecamatan();
+  renderTabelPengajuanDesa();
   renderTabelKirimRekomDesa();
   renderDokumenKecamatanUntukDesa();
   showToast('Data kiriman rekomendasi berhasil dihapus.', 'info');
