@@ -2340,6 +2340,64 @@ async function getLogoPpuBase64() {
 }
 
 /**
+ * Konversi elemen <ol> menjadi markup tabel 2-kolom Word
+ * Kolom 1: Nomor urut (1., 2., 12., dll)
+ * Kolom 2: Konten teks item
+ * Ini 100% mencegah Microsoft Word me-reset nomor urut pada Halaman 2 dan 3!
+ */
+function convertOlToTable(ol, lineSpacing) {
+  const table = document.createElement('table');
+  table.setAttribute('border', '0');
+  table.setAttribute('cellspacing', '0');
+  table.setAttribute('cellpadding', '0');
+  table.setAttribute('style', `width: 95%; margin-left: 20pt; border-collapse: collapse; margin-top: 3pt; margin-bottom: 3pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+  
+  let startNum = 1;
+  const startAttr = ol.getAttribute('start');
+  if (startAttr) {
+    startNum = parseInt(startAttr, 10) || 1;
+  }
+
+  const lis = ol.querySelectorAll(':scope > li');
+  let currentNum = startNum;
+  let rowsHtml = '';
+  lis.forEach(li => {
+    rowsHtml += `
+      <tr>
+        <td style="width: 20pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${currentNum}.</td>
+        <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${li.innerHTML}</td>
+      </tr>
+    `;
+    currentNum++;
+  });
+  table.innerHTML = rowsHtml;
+  return table;
+}
+
+function convertOlToTableHtml(ol, lineSpacing) {
+  let startNum = 1;
+  const startAttr = ol.getAttribute('start');
+  if (startAttr) {
+    startNum = parseInt(startAttr, 10) || 1;
+  }
+
+  const lis = ol.querySelectorAll(':scope > li');
+  let currentNum = startNum;
+  let rowsHtml = '';
+  lis.forEach(li => {
+    rowsHtml += `
+      <tr>
+        <td style="width: 18pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${currentNum}.</td>
+        <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${li.innerHTML}</td>
+      </tr>
+    `;
+    currentNum++;
+  });
+
+  return `<table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">${rowsHtml}</table>`;
+}
+
+/**
  * Konversi lembar surat (.surat-sheet) HTML menjadi markup tabel yang 100% kompatibel dengan Microsoft Word
  */
 function cleanSheetToWordHtml(sheet, logoBase64) {
@@ -2352,8 +2410,18 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   // Hapus kontrol atau elemen yang tidak dicetak
   clone.querySelectorAll('.no-print, button, script').forEach(el => el.remove());
 
+  // Hapus tulisan (apabila ada) setelah TEMBUSAN jika masih tersisa
+  clone.querySelectorAll('div, span, p').forEach(el => {
+    if (el.children.length === 0 && el.textContent.includes('TEMBUSAN : (apabila ada)')) {
+      el.textContent = el.textContent.replace('TEMBUSAN : (apabila ada)', 'TEMBUSAN :');
+    }
+  });
+
+  // Tentukan apakah sheet ini adalah Surat Pengantar
+  const isSp = clone.textContent.includes('SURAT PENGANTAR') || AppState.activeTab === 'surat-pengantar';
+
   // Tentukan spasi baris yang aktif (1.0, 1.15, 1.25, 1.5)
-  const lineSpacing = AppState.activeTab === 'surat-pengantar' || AppState.activeTemplateKey === 'surat_pengantar'
+  const lineSpacing = isSp
     ? (document.getElementById('selectLineSpacingSp')?.value || AppState.suratPengantarData?.lineSpacing || '1.15')
     : (document.getElementById('selectLineSpacing')?.value || AppState.lineSpacing || '1.15');
 
@@ -2366,7 +2434,10 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   const kop = clone.querySelector('.kop-surat');
   if (kop) {
     const kopTable = document.createElement('table');
-    kopTable.setAttribute('style', 'width: 100%; border-collapse: collapse; margin-bottom: 8pt;');
+    kopTable.setAttribute('border', '0');
+    kopTable.setAttribute('cellspacing', '0');
+    kopTable.setAttribute('cellpadding', '0');
+    kopTable.setAttribute('style', 'width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 6pt;');
     
     const logoImgHtml = logoBase64 
       ? `<img src="data:image/png;base64,${logoBase64}" width="74" height="86" style="width: 74px; height: 86px; display: block;" />`
@@ -2374,10 +2445,10 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
 
     kopTable.innerHTML = `
       <tr>
-        <td style="width: 74px; width: 56pt; vertical-align: middle; text-align: left; padding: 0 0 5pt 0; border-bottom: 3pt double #000000;">
+        <td style="width: 15%; vertical-align: middle; text-align: left; padding: 0 0 6pt 0;">
           ${logoImgHtml}
         </td>
-        <td style="vertical-align: middle; text-align: center; font-family: Arial, sans-serif; padding: 0 8pt 5pt 8pt; border-bottom: 3pt double #000000;">
+        <td style="width: 70%; vertical-align: middle; text-align: center; font-family: Arial, sans-serif; padding: 0 4pt 6pt 4pt;">
           <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: ${lineSpacing}; color: #000000;">
             PEMERINTAH KABUPATEN PENAJAM PASER UTARA
           </div>
@@ -2390,26 +2461,41 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
             <span>Email : <span style="color: #1d4ed8; text-decoration: underline;">kecamatanwaru2014@gmail.com</span> Pos 76284</span>
           </div>
         </td>
-        <td style="width: 74px; width: 56pt; vertical-align: middle; padding: 0 0 5pt 0; border-bottom: 3pt double #000000;">&nbsp;</td>
+        <td style="width: 15%; vertical-align: middle; padding: 0 0 6pt 0;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="padding: 0; border-top: 3pt double #000000; height: 1pt; font-size: 1pt; line-height: 1pt;">&nbsp;</td>
       </tr>
     `;
     kop.parentNode.replaceChild(kopTable, kop);
   }
 
-  // 2. Transform Header Surat (Nomor/Sifat/Lampiran/Hal & Tanggal/Tujuan Yth)
+  // 2. Transform Header Surat Rekomendasi (Nomor/Sifat/Lampiran/Hal & Tanggal Penajam)
   const flexHeaders = clone.querySelectorAll('div.flex.justify-between.items-start');
   flexHeaders.forEach(fh => {
     const leftCol = fh.children[0];
     const rightCol = fh.children[1];
     const headerTable = document.createElement('table');
-    headerTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
+    headerTable.setAttribute('border', '0');
+    headerTable.setAttribute('cellspacing', '0');
+    headerTable.setAttribute('cellpadding', '0');
+    headerTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
     
+    // Format inner table di leftCol (Nomor, Sifat, Lampiran, Hal) agar titik dua (:) sejajar rapi
     if (leftCol) {
       leftCol.querySelectorAll('table').forEach(tbl => {
+        tbl.setAttribute('border', '0');
+        tbl.setAttribute('cellspacing', '0');
+        tbl.setAttribute('cellpadding', '0');
         tbl.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
-      });
-      leftCol.querySelectorAll('td').forEach(td => {
-        td.style.lineHeight = lineSpacing;
+        tbl.querySelectorAll('tr').forEach(tr => {
+          const tds = tr.children;
+          if (tds.length >= 3) {
+            tds[0].setAttribute('style', `width: 65pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;`);
+            tds[1].setAttribute('style', `width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;`);
+            tds[2].setAttribute('style', `vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; text-align: justify;`);
+          }
+        });
       });
     }
 
@@ -2424,61 +2510,169 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     fh.parentNode.replaceChild(headerTable, fh);
   });
 
-  // 3. Transform Baris Dasar Hukum (Flex layout menjadi Tabel 3 Kolom)
+  // 3. Transform Elemen Rata Kanan: Header Tujuan Surat Pengantar & Tanda Tangan Camat
+  const flexEnds = clone.querySelectorAll('div.flex.justify-end');
+  flexEnds.forEach(el => {
+    const text = el.textContent || '';
+    const isTopHeaderSp = text.includes('Kepada') || text.includes('Yth.') || text.includes('tempat_tujuan') || text.includes('jabatan_tujuan');
+
+    if (isTopHeaderSp) {
+      // Header Tujuan Surat Pengantar (di kanan atas)
+      const box = el.querySelector('.w-80') || el.firstElementChild || el;
+      const headerSpTable = document.createElement('table');
+      headerSpTable.setAttribute('border', '0');
+      headerSpTable.setAttribute('cellspacing', '0');
+      headerSpTable.setAttribute('cellpadding', '0');
+      headerSpTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 6pt; margin-bottom: 8pt; line-height: ${lineSpacing};`);
+      
+      box.querySelectorAll('.pl-6').forEach(p => {
+        p.setAttribute('style', `padding-left: 18pt; line-height: ${lineSpacing};`);
+      });
+      box.querySelectorAll('div').forEach(d => {
+        d.style.lineHeight = lineSpacing;
+      });
+
+      headerSpTable.innerHTML = `
+        <tr>
+          <td style="width: 50%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
+          <td style="width: 50%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${box.innerHTML}</td>
+        </tr>
+      `;
+      el.parentNode.replaceChild(headerSpTable, el);
+    } else {
+      // Tanda Tangan Camat (di kanan bawah)
+      const ttdBox = el.querySelector('.w-72') || el.firstElementChild || el;
+      const ttdTable = document.createElement('table');
+      ttdTable.setAttribute('border', '0');
+      ttdTable.setAttribute('cellspacing', '0');
+      ttdTable.setAttribute('cellpadding', '0');
+      ttdTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 14pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
+      
+      ttdBox.querySelectorAll('div').forEach(d => {
+        d.style.lineHeight = lineSpacing;
+      });
+      ttdBox.querySelectorAll('.h-16, .h-12').forEach(sp => {
+        sp.setAttribute('style', `height: 48pt; line-height: 48pt;`);
+      });
+
+      ttdTable.innerHTML = `
+        <tr>
+          <td style="width: 50%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
+          <td style="width: 50%; vertical-align: top; text-align: left; padding-left: 10pt; line-height: ${lineSpacing};">${ttdBox.innerHTML}</td>
+        </tr>
+      `;
+      el.parentNode.replaceChild(ttdTable, el);
+    }
+  });
+
+  // 4. Judul Surat Pengantar (SURAT PENGANTAR & Nomor)
+  const centerTitles = clone.querySelectorAll('div.text-center');
+  centerTitles.forEach(ct => {
+    if (ct.textContent.includes('SURAT PENGANTAR')) {
+      ct.setAttribute('style', `text-align: center; margin-top: 8pt; margin-bottom: 10pt; font-family: Arial, sans-serif; line-height: ${lineSpacing};`);
+      const h1 = ct.firstElementChild;
+      if (h1) {
+        h1.setAttribute('style', `font-size: 14pt; font-weight: bold; letter-spacing: 0.5pt; text-transform: uppercase; text-decoration: underline; line-height: ${lineSpacing}; margin: 0; padding: 0;`);
+      }
+      const noDiv = ct.children[1];
+      if (noDiv) {
+        noDiv.setAttribute('style', `font-size: 11pt; margin-top: 2pt; line-height: ${lineSpacing};`);
+      }
+    }
+  });
+
+  // 5. Transform Baris Dasar Hukum & Tembusan (Flex items-start)
   const flexRows = clone.querySelectorAll('div.flex.items-start');
   flexRows.forEach(fr => {
     const labelDiv = fr.querySelector('.w-20');
     const colonDiv = fr.querySelector('.w-3');
     const contentDiv = fr.querySelector('.flex-1');
+    const numSpan = fr.querySelector('.w-6');
+    
     if (labelDiv || contentDiv) {
       const dasarTable = document.createElement('table');
-      dasarTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 4pt; margin-bottom: 4pt; line-height: ${lineSpacing};`);
+      dasarTable.setAttribute('border', '0');
+      dasarTable.setAttribute('cellspacing', '0');
+      dasarTable.setAttribute('cellpadding', '0');
+      dasarTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 3pt; margin-bottom: 3pt; line-height: ${lineSpacing};`);
+      
       const labelText = labelDiv ? labelDiv.textContent.trim() : '';
       const colonText = colonDiv ? colonDiv.textContent.trim() : (labelText ? ':' : '');
-      const contentHtml = contentDiv ? contentDiv.innerHTML : '';
+      
+      let contentHtml = '';
+      if (contentDiv) {
+        const ol = contentDiv.querySelector('ol');
+        if (ol) {
+          contentHtml = convertOlToTableHtml(ol, lineSpacing);
+        } else {
+          contentHtml = contentDiv.innerHTML;
+        }
+      }
+
       dasarTable.innerHTML = `
         <tr>
-          <td style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">${labelText}</td>
-          <td style="width: 8pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">${colonText}</td>
-          <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};">${contentHtml}</td>
+          <td style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${labelText || '&nbsp;'}</td>
+          <td style="width: 10pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${colonText || '&nbsp;'}</td>
+          <td style="vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${contentHtml}</td>
         </tr>
       `;
       fr.parentNode.replaceChild(dasarTable, fr);
+    } else if (numSpan) {
+      // Baris Tembusan (misal: 1. ${tembusan_jabatan}.)
+      const textSpan = numSpan.nextElementSibling;
+      const tTable = document.createElement('table');
+      tTable.setAttribute('border', '0');
+      tTable.setAttribute('cellspacing', '0');
+      tTable.setAttribute('cellpadding', '0');
+      tTable.setAttribute('style', `border-collapse: collapse; margin-top: 1pt; margin-bottom: 1pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+      tTable.innerHTML = `
+        <tr>
+          <td style="width: 18pt; vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${numSpan.innerHTML}</td>
+          <td style="vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${textSpan ? textSpan.innerHTML : ''}</td>
+        </tr>
+      `;
+      fr.parentNode.replaceChild(tTable, fr);
     }
   });
 
-  // 4. Transform Tanda Tangan Camat & Tembusan
-  const flexTtd = clone.querySelectorAll('div.flex.justify-end');
-  flexTtd.forEach(ft => {
-    const ttdBox = ft.querySelector('.w-72') || ft.firstElementChild;
-    const ttdTable = document.createElement('table');
-    ttdTable.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 14pt; line-height: ${lineSpacing};`);
-    const ttdHtml = ttdBox ? ttdBox.innerHTML : ft.innerHTML;
-    ttdTable.innerHTML = `
-      <tr>
-        <td style="width: 48%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
-        <td style="width: 52%; vertical-align: top; text-align: left; padding-left: 15pt; line-height: ${lineSpacing};">${ttdHtml}</td>
-      </tr>
-    `;
-    ft.parentNode.replaceChild(ttdTable, ft);
+  // 6. Konversi Semua <ol> Lainnya (Berkas Persyaratan Hal 2 & Hal 3) Menjadi Tabel
+  // Ini 100% menjamin nomor urut tidak ter-reset ke 1 oleh Microsoft Word!
+  const remainingOls = clone.querySelectorAll('ol');
+  remainingOls.forEach(ol => {
+    const listTable = convertOlToTable(ol, lineSpacing);
+    ol.parentNode.replaceChild(listTable, ol);
   });
 
-  // 5. Standarisasi Format Paragraf (Sesuai lineSpacing yang dipilih)
-  clone.querySelectorAll('p').forEach(p => {
-    p.setAttribute('style', `text-indent: 36pt; text-align: justify; margin: ${paraMargin} 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+  // 7. Format Tabel Data Rekomendasi (Nama, Jabatan, Nomor Rekening Kas Desa)
+  const pl8Containers = clone.querySelectorAll('div.pl-8');
+  pl8Containers.forEach(div => {
+    const innerTable = div.querySelector('table');
+    if (innerTable && !innerTable.querySelector('th')) {
+      innerTable.setAttribute('border', '0');
+      innerTable.setAttribute('cellspacing', '0');
+      innerTable.setAttribute('cellpadding', '0');
+      innerTable.setAttribute('style', `width: 95%; margin-left: 24pt; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 4pt; margin-bottom: 6pt; line-height: ${lineSpacing};`);
+      innerTable.querySelectorAll('tr').forEach(tr => {
+        const tds = tr.children;
+        if (tds.length >= 3) {
+          tds[0].setAttribute('style', `width: 140pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0;`);
+          tds[1].setAttribute('style', `width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0;`);
+          tds[2].setAttribute('style', `vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0;`);
+        }
+      });
+    }
   });
 
-  // 6. Standarisasi Format Tabel (Sesuai lineSpacing yang dipilih)
+  // 8. Format Tabel 4 Kolom Surat Pengantar
   clone.querySelectorAll('table').forEach(t => {
-    if (!t.getAttribute('style')) {
-      t.setAttribute('style', `border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
-    }
-    // Jika tabel berbingkai data (seperti tabel 4 kolom Surat Pengantar)
     if (t.querySelector('th')) {
       t.setAttribute('border', '1');
-      t.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; border: 1pt solid #000000; margin-top: 10pt; margin-bottom: 10pt;`);
+      t.setAttribute('cellspacing', '0');
+      t.setAttribute('cellpadding', '6');
+      t.setAttribute('style', `width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; border: 1pt solid #000000; margin-top: 10pt; margin-bottom: 12pt;`);
       t.querySelectorAll('th').forEach(th => {
-        th.setAttribute('style', `border: 1pt solid #000000; padding: 5pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; text-align: center; background-color: #f1f5f9; line-height: ${lineSpacing};`);
+        const width = th.style.width || '';
+        th.setAttribute('style', `border: 1pt solid #000000; padding: 5pt 6pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; text-align: center; background-color: #f1f5f9; line-height: ${lineSpacing}; ${width ? 'width: ' + width + ';' : ''}`);
       });
       t.querySelectorAll('td').forEach(td => {
         const align = td.style.textAlign || 'left';
@@ -2486,16 +2680,29 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       });
     }
   });
-  clone.querySelectorAll('td').forEach(td => {
-    td.style.lineHeight = lineSpacing;
+
+  // 9. Standarisasi Format Paragraf <p>
+  clone.querySelectorAll('p').forEach(p => {
+    if (p.closest('.kop-surat') || p.closest('table')) return;
+    if (isSp) {
+      p.setAttribute('style', `margin: ${paraMargin} 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+    } else {
+      p.setAttribute('style', `text-indent: 30pt; text-align: justify; margin: ${paraMargin} 0; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+    }
   });
 
-  // 7. Standarisasi Format Daftar / List Berkas & Dasar (Sesuai lineSpacing yang dipilih)
-  clone.querySelectorAll('ol').forEach(ol => {
-    ol.setAttribute('style', `margin: 3pt 0 3pt 15pt; padding-left: 18pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+  // 10. Format Indentasi pl-6 di luar tabel (seperti pada Yth/Di/Tempat)
+  clone.querySelectorAll('.pl-6').forEach(el => {
+    if (!el.closest('table')) {
+      el.setAttribute('style', `padding-left: 18pt; line-height: ${lineSpacing}; font-family: Arial, sans-serif; font-size: 11pt;`);
+    }
   });
-  clone.querySelectorAll('li').forEach(li => {
-    li.setAttribute('style', `margin-bottom: 2pt; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+
+  // 11. Format Header Tembusan
+  clone.querySelectorAll('div').forEach(d => {
+    if (d.textContent.trim().startsWith('TEMBUSAN')) {
+      d.setAttribute('style', `margin-top: 14pt; margin-bottom: 2pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; line-height: ${lineSpacing};`);
+    }
   });
 
   return clone.innerHTML;
@@ -2578,7 +2785,7 @@ window.eksporSuratKeDocx = async function() {
             size: ${pageCssSize};
             margin: 1.2cm 1.5cm 1.5cm 1.8cm;
           }
-          body, p, table, td, ol, li, div, span {
+          body, p, table, td, th, ol, li, div, span {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 11pt;
             color: #000000;
@@ -2591,7 +2798,7 @@ window.eksporSuratKeDocx = async function() {
           }
           p {
             text-align: justify;
-            text-indent: 36pt;
+            text-indent: 30pt;
             margin: ${paraMargin} 0;
             line-height: ${lineSpacing};
           }
@@ -2599,7 +2806,7 @@ window.eksporSuratKeDocx = async function() {
             border-collapse: collapse;
             line-height: ${lineSpacing};
           }
-          td {
+          td, th {
             vertical-align: top;
             line-height: ${lineSpacing};
           }
@@ -2613,6 +2820,18 @@ window.eksporSuratKeDocx = async function() {
             text-align: justify;
             line-height: ${lineSpacing};
           }
+          .font-bold { font-weight: bold; }
+          .font-semibold { font-weight: bold; }
+          .font-black { font-weight: 900; }
+          .uppercase { text-transform: uppercase; }
+          .underline { text-decoration: underline; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .text-justify { text-align: justify; }
+          .text-left { text-align: left; }
+          .align-top { vertical-align: top; }
+          .align-middle { vertical-align: middle; }
+          .indent-10 { text-indent: 30pt; }
         </style>
       </head>
       <body>
@@ -2624,7 +2843,9 @@ window.eksporSuratKeDocx = async function() {
     // Buat Blob DOCX OpenXML
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
-      margins: docxMargins
+      margins: docxMargins,
+      width: isA4 ? 11906 : 12189,
+      height: isA4 ? 16838 : 18708
     });
 
     // Unduh File
@@ -7693,7 +7914,19 @@ window.eksporSuratPengantarKeDocx = async function() {
           }
           td, th {
             line-height: ${lineSpacing};
+            vertical-align: top;
           }
+          .font-bold { font-weight: bold; }
+          .font-semibold { font-weight: bold; }
+          .font-black { font-weight: 900; }
+          .uppercase { text-transform: uppercase; }
+          .underline { text-decoration: underline; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .text-justify { text-align: justify; }
+          .text-left { text-align: left; }
+          .align-top { vertical-align: top; }
+          .align-middle { vertical-align: middle; }
         </style>
       </head>
       <body>
@@ -7704,7 +7937,9 @@ window.eksporSuratPengantarKeDocx = async function() {
 
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
-      margins: docxMargins
+      margins: docxMargins,
+      width: isA4 ? 11906 : 12189,
+      height: isA4 ? 16838 : 18708
     });
 
     const blobUrl = URL.createObjectURL(blob);

@@ -13077,8 +13077,8 @@ module.exports = {
           };
         default:
           return {
-            width: 12240,
-            height: 15840,
+            width: documentOptions.width || 12240,
+            height: documentOptions.height || 15840,
             orient: 'portrait'
           };
       }
