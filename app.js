@@ -2444,7 +2444,7 @@ function convertOlToTable(ol, lineSpacing) {
       <tr>
         <td width="24" style="width: 24pt; min-width: 24pt; max-width: 24pt; vertical-align: top; padding: 1pt 0; line-height: ${lineSpacing}; mso-line-height-rule: exactly;">&nbsp;</td>
         <td width="18" style="width: 18pt; min-width: 18pt; max-width: 18pt; vertical-align: top; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${currentNum}.</td>
-        <td width="459" style="width: 459pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${li.innerHTML}</td>
+        <td width="496" style="width: 496pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${li.innerHTML}</td>
       </tr>
     `;
     currentNum++;
@@ -2453,7 +2453,7 @@ function convertOlToTable(ol, lineSpacing) {
     <colgroup>
       <col width="24" style="width: 24pt;">
       <col width="18" style="width: 18pt;">
-      <col width="459" style="width: 459pt;">
+      <col width="496" style="width: 496pt;">
     </colgroup>
     ${rowsHtml}
   `;
@@ -2515,10 +2515,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     ? (document.getElementById('selectLineSpacingSp')?.value || AppState.suratPengantarData?.lineSpacing || '1.15')
     : (document.getElementById('selectLineSpacing')?.value || AppState.lineSpacing || '1.15');
 
-  let paraMargin = '4pt';
-  if (lineSpacing === '1.0') paraMargin = '2pt';
-  else if (lineSpacing === '1.5') paraMargin = '6pt';
-  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+  let paraMargin = '0pt';
 
   // =========================================================================
   // LANGKAH 0: SANITASI CSS VARIABEL & !IMPORTANT PADA SELURUH ELEMEN DOM
@@ -2529,7 +2526,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     if (styleStr) {
       styleStr = styleStr
         .replace(/var\(--surat-line-height[^)]*\)/g, lineSpacing)
-        .replace(/var\(--surat-para-margin[^)]*\)/g, paraMargin)
+        .replace(/var\(--surat-para-margin[^)]*\)/g, '0pt')
         .replace(/!important/g, '')
         .replace(/white-space\s*:\s*pre-wrap;?/g, 'white-space: normal;');
       el.setAttribute('style', styleStr);
@@ -2543,18 +2540,16 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     }
   });
 
-  // 1. Transform Kop Surat menjadi Tabel Word Bergaris Ganda yang rapi dan presisi
+  // 1. Transform Kop Surat Menjadi Format Non-Kolom (Logo di kiri, teks kop rata tengah, bergaris ganda)
   const kop = clone.querySelector('.kop-surat');
   if (kop) {
-    const kopTable = document.createElement('table');
-    kopTable.setAttribute('border', '0');
-    kopTable.setAttribute('cellspacing', '0');
-    kopTable.setAttribute('cellpadding', '0');
-    kopTable.setAttribute('style', 'width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 6pt;');
+    const kopDiv = document.createElement('div');
+    kopDiv.className = 'kop-surat';
+    kopDiv.setAttribute('style', 'margin-top: 0pt; margin-bottom: 6pt; padding-bottom: 4pt; border-bottom: 3.0pt double #000000; mso-border-bottom-alt: double windowtext 3.0pt; text-align: center; clear: both;');
     
     const logoImgHtml = logoBase64 
-      ? `<img src="data:image/png;base64,${logoBase64}" width="74" height="86" style="width: 74px; height: 86px; display: block;" />`
-      : `<img src="logo_ppu.png" width="74" height="86" style="width: 74px; height: 86px; display: block;" />`;
+      ? `<img src="data:image/png;base64,${logoBase64}" align="left" width="70" height="82" style="float: left; width: 70px; height: 82px; margin: 0 10pt 0 0;" />`
+      : `<img src="logo_ppu.png" align="left" width="70" height="82" style="float: left; width: 70px; height: 82px; margin: 0 10pt 0 0;" />`;
 
     // Ambil teks kop langsung dari DOM pengguna (agar editan langsung tetap terjaga 100%)
     const textCenterCol = kop.querySelector('.flex-1');
@@ -2568,16 +2563,18 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
         img.parentNode.replaceChild(span, img);
       });
       textClone.querySelectorAll('h3, .text-\\[13pt\\]').forEach(h => {
-        h.setAttribute('style', `font-family: Arial, sans-serif; font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: ${lineSpacing}; text-align: center; color: #000000;`);
+        h.setAttribute('style', `font-family: Arial, sans-serif; font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: ${lineSpacing}; text-align: center; color: #000000; mso-line-height-rule: exactly;`);
       });
       textClone.querySelectorAll('h2, .text-\\[16pt\\]').forEach(h => {
-        h.setAttribute('style', `font-family: Arial, sans-serif; font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 1pt 0 2pt 0; padding: 0; line-height: ${lineSpacing}; text-align: center; color: #000000;`);
+        h.setAttribute('style', `font-family: Arial, sans-serif; font-size: 16pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 1pt 0 2pt 0; padding: 0; line-height: ${lineSpacing}; text-align: center; color: #000000; mso-line-height-rule: exactly;`);
       });
       textClone.querySelectorAll('p, div, span').forEach(p => {
         if (!p.getAttribute('style') || !p.getAttribute('style').includes('font-size')) {
           p.style.fontFamily = 'Arial, sans-serif';
           p.style.lineHeight = lineSpacing;
           p.style.textAlign = 'center';
+          p.style.margin = '0';
+          p.style.padding = '0';
         }
       });
       kopCenterHtml = textClone.innerHTML;
@@ -2597,21 +2594,14 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       `;
     }
 
-    kopTable.innerHTML = `
-      <tr>
-        <td style="width: 15%; vertical-align: middle; text-align: left; padding: 0 0 6pt 0;">
-          ${logoImgHtml}
-        </td>
-        <td style="width: 70%; vertical-align: middle; text-align: center; font-family: Arial, sans-serif; padding: 0 4pt 6pt 4pt;">
-          ${kopCenterHtml}
-        </td>
-        <td style="width: 15%; vertical-align: middle; padding: 0 0 6pt 0;">&nbsp;</td>
-      </tr>
-      <tr>
-        <td colspan="3" style="padding: 0; border-top: 3.0pt double #000000; mso-border-top-alt: double windowtext 3.0pt; height: 1pt; font-size: 1pt; line-height: 1pt;">&nbsp;</td>
-      </tr>
+    kopDiv.innerHTML = `
+      ${logoImgHtml}
+      <div style="text-align: center; margin: 0; padding: 0;">
+        ${kopCenterHtml}
+      </div>
+      <div style="clear: both; font-size: 1pt; line-height: 1pt; height: 1pt;">&nbsp;</div>
     `;
-    kop.parentNode.replaceChild(kopTable, kop);
+    kop.parentNode.replaceChild(kopDiv, kop);
   }
 
   // 2. Transform Header Surat Rekomendasi (Nomor/Sifat/Lampiran/Hal & Tanggal Penajam) Menjadi Master 2-Kolom (58% dan 42%)
@@ -2843,7 +2833,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
               <td width="52" style="width: 52pt; min-width: 52pt; max-width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${isFirst && labelText ? labelText : '&nbsp;'}</td>
               <td width="12" style="width: 12pt; min-width: 12pt; max-width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${isFirst && colonText ? colonText : '&nbsp;'}</td>
               <td width="18" style="width: 18pt; min-width: 18pt; max-width: 18pt; vertical-align: top; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${curNum}.</td>
-              <td width="419" style="width: 419pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${li.innerHTML}</td>
+              <td width="456" style="width: 456pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${li.innerHTML}</td>
             </tr>
           `;
         });
@@ -2852,7 +2842,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
             <col width="52" style="width: 52pt;">
             <col width="12" style="width: 12pt;">
             <col width="18" style="width: 18pt;">
-            <col width="419" style="width: 419pt;">
+            <col width="456" style="width: 456pt;">
           </colgroup>
           ${rowsHtml}
         `;
@@ -2862,12 +2852,12 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
           <colgroup>
             <col width="52" style="width: 52pt;">
             <col width="12" style="width: 12pt;">
-            <col width="437" style="width: 437pt;">
+            <col width="474" style="width: 474pt;">
           </colgroup>
           <tr>
             <td width="52" style="width: 52pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${labelText || '&nbsp;'}</td>
             <td width="12" style="width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${colonText || '&nbsp;'}</td>
-            <td width="437" style="width: 437pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${cHtml}</td>
+            <td width="474" style="width: 474pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0;">${cHtml}</td>
           </tr>
         `;
       }
@@ -2883,11 +2873,11 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       tTable.innerHTML = `
         <colgroup>
           <col width="18" style="width: 18pt;">
-          <col width="483" style="width: 483pt;">
+          <col width="520" style="width: 520pt;">
         </colgroup>
         <tr>
           <td width="18" style="width: 18pt; vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${numSpan.innerHTML}</td>
-          <td width="483" style="width: 483pt; vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${textSpan ? textSpan.innerHTML : ''}</td>
+          <td width="520" style="width: 520pt; vertical-align: top; line-height: ${lineSpacing}; padding: 0;">${textSpan ? textSpan.innerHTML : ''}</td>
         </tr>
       `;
       fr.parentNode.replaceChild(tTable, fr);
@@ -2926,7 +2916,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
             <td width="24" style="width: 24pt; min-width: 24pt; max-width: 24pt; vertical-align: top; padding: 1.5pt 0; line-height: ${lineSpacing}; mso-line-height-rule: exactly;">&nbsp;</td>
             <td width="160" style="width: 160pt; min-width: 160pt; max-width: 160pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0; mso-line-height-rule: exactly;">${tds[0].innerHTML}</td>
             <td width="12" style="width: 12pt; min-width: 12pt; max-width: 12pt; vertical-align: top; text-align: center; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0; mso-line-height-rule: exactly;">:</td>
-            <td width="305" style="width: 305pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0; mso-line-height-rule: exactly;">${tds[2].innerHTML}</td>
+            <td width="342" style="width: 342pt; vertical-align: top; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1.5pt 0; mso-line-height-rule: exactly;">${tds[2].innerHTML}</td>
           </tr>
         `;
       }
@@ -2936,7 +2926,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
         <col width="24" style="width: 24pt;">
         <col width="160" style="width: 160pt;">
         <col width="12" style="width: 12pt;">
-        <col width="305" style="width: 305pt;">
+        <col width="342" style="width: 342pt;">
       </colgroup>
       ${rowsHtml}
     `;
@@ -3076,17 +3066,14 @@ window.eksporSuratKeDocx = async function() {
     const isA4 = paperSize === 'a4';
     const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
     const docxMargins = {
-      top: 680,    // 1.2 cm
-      right: 850,  // 1.5 cm
+      top: 567,    // 1.0 cm
+      right: 567,  // 1.0 cm
       bottom: 850, // 1.5 cm
-      left: 1020   // 1.8 cm
+      left: 567    // 1.0 cm
     };
 
     const lineSpacing = AppState.lineSpacing || document.getElementById('selectLineSpacing')?.value || '1.15';
-    let paraMargin = '4pt';
-    if (lineSpacing === '1.0') paraMargin = '2pt';
-    else if (lineSpacing === '1.5') paraMargin = '6pt';
-    else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+    const paraMargin = '0pt';
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -3097,10 +3084,10 @@ window.eksporSuratKeDocx = async function() {
         <style>
           @page {
             size: ${pageCssSize};
-            margin: 1.2cm 1.5cm 1.5cm 1.8cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
             mso-page-orientation: portrait;
-            mso-header-margin: 36pt;
-            mso-footer-margin: 36pt;
+            mso-header-margin: 0pt;
+            mso-footer-margin: 0pt;
           }
           body, p, table, td, th, ol, li, div, span {
             font-family: Arial, Helvetica, sans-serif;
@@ -3115,9 +3102,9 @@ window.eksporSuratKeDocx = async function() {
           }
           p, div {
             margin-top: 0pt;
-            margin-bottom: ${paraMargin};
+            margin-bottom: 0pt;
             mso-para-margin-top: 0pt;
-            mso-para-margin-bottom: ${paraMargin};
+            mso-para-margin-bottom: 0pt;
             mso-line-height-rule: exactly;
             line-height: ${lineSpacing};
           }
@@ -3126,11 +3113,19 @@ window.eksporSuratKeDocx = async function() {
             text-indent: 30pt;
             mso-char-indent-count: 3;
             mso-text-indent-alt: 30pt;
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+            mso-para-margin-top: 0pt;
+            mso-para-margin-bottom: 0pt;
           }
           table p, table div, td, th {
             text-indent: 0 !important;
             mso-char-indent-count: 0 !important;
             mso-text-indent-alt: 0pt !important;
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+            mso-para-margin-top: 0pt;
+            mso-para-margin-bottom: 0pt;
           }
           table {
             border-collapse: collapse;
@@ -3146,12 +3141,15 @@ window.eksporSuratKeDocx = async function() {
             mso-line-height-rule: exactly;
           }
           ol {
-            margin: 3pt 0 3pt 15pt;
+            margin: 2pt 0 2pt 15pt;
             padding-left: 18pt;
             line-height: ${lineSpacing};
           }
           li {
-            margin-bottom: 2pt;
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+            mso-para-margin-top: 0pt;
+            mso-para-margin-bottom: 0pt;
             text-align: justify;
             line-height: ${lineSpacing};
           }
@@ -8248,17 +8246,14 @@ window.eksporSuratPengantarKeDocx = async function() {
     const isA4 = paperSize === 'a4';
     const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
     const docxMargins = {
-      top: 680,    // 1.2 cm
-      right: 850,  // 1.5 cm
+      top: 567,    // 1.0 cm
+      right: 567,  // 1.0 cm
       bottom: 850, // 1.5 cm
-      left: 1020   // 1.8 cm
+      left: 567    // 1.0 cm
     };
 
     const lineSpacing = AppState.suratPengantarData.lineSpacing || document.getElementById('selectLineSpacingSp')?.value || '1.15';
-    let paraMargin = '4pt';
-    if (lineSpacing === '1.0') paraMargin = '2pt';
-    else if (lineSpacing === '1.5') paraMargin = '6pt';
-    else if (lineSpacing === '1.25') paraMargin = '3.5pt';
+    const paraMargin = '0pt';
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -8269,8 +8264,10 @@ window.eksporSuratPengantarKeDocx = async function() {
         <style>
           @page {
             size: ${pageCssSize};
-            margin: 1.2cm 1.5cm 1.5cm 1.8cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
             mso-page-orientation: portrait;
+            mso-header-margin: 0pt;
+            mso-footer-margin: 0pt;
           }
           body, p, table, td, th, div, span {
             font-family: Arial, Helvetica, sans-serif;
@@ -8285,9 +8282,9 @@ window.eksporSuratPengantarKeDocx = async function() {
           }
           p, div {
             margin-top: 0pt;
-            margin-bottom: ${paraMargin};
+            margin-bottom: 0pt;
             mso-para-margin-top: 0pt;
-            mso-para-margin-bottom: ${paraMargin};
+            mso-para-margin-bottom: 0pt;
             mso-line-height-rule: exactly;
             line-height: ${lineSpacing};
           }
@@ -8303,6 +8300,10 @@ window.eksporSuratPengantarKeDocx = async function() {
             text-indent: 0 !important;
             mso-char-indent-count: 0 !important;
             mso-text-indent-alt: 0pt !important;
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+            mso-para-margin-top: 0pt;
+            mso-para-margin-bottom: 0pt;
           }
           td, th {
             line-height: ${lineSpacing};
