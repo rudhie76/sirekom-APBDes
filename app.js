@@ -318,6 +318,8 @@ const AppState = {
   paperSize: 'a4',
   pageBreakMode: 'separated',
   viewMode: 'split',
+  isDirectEditMode: false,
+  isDirectEditModeSp: false,
 
   // State Surat Pengantar Kecamatan Waru (Menu 3 Tab 3)
   suratPengantarData: {
@@ -1312,9 +1314,14 @@ function handleNominalInput() {
 // =========================================================================================
 // RENDER LIVE PREVIEW SESUAI TEMPLATE
 // =========================================================================================
-function updateLivePreview() {
+function updateLivePreview(force = false) {
   const previewDoc = document.getElementById('previewDocumentContainer');
   if (!previewDoc) return;
+
+  // Jika sedang aktif mode edit langsung di kertas, abaikan render ulang dari form agar ketikan tidak hilang
+  if (AppState.isDirectEditMode && !force) {
+    return;
+  }
 
   if (AppState.tipeRekomendasi === 'siltap') {
     renderLivePreviewSiltap();
@@ -1327,6 +1334,16 @@ function updateLivePreview() {
   }
   applyPaperSize();
   applyPageBreakMode();
+
+  // Jika render ulang saat mode edit sedang aktif, pasang kembali atribut contentEditable
+  if (AppState.isDirectEditMode) {
+    const sheets = previewDoc.querySelectorAll('.surat-sheet');
+    sheets.forEach(sheet => {
+      sheet.contentEditable = "true";
+      sheet.spellcheck = false;
+      sheet.classList.add('is-editing-direct');
+    });
+  }
 }
 
 /**
@@ -2100,6 +2117,9 @@ function resetZoom() {
 }
 
 function triggerPrint() {
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
   const container = document.getElementById('previewDocumentContainer');
   const oldTransform = container ? container.style.transform : '';
   if (container) container.style.transform = 'none';
@@ -2175,6 +2195,69 @@ function triggerPrint() {
 window.triggerPrint = triggerPrint;
 
 /**
+ * Mode Edit Langsung di Kertas Rekomendasi (Inline Direct Edit)
+ */
+window.toggleDirectEditMode = function() {
+  const container = document.getElementById('previewDocumentContainer');
+  if (!container) return;
+  const sheets = container.querySelectorAll('.surat-sheet');
+  if (!sheets || sheets.length === 0) {
+    showToast('Belum ada dokumen yang siap diedit.', 'warning');
+    return;
+  }
+
+  AppState.isDirectEditMode = !AppState.isDirectEditMode;
+  const btn = document.getElementById('btnToggleEditDirect');
+  const icon = document.getElementById('iconEditDirect');
+  const label = document.getElementById('labelEditDirect');
+  const btnReset = document.getElementById('btnResetDirect');
+
+  sheets.forEach(sheet => {
+    sheet.contentEditable = AppState.isDirectEditMode ? "true" : "false";
+    sheet.spellcheck = false;
+    if (AppState.isDirectEditMode) {
+      sheet.classList.add('is-editing-direct');
+    } else {
+      sheet.classList.remove('is-editing-direct');
+    }
+  });
+
+  if (AppState.isDirectEditMode) {
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer animate-pulse';
+    }
+    if (icon) icon.textContent = '🔒';
+    if (label) label.textContent = 'Kunci Ketikan';
+    if (btnReset) btnReset.classList.remove('hidden');
+    showToast('✏️ Mode Edit di Kertas Aktif! Klik bagian mana saja pada surat untuk mengubah/mengetik teks.', 'info');
+  } else {
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
+    }
+    if (icon) icon.textContent = '✏️';
+    if (label) label.textContent = 'Edit di Kertas';
+    if (btnReset) btnReset.classList.remove('hidden');
+    showToast('🔒 Teks pada kertas dikunci. Siap dicetak atau diunduh ke DOCX.', 'success');
+  }
+};
+
+window.resetPreviewFromForm = function() {
+  if (confirm('Muat ulang isi dokumen dari formulir input? Ketikan manual di kertas akan diganti dengan data dari formulir.')) {
+    AppState.isDirectEditMode = false;
+    const btn = document.getElementById('btnToggleEditDirect');
+    const icon = document.getElementById('iconEditDirect');
+    const label = document.getElementById('labelEditDirect');
+    const btnReset = document.getElementById('btnResetDirect');
+    if (btn) btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
+    if (icon) icon.textContent = '✏️';
+    if (label) label.textContent = 'Edit di Kertas';
+    if (btnReset) btnReset.classList.add('hidden');
+    updateLivePreview(true);
+    showToast('Dokumen berhasil dimuat ulang dari formulir input.', 'success');
+  }
+};
+
+/**
  * Helper Base64 Logo Kabupaten Penajam Paser Utara
  */
 let LOGO_PPU_BASE64 = '';
@@ -2222,6 +2305,10 @@ async function getLogoPpuBase64() {
  */
 function cleanSheetToWordHtml(sheet, logoBase64) {
   const clone = sheet.cloneNode(true);
+  clone.removeAttribute('contenteditable');
+  clone.classList.remove('is-editing-direct');
+  clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  clone.querySelectorAll('.is-editing-direct').forEach(el => el.classList.remove('is-editing-direct'));
   
   // Hapus kontrol atau elemen yang tidak dicetak
   clone.querySelectorAll('.no-print, button, script').forEach(el => el.remove());
@@ -7130,9 +7217,14 @@ window.onSpDesaChange = function() {
 /**
  * Perbarui Live Preview Dokumen Surat Pengantar (Sesuai Format Resmi User)
  */
-window.updateLivePreviewSp = function() {
+window.updateLivePreviewSp = function(force = false) {
   const container = document.getElementById('previewSpContainer');
   if (!container) return;
+
+  // Jika sedang aktif mode edit langsung di kertas SP, jangan timpa ketikan user kecuali dipaksa (force)
+  if (AppState.isDirectEditModeSp && !force) {
+    return;
+  }
 
   const nomorSp = document.getElementById('inputNomorSp')?.value || AppState.suratPengantarData.nomorSurat || '000.1.5 / 128 / Ekbang / X / 2026';
   const rawDate = document.getElementById('inputTanggalSp')?.value || AppState.suratPengantarData.tanggalSurat || '2026-10-21';
@@ -7290,6 +7382,16 @@ window.updateLivePreviewSp = function() {
   `;
 
   container.innerHTML = fullSheetHtml;
+
+  // Jika render ulang saat mode edit langsung aktif, pasang kembali contentEditable
+  if (AppState.isDirectEditModeSp) {
+    const sheet = container.querySelector('.surat-sheet');
+    if (sheet) {
+      sheet.contentEditable = "true";
+      sheet.spellcheck = false;
+      sheet.classList.add('is-editing-direct');
+    }
+  }
 };
 
 /**
@@ -7330,6 +7432,9 @@ window.resetZoomSp = function() {
  * Cetak / Simpan PDF Surat Pengantar Resmi
  */
 window.triggerPrintSp = function() {
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
   const container = document.getElementById('previewSpContainer');
   const oldTransform = container ? container.style.transform : '';
   if (container) container.style.transform = 'none';
@@ -7352,6 +7457,63 @@ window.triggerPrintSp = function() {
       workspaceKec.style.display = '';
     }
   }, 1000);
+};
+
+/**
+ * Mode Edit Langsung di Kertas Surat Pengantar (Inline Direct Edit)
+ */
+window.toggleDirectEditModeSp = function() {
+  const container = document.getElementById('previewSpContainer');
+  if (!container) return;
+  const sheet = container.querySelector('.surat-sheet');
+  if (!sheet) {
+    showToast('Belum ada lembar Surat Pengantar yang siap diedit.', 'warning');
+    return;
+  }
+
+  AppState.isDirectEditModeSp = !AppState.isDirectEditModeSp;
+  const btn = document.getElementById('btnToggleEditDirectSp');
+  const icon = document.getElementById('iconEditDirectSp');
+  const label = document.getElementById('labelEditDirectSp');
+  const btnReset = document.getElementById('btnResetDirectSp');
+
+  sheet.contentEditable = AppState.isDirectEditModeSp ? "true" : "false";
+  sheet.spellcheck = false;
+  if (AppState.isDirectEditModeSp) {
+    sheet.classList.add('is-editing-direct');
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer animate-pulse';
+    }
+    if (icon) icon.textContent = '🔒';
+    if (label) label.textContent = 'Kunci Ketikan';
+    if (btnReset) btnReset.classList.remove('hidden');
+    showToast('✏️ Mode Edit di Kertas Aktif! Klik bagian mana saja pada Surat Pengantar untuk mengedit.', 'info');
+  } else {
+    sheet.classList.remove('is-editing-direct');
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
+    }
+    if (icon) icon.textContent = '✏️';
+    if (label) label.textContent = 'Edit di Kertas';
+    if (btnReset) btnReset.classList.remove('hidden');
+    showToast('🔒 Teks Surat Pengantar berhasil dikunci. Siap dicetak atau diunduh ke DOCX.', 'success');
+  }
+};
+
+window.resetPreviewSpFromForm = function() {
+  if (confirm('Muat ulang isi Surat Pengantar dari formulir input? Ketikan manual di kertas akan diganti dengan data dari formulir.')) {
+    AppState.isDirectEditModeSp = false;
+    const btn = document.getElementById('btnToggleEditDirectSp');
+    const icon = document.getElementById('iconEditDirectSp');
+    const label = document.getElementById('labelEditDirectSp');
+    const btnReset = document.getElementById('btnResetDirectSp');
+    if (btn) btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
+    if (icon) icon.textContent = '✏️';
+    if (label) label.textContent = 'Edit di Kertas';
+    if (btnReset) btnReset.classList.add('hidden');
+    updateLivePreviewSp(true);
+    showToast('Surat Pengantar berhasil dimuat ulang dari formulir input.', 'success');
+  }
 };
 
 /**

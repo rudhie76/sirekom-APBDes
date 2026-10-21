@@ -72,6 +72,23 @@
       margin-bottom: 4pt;
     }
 
+    /* Mode Edit Langsung pada Kertas Dokumen */
+    .surat-sheet.is-editing-direct {
+      cursor: text !important;
+      box-shadow: 0 0 0 2.5px #f59e0b, 0 12px 28px -5px rgba(245, 158, 11, 0.25) !important;
+    }
+    .surat-sheet.is-editing-direct:focus,
+    .surat-sheet.is-editing-direct *:focus {
+      outline: 1.5px dashed #0284c7 !important;
+      outline-offset: 2px !important;
+    }
+    .surat-sheet.is-editing-direct tr:hover,
+    .surat-sheet.is-editing-direct p:hover,
+    .surat-sheet.is-editing-direct li:hover {
+      background-color: rgba(254, 243, 199, 0.35);
+      border-radius: 2px;
+    }
+
     /* Print CSS Media Query Khusus Surat Pemerintahan */
     @media print {
       html, body {
@@ -256,6 +273,14 @@
         height: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
+      }
+
+      .surat-sheet.is-editing-direct,
+      .surat-sheet.is-editing-direct * {
+        box-shadow: none !important;
+        outline: none !important;
+        cursor: default !important;
+        background: transparent !important;
       }
 
       @page {
@@ -1467,6 +1492,16 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- Tombol Edit Langsung di Kertas -->
+          <button type="button" id="btnToggleEditDirect" onclick="toggleDirectEditMode()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Edit langsung teks di lembar dokumen">
+            <span id="iconEditDirect">✏️</span>
+            <span id="labelEditDirect">Edit di Kertas</span>
+          </button>
+          
+          <button type="button" id="btnResetDirect" onclick="resetPreviewFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="Muat ulang dari form (batalkan ketikan langsung)">
+            <span>🔄 Reset Form</span>
+          </button>
+
           <!-- Tombol Cetak Langsung -->
           <button onclick="triggerPrint()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Surat Resmi / Simpan PDF">
             <span>🖨️ Cetak / PDF</span>
@@ -1730,6 +1765,16 @@
           </div>
 
           <div class="flex items-center gap-2">
+            <!-- Tombol Edit Langsung di Kertas SP -->
+            <button type="button" id="btnToggleEditDirectSp" onclick="toggleDirectEditModeSp()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Edit langsung teks di lembar Surat Pengantar">
+              <span id="iconEditDirectSp">✏️</span>
+              <span id="labelEditDirectSp">Edit di Kertas</span>
+            </button>
+            
+            <button type="button" id="btnResetDirectSp" onclick="resetPreviewSpFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="Muat ulang dari form (batalkan ketikan langsung)">
+              <span>🔄 Reset Form</span>
+            </button>
+
             <!-- Tombol Cetak / PDF -->
             <button type="button" onclick="triggerPrintSp()" class="px-3 py-1 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Surat Pengantar Resmi / Simpan PDF">
               <span>🖨️ Cetak / PDF</span>
@@ -3208,6 +3253,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261021_bulanan"></script>
+  <script src="app.js?v=20261021_direct_edit"></script>
 </body>
 </html>
