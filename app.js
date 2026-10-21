@@ -2230,6 +2230,58 @@ function triggerPrint() {
     sheet.style.borderBottom = 'none';
   });
 
+  // Pastikan struktur tabel header 58% / 42% terkunci mutlak saat dicetak ke PDF
+  const headerTables = document.querySelectorAll('.header-surat-table');
+  headerTables.forEach(ht => {
+    ht.style.setProperty('width', '100%', 'important');
+    ht.style.setProperty('table-layout', 'fixed', 'important');
+    const leftCol = ht.querySelector('.header-left-col');
+    const rightCol = ht.querySelector('.header-right-col');
+    if (leftCol) {
+      leftCol.style.setProperty('width', '58%', 'important');
+      leftCol.style.setProperty('max-width', '58%', 'important');
+    }
+    if (rightCol) {
+      rightCol.style.setProperty('width', '42%', 'important');
+      rightCol.style.setProperty('min-width', '42%', 'important');
+    }
+    const halCell = leftCol ? leftCol.querySelector('tr:last-child td:last-child') : null;
+    if (halCell) {
+      halCell.style.setProperty('width', '217pt', 'important');
+      halCell.style.setProperty('max-width', '217pt', 'important');
+      halCell.style.setProperty('word-wrap', 'break-word', 'important');
+      halCell.style.setProperty('overflow-wrap', 'break-word', 'important');
+      const halDiv = halCell.querySelector('div');
+      if (halDiv) {
+        halDiv.style.setProperty('width', '100%', 'important');
+        halDiv.style.setProperty('max-width', '217pt', 'important');
+        halDiv.style.setProperty('word-wrap', 'break-word', 'important');
+      }
+    }
+  });
+
+  // Jika masih ada struktur lama flex justify-between di DOM, konversi seketika ke tabel paten
+  const oldFlexHeaders = document.querySelectorAll('#previewDocumentContainer div.flex.justify-between.items-start');
+  oldFlexHeaders.forEach(fh => {
+    if (fh.textContent.includes('Nomor') && (fh.textContent.includes('Sifat') || fh.textContent.includes('Hal'))) {
+      const left = fh.children[0];
+      const right = fh.children[1];
+      if (left && right) {
+        const tbl = document.createElement('table');
+        tbl.className = 'header-surat-table w-full border-collapse';
+        tbl.setAttribute('style', 'width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important;');
+        tbl.innerHTML = `
+          <colgroup><col width="58%" style="width: 58%;"><col width="42%" style="width: 42%;"></colgroup>
+          <tr>
+            <td class="header-left-col align-top p-0" style="width: 58% !important; max-width: 58% !important; vertical-align: top !important;">${left.innerHTML}</td>
+            <td class="header-right-col align-top p-0 text-right font-medium" style="width: 42% !important; min-width: 42% !important; vertical-align: top !important; text-align: right !important;">${right.innerHTML}</td>
+          </tr>
+        `;
+        fh.parentNode.replaceChild(tbl, fh);
+      }
+    }
+  });
+
   window.print();
 
   setTimeout(() => {
@@ -7952,6 +8004,58 @@ window.triggerPrintSp = function() {
 
   const workspaceSp = document.getElementById('workspaceSuratPengantar');
   if (workspaceSp) workspaceSp.style.setProperty('display', 'block', 'important');
+
+  // Pastikan struktur tabel header 58% / 42% terkunci mutlak saat dicetak ke PDF
+  const headerTables = document.querySelectorAll('.header-surat-table');
+  headerTables.forEach(ht => {
+    ht.style.setProperty('width', '100%', 'important');
+    ht.style.setProperty('table-layout', 'fixed', 'important');
+    const leftCol = ht.querySelector('.header-left-col');
+    const rightCol = ht.querySelector('.header-right-col');
+    if (leftCol) {
+      leftCol.style.setProperty('width', '58%', 'important');
+      leftCol.style.setProperty('max-width', '58%', 'important');
+    }
+    if (rightCol) {
+      rightCol.style.setProperty('width', '42%', 'important');
+      rightCol.style.setProperty('min-width', '42%', 'important');
+    }
+    const halCell = leftCol ? leftCol.querySelector('tr:last-child td:last-child') : null;
+    if (halCell) {
+      halCell.style.setProperty('width', '217pt', 'important');
+      halCell.style.setProperty('max-width', '217pt', 'important');
+      halCell.style.setProperty('word-wrap', 'break-word', 'important');
+      halCell.style.setProperty('overflow-wrap', 'break-word', 'important');
+      const halDiv = halCell.querySelector('div');
+      if (halDiv) {
+        halDiv.style.setProperty('width', '100%', 'important');
+        halDiv.style.setProperty('max-width', '217pt', 'important');
+        halDiv.style.setProperty('word-wrap', 'break-word', 'important');
+      }
+    }
+  });
+
+  // Jika masih ada struktur lama flex justify-between di DOM, konversi seketika ke tabel paten
+  const oldFlexHeaders = document.querySelectorAll('#previewDocumentContainer div.flex.justify-between.items-start');
+  oldFlexHeaders.forEach(fh => {
+    if (fh.textContent.includes('Nomor') && (fh.textContent.includes('Sifat') || fh.textContent.includes('Hal'))) {
+      const left = fh.children[0];
+      const right = fh.children[1];
+      if (left && right) {
+        const tbl = document.createElement('table');
+        tbl.className = 'header-surat-table w-full border-collapse';
+        tbl.setAttribute('style', 'width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important;');
+        tbl.innerHTML = `
+          <colgroup><col width="58%" style="width: 58%;"><col width="42%" style="width: 42%;"></colgroup>
+          <tr>
+            <td class="header-left-col align-top p-0" style="width: 58% !important; max-width: 58% !important; vertical-align: top !important;">${left.innerHTML}</td>
+            <td class="header-right-col align-top p-0 text-right font-medium" style="width: 42% !important; min-width: 42% !important; vertical-align: top !important; text-align: right !important;">${right.innerHTML}</td>
+          </tr>
+        `;
+        fh.parentNode.replaceChild(tbl, fh);
+      }
+    }
+  });
 
   window.print();
 

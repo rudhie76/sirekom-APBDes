@@ -95,6 +95,35 @@
       border-radius: 2px;
     }
 
+    /* Kunci Lebar Header Surat Paten (58% Kiri vs 42% Kanan) Agar Hal Tidak Memanjang */
+    .header-surat-table,
+    table.header-surat-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      table-layout: fixed !important;
+    }
+    .header-surat-table td.header-left-col,
+    td.header-left-col {
+      width: 58% !important;
+      max-width: 58% !important;
+      vertical-align: top !important;
+    }
+    .header-surat-table td.header-right-col,
+    td.header-right-col {
+      width: 42% !important;
+      min-width: 42% !important;
+      vertical-align: top !important;
+      text-align: right !important;
+    }
+    .header-left-col table {
+      width: 100% !important;
+      table-layout: fixed !important;
+    }
+    .header-left-col td:last-child {
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+    }
+
     /* Print CSS Media Query Khusus Surat Pemerintahan */
     @media print {
       html, body {
@@ -252,6 +281,39 @@
       .surat-sheet:last-child {
         page-break-after: auto !important;
         break-after: auto !important;
+      }
+
+      /* Kunci Absolut Lebar Kolom Header Saat Dicetak ke PDF */
+      .header-surat-table,
+      table.header-surat-table {
+        display: table !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        table-layout: fixed !important;
+      }
+      .header-surat-table td.header-left-col,
+      td.header-left-col {
+        display: table-cell !important;
+        width: 58% !important;
+        max-width: 58% !important;
+        vertical-align: top !important;
+      }
+      .header-surat-table td.header-right-col,
+      td.header-right-col {
+        display: table-cell !important;
+        width: 42% !important;
+        min-width: 42% !important;
+        vertical-align: top !important;
+        text-align: right !important;
+      }
+      .header-left-col table {
+        display: table !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+      }
+      .header-left-col td:last-child {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
       }
 
       /* Mode Bebas Lembar Kosong / Mengalir Tanpa Page Break */
@@ -3280,6 +3342,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261021_docx_pdf_srikandi_v3"></script>
+  <script src="app.js?v=20261021_cetak_pdf_srikandi_fix"></script>
 </body>
 </html>
