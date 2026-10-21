@@ -2044,7 +2044,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
     <div class="mt-8 flex justify-end text-[11pt] font-sans text-black">
       <div class="w-72 text-left">
         <div class="leading-normal">Camat Waru,</div>
-        <div class="my-6 py-2 text-center text-slate-800 font-sans tracking-wide">
+        <div class="my-6 py-2 text-left text-slate-800 font-sans tracking-wide">
           \${ttd_pengirim}
         </div>
         <div class="leading-normal font-sans">\${nama_pengirim}</div>
@@ -2762,10 +2762,10 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
       
       ttdBox.querySelectorAll('.h-16, .h-12').forEach(sp => {
         sp.innerHTML = '&nbsp;';
-        sp.setAttribute('style', `height: 48pt; line-height: 48pt; font-size: 48pt; margin: 0; padding: 0;`);
+        sp.setAttribute('style', `height: 48pt; line-height: 48pt; font-size: 48pt; margin: 0; padding: 0; text-align: left;`);
       });
-      ttdBox.querySelectorAll('.my-6, .my-4, .my-3').forEach(sp => {
-        sp.setAttribute('style', `height: 36pt; line-height: 36pt; margin: 12pt 0; text-align: center; font-family: Arial, sans-serif; font-size: 11pt;`);
+      ttdBox.querySelectorAll('.my-6, .my-5, .my-4, .my-3').forEach(sp => {
+        sp.setAttribute('style', `height: 36pt; line-height: 36pt; margin: 12pt 0; text-align: left; font-family: Arial, sans-serif; font-size: 11pt;`);
       });
 
       ttdBox.querySelectorAll('div').forEach(d => {
@@ -2775,6 +2775,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
           d.style.fontSize = '11pt';
           d.style.margin = '0';
           d.style.padding = '0';
+          d.style.textAlign = 'left';
         }
         if (d.textContent.includes('nama_pengirim') || d.classList.contains('font-bold') || d.classList.contains('underline')) {
           d.style.fontWeight = 'bold';
@@ -7933,7 +7934,7 @@ window.updateLivePreviewSp = function(force = false) {
       <div class="mt-8 flex justify-end text-[11pt] font-sans text-black" style="line-height: var(--surat-line-height, 1.15) !important;">
         <div class="w-[48%] text-left">
           <div class="leading-normal" style="line-height: var(--surat-line-height, 1.15) !important;">${escapeHtml(jabatanPengirim)}</div>
-          <div class="my-5 py-2 text-center text-slate-800 font-sans tracking-wide font-mono" style="line-height: var(--surat-line-height, 1.15) !important;">
+          <div class="my-5 py-2 text-left text-slate-800 font-sans tracking-wide font-mono" style="line-height: var(--surat-line-height, 1.15) !important;">
             \${ttd_pengirim}
           </div>
           <div class="leading-normal font-bold font-sans" style="line-height: var(--surat-line-height, 1.15) !important;">\${nama_pengirim}</div>
