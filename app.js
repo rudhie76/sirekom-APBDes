@@ -4085,7 +4085,7 @@ function renderHistoryTable(query = '') {
   if (badgeTotalPage) badgeTotalPage.textContent = filtered.length;
 
   if (filtered.length === 0) {
-    const emptyRow = `<tr><td colspan="8" class="text-center py-10 text-slate-400 font-medium">Belum ada riwayat arsip surat yang sesuai filter pencarian.</td></tr>`;
+    const emptyRow = `<tr><td colspan="7" class="text-center py-10 text-slate-400 font-medium">Belum ada riwayat arsip surat yang sesuai filter pencarian.</td></tr>`;
     if (tbodyPage) tbodyPage.innerHTML = emptyRow;
     if (tbodyDrawer) tbodyDrawer.innerHTML = emptyRow;
     return;
@@ -4096,10 +4096,6 @@ function renderHistoryTable(query = '') {
     tbodyPage.innerHTML = filtered.map((item, index) => `
       <tr class="hover:bg-slate-50 transition border-b border-slate-200">
         <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
-        <td class="py-3 px-3 whitespace-nowrap">
-          <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nomorSurat || '-')}</div>
-          <div class="text-[11px] text-slate-500 mt-0.5">${formatTanggalIndo(item.tanggalSurat)}</div>
-        </td>
         <td class="py-3 px-3 whitespace-nowrap font-semibold text-slate-800 text-xs">
           Desa ${escapeHtml(item.namaDesa || '-')}
         </td>
@@ -4147,10 +4143,6 @@ function renderHistoryTable(query = '') {
     tbodyDrawer.innerHTML = filtered.map((item, index) => `
       <tr class="hover:bg-slate-50 transition border-b border-slate-100">
         <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
-        <td class="py-3 px-3 whitespace-nowrap">
-          <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nomorSurat || '-')}</div>
-          <div class="text-[11px] text-slate-500">${formatTanggalIndo(item.tanggalSurat)}</div>
-        </td>
         <td class="py-3 px-3 whitespace-nowrap font-semibold text-slate-800 text-xs">Desa ${escapeHtml(item.namaDesa || '-')}</td>
         <td class="py-3 px-3 min-w-[180px]">
           <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
