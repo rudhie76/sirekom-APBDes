@@ -4096,47 +4096,45 @@ function renderHistoryTable(query = '') {
     tbodyPage.innerHTML = filtered.map((item, index) => `
       <tr class="hover:bg-slate-50 transition border-b border-slate-200">
         <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
-        <td class="py-3 px-3">
+        <td class="py-3 px-3 whitespace-nowrap">
           <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nomorSurat || '-')}</div>
           <div class="text-[11px] text-slate-500 mt-0.5">${formatTanggalIndo(item.tanggalSurat)}</div>
         </td>
-        <td class="py-3 px-3">
-          <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold text-xs bg-slate-100 text-slate-800 border border-slate-200">
-            Desa ${escapeHtml(item.namaDesa || '-')}
-          </span>
+        <td class="py-3 px-3 whitespace-nowrap font-semibold text-slate-800 text-xs">
+          Desa ${escapeHtml(item.namaDesa || '-')}
         </td>
-        <td class="py-3 px-3">
+        <td class="py-3 px-3 min-w-[220px]">
           <span class="inline-block px-2 py-0.5 rounded text-[10.5px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
             ${escapeHtml(item.jenisDana ? item.jenisDana.toUpperCase() : '-')}
           </span>
-          <div class="text-[11px] text-slate-600 mt-0.5 font-medium line-clamp-1">${escapeHtml(item.tahap || '')}</div>
+          <div class="text-[11px] text-slate-700 mt-1 font-medium whitespace-normal break-words leading-relaxed">${escapeHtml(item.tahap || '')}</div>
         </td>
-        <td class="py-3 px-3 text-right font-mono font-bold text-xs text-emerald-800">${formatRupiah(item.nominalAngka)}</td>
+        <td class="py-3 px-3 text-right font-mono font-bold text-xs text-emerald-800 whitespace-nowrap">${formatRupiah(item.nominalAngka)}</td>
         <td class="py-2.5 px-3 text-center">
-          <div class="flex flex-col gap-1 items-stretch max-w-[280px] mx-auto py-0.5">
-            <button type="button" onclick="donlotRekomendasiItem('${item.id}')" class="px-2.5 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer" title="Unduh Surat Rekomendasi Camat Waru">
-              <span>ðŸ“„ Donlot Rekomendasi</span>
+          <div class="flex flex-col gap-1.5 items-stretch max-w-[170px] mx-auto py-0.5">
+            <button type="button" onclick="donlotRekomendasiItem('${item.id}')" class="w-full py-1.5 px-3 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-2xs transition text-center cursor-pointer" title="Unduh Surat Rekomendasi Camat Waru">
+              Rekomendasi
             </button>
-            <button type="button" onclick="donlotSpArsip('${item.id}')" class="px-2.5 py-1 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer" title="Unduh Surat Pengantar Kecamatan Waru">
-              <span>âœ‰ï¸ Donlot SPengantar</span>
+            <button type="button" onclick="donlotSpArsip('${item.id}')" class="w-full py-1.5 px-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-2xs transition text-center cursor-pointer" title="Unduh Surat Pengantar Kecamatan Waru">
+              S Pengantar
             </button>
-            <button type="button" onclick="donlotCeklistArsip('${item.id}')" class="px-2.5 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer" title="Unduh Ceklist Kelengkapan Berkas Tim Verifikasi Kecamatan">
-              <span>ðŸ“‹ Donlot Ceklist</span>
+            <button type="button" onclick="donlotCeklistArsip('${item.id}')" class="w-full py-1.5 px-3 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-2xs transition text-center cursor-pointer" title="Unduh Ceklist Kelengkapan Berkas Tim Verifikasi Kecamatan">
+              Ceklist
             </button>
           </div>
         </td>
-        <td class="py-3 px-3 text-center">
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+        <td class="py-3 px-3 text-center whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
             ${escapeHtml(item.status || 'Diterbitkan')}
           </span>
         </td>
-        <td class="py-3 px-3 text-center">
+        <td class="py-3 px-3 text-center whitespace-nowrap">
           <div class="flex items-center justify-center gap-1.5">
-            <button type="button" onclick="loadHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg border border-amber-200 font-semibold transition cursor-pointer" title="Buka dan Edit Formulir Rekomendasi">
-              âœï¸ Edit
+            <button type="button" onclick="loadHistoryItem('${item.id}')" class="px-3 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg border border-amber-300 font-bold transition cursor-pointer" title="Buka dan Edit Formulir Rekomendasi">
+              Edit
             </button>
-            <button type="button" onclick="deleteHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg border border-rose-200 font-semibold transition cursor-pointer" title="Hapus dari Riwayat Arsip">
-              ðŸ—‘ï¸ Hapus
+            <button type="button" onclick="deleteHistoryItem('${item.id}')" class="px-3 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg border border-rose-300 font-bold transition cursor-pointer" title="Hapus dari Riwayat Arsip">
+              Hapus
             </button>
           </div>
         </td>
@@ -4149,39 +4147,39 @@ function renderHistoryTable(query = '') {
     tbodyDrawer.innerHTML = filtered.map((item, index) => `
       <tr class="hover:bg-slate-50 transition border-b border-slate-100">
         <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
-        <td class="py-3 px-3">
+        <td class="py-3 px-3 whitespace-nowrap">
           <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nomorSurat || '-')}</div>
           <div class="text-[11px] text-slate-500">${formatTanggalIndo(item.tanggalSurat)}</div>
         </td>
-        <td class="py-3 px-3 font-bold text-slate-800 text-xs">Desa ${escapeHtml(item.namaDesa || '-')}</td>
-        <td class="py-3 px-3">
+        <td class="py-3 px-3 whitespace-nowrap font-semibold text-slate-800 text-xs">Desa ${escapeHtml(item.namaDesa || '-')}</td>
+        <td class="py-3 px-3 min-w-[180px]">
           <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
             ${escapeHtml(item.jenisDana || '-')}
           </span>
-          <div class="text-[11px] text-slate-600 mt-0.5 line-clamp-1">${escapeHtml(item.tahap || '')}</div>
+          <div class="text-[11px] text-slate-700 mt-1 font-medium whitespace-normal break-words leading-relaxed">${escapeHtml(item.tahap || '')}</div>
         </td>
-        <td class="py-3 px-3 text-right font-mono font-bold text-xs text-emerald-800">${formatRupiah(item.nominalAngka)}</td>
-        <td class="py-3 px-3 text-center">
+        <td class="py-3 px-3 text-right font-mono font-bold text-xs text-emerald-800 whitespace-nowrap">${formatRupiah(item.nominalAngka)}</td>
+        <td class="py-3 px-3 text-center whitespace-nowrap">
           <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800">
             ${escapeHtml(item.status || 'Diterbitkan')}
           </span>
         </td>
         <td class="py-2 px-2 text-center">
-          <div class="flex flex-col gap-1 items-stretch max-w-[260px] mx-auto py-0.5">
-            <button type="button" onclick="donlotRekomendasiItem('${item.id}')" class="px-2 py-0.5 text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white rounded shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer" title="Unduh Surat Rekomendasi Camat">
-              <span>ðŸ“„ Donlot Rekomendasi</span>
+          <div class="flex flex-col gap-1 items-stretch max-w-[150px] mx-auto py-0.5">
+            <button type="button" onclick="donlotRekomendasiItem('${item.id}')" class="w-full py-1 px-2.5 text-[10.5px] font-bold bg-blue-600 hover:bg-blue-500 text-white rounded shadow-2xs transition text-center cursor-pointer" title="Unduh Surat Rekomendasi Camat">
+              Rekomendasi
             </button>
-            <button type="button" onclick="donlotSpArsip('${item.id}')" class="px-2 py-0.5 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer" title="Unduh Surat Pengantar Kecamatan">
-              <span>âœ‰ï¸ Donlot SPengantar</span>
+            <button type="button" onclick="donlotSpArsip('${item.id}')" class="w-full py-1 px-2.5 text-[10.5px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded shadow-2xs transition text-center cursor-pointer" title="Unduh Surat Pengantar Kecamatan">
+              S Pengantar
             </button>
-            <button type="button" onclick="donlotCeklistArsip('${item.id}')" class="px-2 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer" title="Unduh Ceklist Kelengkapan Berkas">
-              <span>ðŸ“‹ Donlot Ceklist</span>
+            <button type="button" onclick="donlotCeklistArsip('${item.id}')" class="w-full py-1 px-2.5 text-[10.5px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded shadow-2xs transition text-center cursor-pointer" title="Unduh Ceklist Kelengkapan Berkas">
+              Ceklist
             </button>
           </div>
         </td>
         <td class="py-3 px-3 text-center space-x-1 whitespace-nowrap">
-          <button type="button" onclick="loadHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded border border-amber-200 transition font-semibold cursor-pointer" title="Buka Formulir">âœï¸ Edit</button>
-          <button type="button" onclick="deleteHistoryItem('${item.id}')" class="px-2 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded border border-rose-200 transition font-semibold cursor-pointer" title="Hapus Arsip">ðŸ—‘ï¸ Hapus</button>
+          <button type="button" onclick="loadHistoryItem('${item.id}')" class="px-2.5 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded border border-amber-300 transition font-bold cursor-pointer" title="Buka Formulir">Edit</button>
+          <button type="button" onclick="deleteHistoryItem('${item.id}')" class="px-2.5 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded border border-rose-300 transition font-bold cursor-pointer" title="Hapus Arsip">Hapus</button>
         </td>
       </tr>
     `).join('');
