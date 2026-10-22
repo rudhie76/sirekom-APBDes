@@ -5997,6 +5997,10 @@ window.submitPengajuanDesa = async function() {
 function isPengajuanSelesai(item) {
   if (!item) return false;
   const statusStr = String(item.status || '').toLowerCase().trim();
+  // Status pengembalian berkas / revisi TIDAK BOLEH dianggap selesai
+  if (statusStr === 'dikembalikan' || statusStr === 'perlu perbaikan' || statusStr === 'revisi') {
+    return false;
+  }
   if (statusStr === 'selesai' || statusStr === 'terkirim' || statusStr === 'terkirim ke desa') {
     return true;
   }
@@ -6584,8 +6588,11 @@ window.closeModalPengajuanKecamatan = function() {
  * Render Tabel Berkas Masuk dari Desa untuk Pihak Kecamatan
  */
 window.renderTabelPengajuanKecamatan = function() {
-  const tbody = document.getElementById('tbodyPengajuanKecamatan');
-  if (!tbody) return;
+  const tbodies = [
+    document.getElementById('tbodyPengajuanKecamatan'),
+    document.getElementById('tbodyPengajuanKecamatanModal')
+  ].filter(Boolean);
+  if (tbodies.length === 0) return;
 
   const filterDesa = document.getElementById('filterDesaKecamatan')?.value || 'semua';
   const filterJenis = document.getElementById('filterJenisKecamatan')?.value || 'semua';
@@ -6599,18 +6606,20 @@ window.renderTabelPengajuanKecamatan = function() {
   }
 
   if (list.length === 0) {
-    tbody.innerHTML = `
+    const emptyRow = `
       <tr>
         <td colspan="8" class="text-center py-8 text-slate-400">
           Tidak ada berkas pengajuan masuk dari desa yang sesuai filter.
         </td>
       </tr>
     `;
+    tbodies.forEach(tb => { tb.innerHTML = emptyRow; });
     return;
   }
 
-  tbody.innerHTML = list.map((item, index) => {
+  const rowsHtml = list.map((item, index) => {
     const isSelesai = isPengajuanSelesai(item);
+    const safeId = String(item.id || '').replace(/'/g, "\\'");
 
     // Status Badge & Keterangan Catatan
     let statusBadge = `
@@ -6762,6 +6771,8 @@ window.renderTabelPengajuanKecamatan = function() {
       </tr>
     `;
   }).join('');
+
+  tbodies.forEach(tb => { tb.innerHTML = rowsHtml; });
 };
 
 /**
@@ -6804,36 +6815,82 @@ window.openDriveFolderKecamatan = async function() {
 AppState.kembalikanPengajuanId = null;
 
 window.bukaModalKembalikanPengajuan = function(id) {
-  const item = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id)) || (() => { try { return (JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]')).find(p => String(p.id) === String(id)); } catch(e) { return null; } })();
+  let item = null;
+  const list = AppState.pengajuanDesa || [];
+
+  if (id && id !== 'undefined') {
+    item = list.find(p => String(p.id).trim() === String(id).trim());
+    if (!item) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]');
+        item = stored.find(p => String(p.id).trim() === String(id).trim());
+      } catch (e) {}
+    }
+  }
+
+  // Fallback jika id tidak match langsung, coba cari berdasarkan nama desa
+  if (!item && typeof id === 'string' && id) {
+    item = list.find(p => (p.namaDesa || '').toLowerCase() === id.toLowerCase());
+  }
+
   if (!item) {
     showToast('Data pengajuan berkas tidak ditemukan.', 'error');
     return;
   }
 
-  AppState.kembalikanPengajuanId = id;
+  AppState.kembalikanPengajuanId = item.id;
 
-  const infoDesa = document.getElementById('kembalikanInfoDesa');
-  if (infoDesa) {
-    infoDesa.textContent = `Desa ${item.namaDesa} • ${getNamaTipe(item.jenisDana)} (${item.tahap} TA ${item.tahunAnggaran})`;
+  // Set hidden input
+  const idInput = document.getElementById('modalKembalikanId');
+  if (idInput) idInput.value = item.id;
+
+  // Set informasi desa dan pengajuan pada ringkasan modal
+  const namaDesaEl = document.getElementById('modalKembalikanDesaNama');
+  if (namaDesaEl) {
+    namaDesaEl.textContent = `Desa ${item.namaDesa || '-'}`;
   }
 
-  const infoSp = document.getElementById('kembalikanInfoSp');
-  if (infoSp) {
-    infoSp.textContent = `No. SP: ${item.nomorSp || '-'} (${item.tanggalSp ? formatTanggalIndo(item.tanggalSp) : '-'}) • Nominal: ${formatRupiah(item.nominal)}`;
+  const jenisDanaEl = document.getElementById('modalKembalikanJenisDana');
+  if (jenisDanaEl) {
+    jenisDanaEl.textContent = `${getNamaTipe(item.jenisDana)} (${item.tahap || '-'} TA ${item.tahunAnggaran || '-'})`;
   }
 
+  const noSpEl = document.getElementById('modalKembalikanNoSp');
+  if (noSpEl) noSpEl.textContent = item.nomorSp || '-';
+
+  const tglSpEl = document.getElementById('modalKembalikanTglSp');
+  if (tglSpEl) tglSpEl.textContent = item.tanggalSp ? formatTanggalIndo(item.tanggalSp) : '-';
+
+  const noRekomEl = document.getElementById('modalKembalikanNoRekom');
+  if (noRekomEl) noRekomEl.textContent = item.nomorRekomDesa || item.nomorRekom || item.noRekom || '-';
+
+  const nominalEl = document.getElementById('modalKembalikanNominal');
+  if (nominalEl) nominalEl.textContent = formatRupiah(item.nominal || 0);
+
+  // Bersihkan atau isi textarea catatan
   const inputCatatan = document.getElementById('inputCatatanKecamatan');
   if (inputCatatan) {
-    inputCatatan.value = item.catatanKecamatan || '';
+    let currentNote = item.catatanKecamatan || '';
+    // Jika catatan sebelumnya berisi persetujuan otomatis, kosongkan agar operator mengisi perbaikan
+    if (currentNote.toLowerCase().includes('disetujui') || currentNote.toLowerCase().includes('diterbitkan')) {
+      currentNote = '';
+    }
+    inputCatatan.value = currentNote;
   }
 
   const modal = document.getElementById('modalKembalikanPengajuan');
   if (modal) {
-    modal.classList.remove('hidden'); modal.style.display = 'flex';
-    setTimeout(() => inputCatatan?.focus(), 150);
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    modal.style.zIndex = '9999';
+    setTimeout(() => {
+      if (inputCatatan) {
+        inputCatatan.focus();
+        inputCatatan.select();
+      }
+    }, 150);
   }
 };
-
 window.closeModalKembalikanPengajuan = function() {
   const modal = document.getElementById('modalKembalikanPengajuan');
   if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
@@ -6852,14 +6909,25 @@ window.appendCatatanTemplate = function(templateText) {
   input.focus();
 };
 
-window.submitKembalikanPengajuan = function() {
-  const id = AppState.kembalikanPengajuanId;
+window.submitKembalikanPengajuan = async function() {
+  const id = AppState.kembalikanPengajuanId || document.getElementById('modalKembalikanId')?.value;
   if (!id) {
     closeModalKembalikanPengajuan();
     return;
   }
 
-  const item = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id)) || (() => { try { return (JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]')).find(p => String(p.id) === String(id)); } catch(e) { return null; } })();
+  let item = (AppState.pengajuanDesa || []).find(p => String(p.id).trim() === String(id).trim());
+  if (!item) {
+    try {
+      const stored = JSON.parse(localStorage.getItem('sip_pengajuan_desa') || '[]');
+      item = stored.find(p => String(p.id).trim() === String(id).trim());
+      if (item) {
+        if (!AppState.pengajuanDesa) AppState.pengajuanDesa = [];
+        AppState.pengajuanDesa.push(item);
+      }
+    } catch(e) {}
+  }
+
   if (!item) {
     showToast('Data pengajuan tidak ditemukan.', 'error');
     closeModalKembalikanPengajuan();
@@ -6875,34 +6943,91 @@ window.submitKembalikanPengajuan = function() {
     return;
   }
 
-  // Update status lokal
-  item.status = 'Dikembalikan';
-  item.catatanKecamatan = catatan;
-  item.waktuCatatanKecamatan = new Date().toISOString();
-
-  // Simpan ke localStorage
-  localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
-
-  // Update ke Google Sheets di background jika online
-  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
-    fetch(AppState.gasUrl, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'updateStatusPengajuan',
-        id: item.id,
-        status: 'Dikembalikan',
-        catatan: catatan
-      })
-    }).catch(e => console.error('Gagal kirim update status ke GAS:', e));
+  const btnKonfirmasi = document.getElementById('btnKonfirmasiKembalikan');
+  const origBtnText = btnKonfirmasi ? btnKonfirmasi.innerHTML : '';
+  if (btnKonfirmasi) {
+    btnKonfirmasi.disabled = true;
+    btnKonfirmasi.innerHTML = '<span>&#x23F3; Memproses...</span>';
   }
 
-  closeModalKembalikanPengajuan();
-  renderTabelPengajuanKecamatan();
-  renderTabelPengajuanDesa();
-  renderDashboardDesa();
-  updateBadgePengajuanDesa();
+  try {
+    // 1. Update status lokal pengajuan berkas
+    item.status = 'Dikembalikan';
+    item.catatanKecamatan = catatan;
+    item.waktuCatatanKecamatan = new Date().toISOString();
 
-  showToast(`Berkas pengajuan Desa ${item.namaDesa} berhasil dikembalikan dengan catatan perbaikan!`, 'warning');
+    // Pastikan seluruh array sinkron
+    (AppState.pengajuanDesa || []).forEach(p => {
+      if (String(p.id).trim() === String(item.id).trim()) {
+        p.status = 'Dikembalikan';
+        p.catatanKecamatan = catatan;
+        p.waktuCatatanKecamatan = item.waktuCatatanKecamatan;
+      }
+    });
+
+    // 2. Tarik / bersihkan data dari kirimRekomDesa jika berkas ini sebelumnya berstatus terkirim/terbit
+    const itemDesa = (item.namaDesa || '').toLowerCase().trim();
+    const itemJenis = (item.jenisDana || '').toLowerCase().trim();
+    const itemTahap = (item.tahap || '').toLowerCase().trim();
+    const itemTahun = String(item.tahunAnggaran || '').trim();
+
+    if (Array.isArray(AppState.kirimRekomDesa)) {
+      AppState.kirimRekomDesa = AppState.kirimRekomDesa.filter(k => {
+        if (k.riwayatId && String(k.riwayatId).trim() === String(item.id).trim()) return false;
+        const kDesa = (k.namaDesa || '').toLowerCase().trim();
+        const kJenis = (k.jenisDana || '').toLowerCase().trim();
+        const kTahap = (k.tahap || '').toLowerCase().trim();
+        const kTahun = String(k.tahunAnggaran || '').trim();
+        if (kDesa === itemDesa && kJenis === itemJenis && kTahap === itemTahap && kTahun === itemTahun) {
+          return false;
+        }
+        return true;
+      });
+      try {
+        localStorage.setItem('sip_kirim_rekom_desa', JSON.stringify(AppState.kirimRekomDesa));
+      } catch(_) {}
+    }
+
+    // 3. Simpan perubahan ke localStorage
+    try {
+      localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+    } catch (e) {
+      console.warn('Gagal simpan ke localStorage sip_pengajuan_desa:', e);
+    }
+
+    // 4. Update ke Google Sheets di background jika online
+    if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+      fetch(AppState.gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'updateStatusPengajuan',
+          id: item.id,
+          status: 'Dikembalikan',
+          catatan: catatan
+        })
+      }).catch(e => console.error('Gagal kirim update status ke GAS:', e));
+    }
+
+    closeModalKembalikanPengajuan();
+    renderTabelPengajuanKecamatan();
+    renderTabelPengajuanDesa();
+    renderBannerRevisiDesa();
+    renderDashboardDesa();
+    renderDokumenKecamatanUntukDesa();
+    renderTabelKirimRekomDesa();
+    updateBadgePengajuanDesa();
+
+    showToast(`Berkas pengajuan Desa ${item.namaDesa} berhasil dikembalikan dengan catatan perbaikan!`, 'warning');
+  } catch (err) {
+    console.error('Error saat submitKembalikanPengajuan:', err);
+    showToast('Terjadi kesalahan saat mengembalikan berkas: ' + err.message, 'error');
+  } finally {
+    if (btnKonfirmasi) {
+      btnKonfirmasi.disabled = false;
+      btnKonfirmasi.innerHTML = origBtnText;
+    }
+  }
 };
 
 /**
