@@ -3255,11 +3255,19 @@ window.donlotRekomendasiItem = async function(id) {
     return;
   }
 
+  // Jika item riwayat sendiri sudah memiliki link drive / file TTD
+  if (item.driveRekomTtdUrl || item.fileRekomTtdId) {
+    showToast('Mengunduh berkas Rekomendasi Camat bertanda tangan...', 'info');
+    downloadDokumenPengajuan(item.fileRekomTtdId, item.fileRekomTtdName || `Rekomendasi_${item.namaDesa}_TTD.pdf`, item.driveRekomTtdUrl);
+    return;
+  }
+
   // Cek apakah ada file Rekomendasi bertanda tangan di kirimRekomDesa
   const kirimMatch = (AppState.kirimRekomDesa || []).find(k => 
     (k.riwayatId && String(k.riwayatId) === String(item.id)) ||
-    (k.namaDesa === item.namaDesa && String(k.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() && k.tahap === item.tahap) ||
-    (k.nomorSuratRekom && item.nomorSurat && k.nomorSuratRekom.trim() === item.nomorSurat.trim())
+    (String(k.id) === String(item.id)) ||
+    ((k.nomorRekom || k.nomorSuratRekom) && item.nomorSurat && (k.nomorRekom || k.nomorSuratRekom).trim() === item.nomorSurat.trim()) ||
+    (String(k.namaDesa || '').toLowerCase().trim() === String(item.namaDesa || '').toLowerCase().trim())
   );
 
   if (kirimMatch && (kirimMatch.fileRekomTtdId || kirimMatch.driveRekomTtdUrl)) {
@@ -3283,11 +3291,19 @@ window.donlotSpArsip = async function(id) {
     return;
   }
 
+  // Jika item riwayat sendiri sudah memiliki link drive / file SP
+  if (item.driveSpKecUrl || item.fileSpKecId) {
+    showToast('Mengunduh berkas Surat Pengantar Kecamatan...', 'info');
+    downloadDokumenPengajuan(item.fileSpKecId, item.fileSpKecName || `Surat_Pengantar_${item.namaDesa}.pdf`, item.driveSpKecUrl);
+    return;
+  }
+
   // A. Cek file SP Kecamatan di kirimRekomDesa
   const kirimMatch = (AppState.kirimRekomDesa || []).find(k => 
     (k.riwayatId && String(k.riwayatId) === String(item.id)) ||
-    (k.namaDesa === item.namaDesa && String(k.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() && k.tahap === item.tahap) ||
-    (k.nomorSuratRekom && item.nomorSurat && k.nomorSuratRekom.trim() === item.nomorSurat.trim())
+    (String(k.id) === String(item.id)) ||
+    ((k.nomorRekom || k.nomorSuratRekom) && item.nomorSurat && (k.nomorRekom || k.nomorSuratRekom).trim() === item.nomorSurat.trim()) ||
+    (String(k.namaDesa || '').toLowerCase().trim() === String(item.namaDesa || '').toLowerCase().trim())
   );
 
   if (kirimMatch && (kirimMatch.fileSpKecId || kirimMatch.driveSpKecUrl)) {
@@ -3339,11 +3355,19 @@ window.donlotCeklistArsip = async function(id) {
     return;
   }
 
+  // Jika item riwayat sendiri sudah memiliki link drive / file Ceklist
+  if (item.driveCeklistKecUrl || item.fileCeklistKecId) {
+    showToast('Mengunduh berkas Ceklist Kecamatan...', 'info');
+    downloadDokumenPengajuan(item.fileCeklistKecId, item.fileCeklistKecName || `Ceklist_${item.namaDesa}.pdf`, item.driveCeklistKecUrl);
+    return;
+  }
+
   // A. Cek file Ceklist Kecamatan di kirimRekomDesa
   const kirimMatch = (AppState.kirimRekomDesa || []).find(k => 
     (k.riwayatId && String(k.riwayatId) === String(item.id)) ||
-    (k.namaDesa === item.namaDesa && String(k.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() && k.tahap === item.tahap) ||
-    (k.nomorSuratRekom && item.nomorSurat && k.nomorSuratRekom.trim() === item.nomorSurat.trim())
+    (String(k.id) === String(item.id)) ||
+    ((k.nomorRekom || k.nomorSuratRekom) && item.nomorSurat && (k.nomorRekom || k.nomorSuratRekom).trim() === item.nomorSurat.trim()) ||
+    (String(k.namaDesa || '').toLowerCase().trim() === String(item.namaDesa || '').toLowerCase().trim())
   );
 
   if (kirimMatch && (kirimMatch.fileCeklistKecId || kirimMatch.driveCeklistKecUrl)) {
@@ -7126,6 +7150,7 @@ window.sinkronPengajuanKeGoogleSheets = async function() {
     renderTabelPengajuanDesa();
     renderTabelKirimRekomDesa();
     renderDokumenKecamatanUntukDesa();
+    renderHistoryTable();
     renderDashboardSummary();
   }
 };
@@ -7179,11 +7204,80 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
         seenR.set(key, item);
       });
 
+      // Sinkronkan juga dokumen rekomendasi resmi dari kirimRekomDesa agar tidak ada desa selesai yang tertinggal
+      (AppState.kirimRekomDesa || []).forEach(k => {
+        const kDesa = (k.namaDesa || '').toLowerCase().trim();
+        const kDana = (k.jenisDana || '').toLowerCase().trim();
+        const kTahap = (k.tahap || '').toLowerCase().trim();
+        const kNo = (k.nomorRekom || k.nomorSuratRekom || '').toLowerCase().trim();
+        const key = kNo ? `no:${kNo}` : (k.id ? `id:${k.id}` : `p:${kDesa}_${kDana}_${kTahap}`);
+
+        // Cek apakah sudah ada di seenR
+        let matchedItem = null;
+        for (const [sKey, sItem] of seenR.entries()) {
+          if (
+            (kNo && (sItem.nomorSurat || '').toLowerCase().trim() === kNo) ||
+            (k.id && String(sItem.id) === String(k.id)) ||
+            ((sItem.namaDesa || '').toLowerCase().trim() === kDesa && String(sItem.jenisDana || '').toLowerCase().trim() === kDana)
+          ) {
+            matchedItem = sItem;
+            break;
+          }
+        }
+
+        if (matchedItem) {
+          // Lengkapi file TTD / Drive dari data kiriman
+          if (k.fileRekomTtdId) matchedItem.fileRekomTtdId = k.fileRekomTtdId;
+          if (k.fileRekomTtdName) matchedItem.fileRekomTtdName = k.fileRekomTtdName;
+          if (k.driveRekomTtdUrl && k.driveRekomTtdUrl !== '-') matchedItem.driveRekomTtdUrl = k.driveRekomTtdUrl;
+          if (k.fileSpKecId) matchedItem.fileSpKecId = k.fileSpKecId;
+          if (k.fileSpKecName) matchedItem.fileSpKecName = k.fileSpKecName;
+          if (k.driveSpKecUrl && k.driveSpKecUrl !== '-') matchedItem.driveSpKecUrl = k.driveSpKecUrl;
+          if (k.fileCeklistKecId) matchedItem.fileCeklistKecId = k.fileCeklistKecId;
+          if (k.fileCeklistKecName) matchedItem.fileCeklistKecName = k.fileCeklistKecName;
+          if (k.driveCeklistKecUrl && k.driveCeklistKecUrl !== '-') matchedItem.driveCeklistKecUrl = k.driveCeklistKecUrl;
+        } else {
+          // Buat entri arsip resmi baru dari kirimRekomDesa
+          const mDesa = (AppState.masterDesa || []).find(d => (d.nama || '').toLowerCase() === kDesa);
+          const newItem = {
+            id: k.id || `REK-${Date.now()}`,
+            waktuSimpan: k.waktuKirim || new Date().toISOString(),
+            waktuTerbit: k.waktuKirim || new Date().toISOString(),
+            nomorSurat: k.nomorRekom || k.nomorSuratRekom || `R-900/442/PMDK/Kec.Waru`,
+            tanggalSurat: k.tanggalRekom || '',
+            namaDesa: k.namaDesa,
+            jenisDana: (k.jenisDana || 'add_reguler').toUpperCase(),
+            tahap: k.tahap ? (k.tahap.toLowerCase().includes('rekomendasi') ? k.tahap : `Rekomendasi Pencairan ${(k.jenisDana || 'ADD').toUpperCase()} ${k.tahap} Desa ${k.namaDesa} Tahun ${k.tahunAnggaran || '2026'}`) : `Tahap I TA ${k.tahunAnggaran || '2026'}`,
+            tahunAnggaran: String(k.tahunAnggaran || '2026'),
+            nominalAngka: Number(k.nominal) || 0,
+            terbilang: typeof convertTerbilang === 'function' ? convertTerbilang(k.nominal || 0) : '',
+            bankPenyalur: mDesa?.bankPenyalur || 'PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru',
+            nomorRekening: mDesa?.nomorRekening || '',
+            kepalaDesa: mDesa?.kepalaDesa || '',
+            kaurKeuangan: mDesa?.kaurKeuangan || '',
+            namaCamat: AppState.camat?.nama || 'Ahmad Yani, S.STP',
+            nipCamat: AppState.camat?.nip || '19861008 200602 1 001',
+            metodeTte: 'tte',
+            status: 'Diterbitkan',
+            fileRekomTtdId: k.fileRekomTtdId,
+            fileRekomTtdName: k.fileRekomTtdName,
+            driveRekomTtdUrl: k.driveRekomTtdUrl,
+            fileSpKecId: k.fileSpKecId,
+            fileSpKecName: k.fileSpKecName,
+            driveSpKecUrl: k.driveSpKecUrl,
+            fileCeklistKecId: k.fileCeklistKecId,
+            fileCeklistKecName: k.fileCeklistKecName,
+            driveCeklistKecUrl: k.driveCeklistKecUrl
+          };
+          seenR.set(key, newItem);
+        }
+      });
+
       AppState.riwayat = Array.from(seenR.values());
       localStorage.setItem('sip_riwayat_rekom', JSON.stringify(AppState.riwayat));
       renderHistoryTable();
       renderDashboardSummary();
-      console.log('Sinkronisasi riwayat rekomendasi dari Google Sheets berhasil, total:', AppState.riwayat.length);
+      console.log('Sinkronisasi riwayat rekomendasi dari Google Sheets & kiriman desa berhasil, total:', AppState.riwayat.length);
     }
   } catch (e) {
     console.warn('Gagal sinkron riwayat dari Google Sheets:', e);
@@ -7604,12 +7698,58 @@ window.simpanKirimRekomDesa = async function(event) {
       }
     }
 
+    // 4. Sinkronkan ke Riwayat Arsip Surat Resmi APBDes (AppState.riwayat)
+    const mDesa = (AppState.masterDesa || []).find(d => (d.nama || '').toLowerCase() === (desa || '').toLowerCase());
+    const riwayatItem = {
+      id: recordToSave.id || `REK-${Date.now()}`,
+      waktuSimpan: recordToSave.waktuKirim || new Date().toISOString(),
+      waktuTerbit: recordToSave.waktuKirim || new Date().toISOString(),
+      nomorSurat: recordToSave.nomorRekom || `R-900/442/PMDK/Kec.Waru`,
+      tanggalSurat: recordToSave.tanggalRekom || '',
+      namaDesa: recordToSave.namaDesa,
+      jenisDana: (recordToSave.jenisDana || 'add_reguler').toUpperCase(),
+      tahap: recordToSave.tahap ? (recordToSave.tahap.toLowerCase().includes('rekomendasi') ? recordToSave.tahap : `Rekomendasi Pencairan ${(recordToSave.jenisDana || 'ADD').toUpperCase()} ${recordToSave.tahap} Desa ${recordToSave.namaDesa} Tahun ${recordToSave.tahunAnggaran || '2026'}`) : `Tahap I TA 2026`,
+      tahunAnggaran: String(recordToSave.tahunAnggaran || '2026'),
+      nominalAngka: Number(recordToSave.nominal) || 0,
+      terbilang: typeof convertTerbilang === 'function' ? convertTerbilang(recordToSave.nominal || 0) : '',
+      bankPenyalur: mDesa?.bankPenyalur || 'PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru',
+      nomorRekening: mDesa?.nomorRekening || '',
+      kepalaDesa: mDesa?.kepalaDesa || '',
+      kaurKeuangan: mDesa?.kaurKeuangan || '',
+      namaCamat: AppState.camat?.nama || 'Ahmad Yani, S.STP',
+      nipCamat: AppState.camat?.nip || '19861008 200602 1 001',
+      metodeTte: 'tte',
+      status: 'Diterbitkan',
+      fileRekomTtdId: recordToSave.fileRekomTtdId,
+      fileRekomTtdName: recordToSave.fileRekomTtdName,
+      driveRekomTtdUrl: recordToSave.driveRekomTtdUrl,
+      fileSpKecId: recordToSave.fileSpKecId,
+      fileSpKecName: recordToSave.fileSpKecName,
+      driveSpKecUrl: recordToSave.driveSpKecUrl,
+      fileCeklistKecId: recordToSave.fileCeklistKecId,
+      fileCeklistKecName: recordToSave.fileCeklistKecName,
+      driveCeklistKecUrl: recordToSave.driveCeklistKecUrl
+    };
+
+    if (!Array.isArray(AppState.riwayat)) AppState.riwayat = [];
+    const existRiwIdx = AppState.riwayat.findIndex(r => 
+      String(r.id) === String(riwayatItem.id) || 
+      (r.namaDesa === riwayatItem.namaDesa && String(r.jenisDana).toLowerCase() === String(riwayatItem.jenisDana).toLowerCase())
+    );
+    if (existRiwIdx !== -1) {
+      AppState.riwayat[existRiwIdx] = { ...AppState.riwayat[existRiwIdx], ...riwayatItem };
+    } else {
+      AppState.riwayat.unshift(riwayatItem);
+    }
+    localStorage.setItem('sip_riwayat_rekom', JSON.stringify(AppState.riwayat));
+
     tutupModalKirimRekomDesa();
     updateBadgePengajuanDesa();
     renderTabelPengajuanKecamatan();
     renderTabelPengajuanDesa();
     renderTabelKirimRekomDesa();
     renderDokumenKecamatanUntukDesa();
+    renderHistoryTable();
     showToast(`Dokumen Rekomendasi untuk Desa ${desa} berhasil disimpan & dikirim!`, 'success');
 
   } catch (err) {
