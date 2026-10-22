@@ -4717,7 +4717,6 @@ window.doLoginDesa = function() { handleUnifiedLogin(); };
  * Keluar Akun & Tampilkan Kembali Kartu Login
  */
 window.logoutUser = function() {
-  if (!confirm('Apakah Anda ingin keluar dan kembali ke Halaman Login?')) return;
 
   AppState.currentUser = null;
   localStorage.removeItem('sip_auth_user');
