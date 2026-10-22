@@ -426,35 +426,35 @@
   <!-- ================================================================================= -->
   <!-- MODAL / PORTAL KARTU LOGIN TUNGGAL (USER & PASSWORD DENGAN FITUR TANDA MATA) -->
   <!-- ================================================================================= -->
-  <div id="loginPortalContainer" class="no-print login-portal fixed inset-0 z-50 overflow-y-auto flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4 sm:p-6 transition-all duration-300">
+  <div id="loginPortalContainer" class="no-print login-portal fixed inset-0 z-50 overflow-y-auto flex items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50/70 to-emerald-50/70 backdrop-blur-md p-4 sm:p-6 transition-all duration-300">
     
-    <!-- Background Ambient Glow & Lighting -->
+    <!-- Background Ambient Glow & Lighting (Nuansa Cerah & Bersahabat) -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl"></div>
-      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-indigo-600/10 rounded-full blur-3xl"></div>
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-indigo-300/15 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Main Card Login Tunggal -->
-    <div class="relative w-full max-w-md bg-slate-900/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl">
+    <!-- Main Card Login Tunggal (Tema Terang Bersih / Light Mode) -->
+    <div class="relative w-full max-w-md bg-white/95 border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-300/60 overflow-hidden backdrop-blur-xl">
       
       <!-- Card Header: Logo & Judul Instansi Resmi -->
-      <div class="p-6 text-center border-b border-slate-800 bg-gradient-to-b from-slate-800/60 to-transparent relative">
-        <div class="mx-auto w-16 h-16 rounded-2xl bg-slate-800/90 p-2 flex items-center justify-center border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/10 mb-3 ring-4 ring-slate-800/80">
+      <div class="p-6 text-center border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-white relative">
+        <div class="mx-auto w-16 h-16 rounded-2xl bg-white p-2 flex items-center justify-center border-2 border-emerald-500/40 shadow-md shadow-emerald-500/10 mb-3 ring-4 ring-slate-100">
           <img src="logo_ppu.png" alt="Logo Kab. Penajam Paser Utara" class="w-full h-full object-contain" />
         </div>
         
-        <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/10 border border-blue-400/30 text-blue-300 text-[10px] font-bold uppercase tracking-wider mb-1.5">
-          <span>🏛️ KABUPATEN PENAJAM PASER UTARA</span>
+        <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold uppercase tracking-wider mb-1.5">
+          <span>&#127963;&#65039; KABUPATEN PENAJAM PASER UTARA</span>
         </div>
         
-        <h1 class="text-xl font-black text-white tracking-tight">
+        <h1 class="text-xl font-black text-slate-900 tracking-tight">
           SIP-REKOM APBDES
         </h1>
-        <p class="text-xs font-bold text-emerald-400 mt-0.5 uppercase tracking-wide">
+        <p class="text-xs font-bold text-emerald-600 mt-0.5 uppercase tracking-wide">
           KECAMATAN WARU
         </p>
-        <p class="text-[11px] text-slate-400 mt-1.5 max-w-xs mx-auto leading-relaxed">
+        <p class="text-[11px] text-slate-600 mt-1.5 max-w-xs mx-auto leading-relaxed">
           Silakan masukkan Username & Password akun Kecamatan atau Desa untuk melanjutkan.
         </p>
       </div>
@@ -463,16 +463,16 @@
       <form id="formUnifiedLogin" onsubmit="handleUnifiedLogin(event)" class="p-6 space-y-4">
         
         <!-- Error Alert Container (Tersembunyi secara default) -->
-        <div id="loginErrorAlert" class="hidden p-3 rounded-xl bg-rose-950/60 border border-rose-800/60 text-rose-300 text-xs flex items-start gap-2.5">
-          <span class="text-base flex-shrink-0">⚠️</span>
-          <div id="loginErrorMessage" class="leading-relaxed">Username atau Password salah!</div>
+        <div id="loginErrorAlert" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5">
+          <span class="text-base flex-shrink-0">&#9888;&#65039;</span>
+          <div id="loginErrorMessage" class="leading-relaxed font-medium">Username atau Password salah!</div>
         </div>
 
         <!-- Input Username / User -->
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
             <span>Username / Pengguna</span>
-            <span class="text-[10px] text-slate-400 font-normal">Kecamatan atau Desa</span>
+            <span class="text-[10px] text-slate-500 font-normal">Kecamatan atau Desa</span>
           </label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -486,14 +486,14 @@
               placeholder="Masukkan username akun Anda" 
               autocomplete="username" 
               required
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-2xs font-medium" 
             />
           </div>
         </div>
 
         <!-- Input Password / PIN dengan Tanda Mata (Eye Icon) -->
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
             Password / PIN Keamanan
           </label>
           <div class="relative">
@@ -508,14 +508,14 @@
               placeholder="Masukkan password atau PIN" 
               autocomplete="current-password" 
               required
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-11 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono tracking-wider" 
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl pl-10 pr-11 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono tracking-wider shadow-2xs" 
             />
             <!-- Tombol Tanda Mata (Toggle Password Visibility) -->
             <button 
               type="button" 
               id="btnTogglePassword" 
               onclick="togglePasswordVisibility()" 
-              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white transition focus:outline-none cursor-pointer" 
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition focus:outline-none cursor-pointer" 
               title="Tampilkan / Sembunyikan Password"
             >
               <!-- Ikon Mata Terbuka -->
@@ -535,22 +535,22 @@
         <button 
           type="submit" 
           id="btnLoginSubmit" onclick="handleUnifiedLogin(event)" 
-          class="w-full mt-2 py-3 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:via-indigo-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 group cursor-pointer"
+          class="w-full mt-2 py-3 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:via-indigo-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2 group cursor-pointer"
         >
           <span>Masuk ke Sistem SIP-REKOM</span>
-          <span class="group-hover:translate-x-1 transition-transform">→</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
         </button>
 
       </form>
 
       <!-- Card Footer -->
-      <div class="p-3 bg-slate-950/90 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-500 px-6">
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 px-6">
         <div class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Tersinkron Sheet Data_User</span>
+          <span class="font-medium">Tersinkron Sheet Data_User</span>
         </div>
         <div>
-          <span>Format Srikandi & BSrE</span>
+          <span class="font-medium">Format Srikandi & BSrE</span>
         </div>
       </div>
 
@@ -3449,6 +3449,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261022_langsung_ke_layar_login"></script>
+  <script src="app.js?v=20261022_login_light_mode"></script>
 </body>
 </html>
