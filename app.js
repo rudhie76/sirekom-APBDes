@@ -2383,7 +2383,7 @@ window.toggleDirectEditMode = function() {
     if (icon) icon.textContent = '✏️';
     if (label) label.textContent = 'Edit di Kertas';
     if (btnReset) btnReset.classList.remove('hidden');
-    showToast('🔒 Teks pada kertas dikunci. Siap dicetak atau diunduh ke DOCX.', 'success');
+    showToast('🔒 Teks pada kertas dikunci. Siap dicetak atau dikonversi ke Word.', 'success');
   }
 };
 
@@ -3062,7 +3062,7 @@ window.eksporSuratKeDocx = async function() {
     return;
   }
 
-  showToast('Sedang membuat file Microsoft Word (.docx)...', 'info');
+  showToast('Sedang mengonversi dokumen ke Microsoft Word (.docx)...', 'info');
 
   try {
     const logoBase64 = await getLogoPpuBase64();
@@ -3222,7 +3222,7 @@ window.eksporSuratKeDocx = async function() {
       URL.revokeObjectURL(blobUrl);
     }, 2000);
 
-    showToast(`Dokumen "${safeName}.docx" berhasil dibuat dan diunduh!`, 'success');
+    showToast(`Dokumen "${safeName}.docx" berhasil dikonversi ke Word dan diunduh!`, 'success');
   } catch (err) {
     console.error('Gagal mengekspor dokumen ke DOCX:', err);
     showToast('Terjadi kendala saat membuat file DOCX. ' + (err.message || ''), 'error');
@@ -9379,7 +9379,7 @@ window.toggleDirectEditModeSp = function() {
     if (icon) icon.textContent = '✏️';
     if (label) label.textContent = 'Edit di Kertas';
     if (btnReset) btnReset.classList.remove('hidden');
-    showToast('🔒 Teks Surat Pengantar berhasil dikunci. Siap dicetak atau diunduh ke DOCX.', 'success');
+    showToast('🔒 Teks Surat Pengantar berhasil dikunci. Siap dicetak atau dikonversi ke Word.', 'success');
   }
 };
 
@@ -9420,7 +9420,7 @@ window.eksporSuratPengantarKeDocx = async function() {
     return;
   }
 
-  showToast('Sedang membuat file Microsoft Word (.docx)...', 'info');
+  showToast('Sedang mengonversi dokumen ke Microsoft Word (.docx)...', 'info');
 
   try {
     const logoBase64 = await getLogoPpuBase64();
