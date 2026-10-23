@@ -807,10 +807,6 @@
           <span>🖨️ Cetak / PDF</span>
         </button>
 
-        <button id="btnHeaderKirimDesa" onclick="bukaKirimRekomDesaDariRekomAktif()" class="hidden px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="Langsung Buka Tab 4. Kirim Rekom Ke Desa Sesuai Rekomendasi Aktif">
-          <span>📤 Kirim ke Desa</span>
-        </button>
-
         <button id="btnExportDocx" onclick="eksporSuratKeDocx()" class="hidden px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
           <span>&#x1F4DD; Convert to Word</span>
         </button>
@@ -1600,11 +1596,6 @@
             <span>🖨️ Cetak / PDF</span>
           </button>
 
-          <!-- Tombol Kirim ke Desa Langsung Sesuai Rekom Aktif -->
-          <button type="button" onclick="bukaKirimRekomDesaDariRekomAktif()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Langsung Buka Tab 4. Kirim Rekom Ke Desa Sesuai Data Surat Ini">
-            <span>📤 Kirim ke Desa</span>
-          </button>
-
           <!-- Tombol Ekspor Word (.docx) -->
           <button onclick="eksporSuratKeDocx()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
             <span>&#x1F4DD; Convert to Word</span>
@@ -1888,11 +1879,6 @@
               <span>🖨️ Cetak / PDF</span>
             </button>
 
-            <!-- Tombol Kirim ke Desa Langsung Sesuai SP Aktif -->
-            <button type="button" onclick="bukaKirimRekomDesaDariSpAktif()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Langsung Buka Tab 4. Kirim Rekom Ke Desa Sesuai Data Surat Pengantar Ini">
-              <span>📤 Kirim ke Desa</span>
-            </button>
-
             <!-- Tombol Ekspor DOCX -->
             <button type="button" onclick="eksporSuratPengantarKeDocx()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
               <span>&#x1F4DD; Convert to Word</span>
@@ -1970,20 +1956,6 @@
           <span><b>Arsip Dokumen Resmi Siap BKAD:</b> Unggah Rekom yang sudah TTD, Surat Pengantar Kecamatan, dan Ceklist Kecamatan. Berkas tersimpan di subfolder <code>kecamatan</code> Google Drive & siap diunduh Desa untuk diteruskan ke BKAD.</span>
         </div>
         <span id="badgeTotalKirimRekom" class="self-start sm:self-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-900 whitespace-nowrap">0 Rekomendasi Terkirim</span>
-      </div>
-
-      <!-- Banner Pintasan Rekomendasi Aktif -->
-      <div id="bannerRekomAktifKirimDesa" class="hidden px-4 py-2.5 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-indigo-200 flex flex-wrap items-center justify-between gap-2 text-xs text-indigo-950 flex-shrink-0">
-        <div class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-2xs">🚀</span>
-          <div>
-            <span class="font-bold text-indigo-900">Rekomendasi Aktif di Generator:</span>
-            <span id="textRekomAktifKirimDesa" class="ml-1 font-bold text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200">Desa Api-Api</span>
-          </div>
-        </div>
-        <button type="button" onclick="bukaKirimRekomDesaDariRekomAktif()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
-          <span>📤 Buka Form Kirim Rekomendasi Ini</span>
-        </button>
       </div>
 
       <!-- Tabel Daftar Kirim Rekom ke Desa -->
@@ -3477,6 +3449,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261023_open_tab_kirim_desa"></script>
+  <script src="app.js?v=20261023_gdocs_full_content"></script>
 </body>
 </html>
