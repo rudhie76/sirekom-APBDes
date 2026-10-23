@@ -5374,6 +5374,7 @@ window.navigateToMenu = function(menuKey) {
   const btnPrintDoc = document.getElementById('btnPrintDoc');
   const btnExportDocx = document.getElementById('btnExportDocx');
   const btnSaveToDb = document.getElementById('btnSaveToDb');
+  const btnHeaderKirimDesa = document.getElementById('btnHeaderKirimDesa');
 
   if (menuKey === 'dashboard') {
     if (titleEl) titleEl.textContent = 'Dashboard & Ringkasan APBDes';
@@ -5475,6 +5476,7 @@ window.switchKecamatanSubTab = function(tabKey) {
   const btnPrintDoc = document.getElementById('btnPrintDoc');
   const btnExportDocx = document.getElementById('btnExportDocx');
   const btnSaveToDb = document.getElementById('btnSaveToDb');
+  const btnHeaderKirimDesa = document.getElementById('btnHeaderKirimDesa');
 
   // Reset semua tombol subtab ke inaktif
   const btnInactive = 'px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer';
@@ -5488,6 +5490,7 @@ window.switchKecamatanSubTab = function(tabKey) {
   if (tabContentGen) tabContentGen.classList.add('hidden');
   if (tabContentSp) tabContentSp.classList.add('hidden');
   if (tabContentKirim) tabContentKirim.classList.add('hidden');
+  if (btnHeaderKirimDesa) btnHeaderKirimDesa.classList.add('hidden');
 
   if (tabKey === 'verifikasi') {
     if (tabBtnVerif) tabBtnVerif.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
@@ -5504,6 +5507,7 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (btnPrintDoc) btnPrintDoc.classList.remove('hidden');
     if (btnExportDocx) btnExportDocx.classList.remove('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.remove('hidden');
+    if (btnHeaderKirimDesa) btnHeaderKirimDesa.classList.remove('hidden');
     updateLivePreview();
   } else if (tabKey === 'surat_pengantar') {
     if (tabBtnSp) tabBtnSp.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
@@ -5514,6 +5518,7 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     initSuratPengantarTab();
   } else if (tabKey === 'kirim_desa') {
+    if (typeof updateBannerRekomAktifKirimDesa === 'function') updateBannerRekomAktifKirimDesa();
     if (tabBtnKirim) tabBtnKirim.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
     if (tabContentKirim) tabContentKirim.classList.remove('hidden');
     if (splitControls) splitControls.classList.add('hidden');
@@ -7569,6 +7574,164 @@ window.kosongkanDatabaseLokal = async function() {
  * =============================================================================
  */
 
+// Helper: Normalisasi string tahap / bulan agar presisi dengan pilihan select #selectKirimTahap
+window.normalisasiTahapKirim = function(tahap) {
+  if (!tahap) return 'Tahap II';
+  const t = String(tahap).trim();
+  const lower = t.toLowerCase();
+  if (lower === 'tahap 1' || lower === '1' || lower === 'tahap i') return 'Tahap I';
+  if (lower === 'tahap 2' || lower === '2' || lower === 'tahap ii') return 'Tahap II';
+  if (lower === 'tahap 3' || lower === '3' || lower === 'tahap iii') return 'Tahap III';
+  if (lower.includes('kurang salur')) return 'Kurang Salur';
+  
+  const bulanList = ['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'];
+  for (const b of bulanList) {
+    if (lower.includes(b)) {
+      return 'Bulan ' + b.charAt(0).toUpperCase() + b.slice(1);
+    }
+  }
+  return t;
+};
+
+// Helper: Ambil data rekomendasi yang sedang aktif di formulir Generator Rekomendasi
+window.getActiveRekomendasiData = function() {
+  const activeDesa = document.getElementById('selectNamaDesa')?.value || AppState.activeDesa || 'Api-Api';
+  const activeTipe = AppState.tipeRekomendasi || AppState.activeTemplateKey || 'add_reguler';
+  const activeTahun = (document.getElementById('inputTahunAnggaranReguler')?.value || document.getElementById('inputTahunAnggaran')?.value || '2026').trim();
+  
+  let rawTahap = document.getElementById('selectTahapReguler')?.value || 'Tahap II';
+  if (activeTipe === 'siltap') {
+    const bulanGaji = document.getElementById('selectBulanGaji')?.value || 'Juni';
+    rawTahap = `Bulan ${bulanGaji}`;
+  }
+  const activeTahap = window.normalisasiTahapKirim(rawTahap);
+
+  const nominalStr = document.getElementById('inputNominalAngka')?.value || '0';
+  const nominalVal = parseCurrencyInput(nominalStr);
+
+  const nomorRekom = (document.getElementById('inputNomorSurat')?.value || '').trim();
+  const tanggalRekom = document.getElementById('inputTanggalSurat')?.value || new Date().toISOString().split('T')[0];
+
+  // Cari nomor & tanggal SP kecamatan terkait jika ada
+  let nomorSpKec = (document.getElementById('inputNomorSp')?.value || '').trim();
+  let tanggalSpKec = document.getElementById('inputTanggalSp')?.value || new Date().toISOString().split('T')[0];
+
+  const matchSp = (AppState.suratPengantarList || []).find(sp => 
+    sp.namaDesa === activeDesa && 
+    String(sp.jenisDana).toLowerCase() === String(activeTipe).toLowerCase()
+  );
+  if (matchSp) {
+    if (matchSp.nomorSuratPengantar) nomorSpKec = matchSp.nomorSuratPengantar;
+    if (matchSp.tanggalSurat) tanggalSpKec = matchSp.tanggalSurat;
+  }
+
+  return {
+    namaDesa: activeDesa,
+    jenisDana: activeTipe,
+    tahap: activeTahap,
+    tahunAnggaran: activeTahun,
+    nominal: nominalVal,
+    nomorRekom: nomorRekom,
+    tanggalRekom: tanggalRekom,
+    nomorSpKec: nomorSpKec,
+    tanggalSpKec: tanggalSpKec
+  };
+};
+
+// Update Banner info rekomendasi aktif di Tab 4
+window.updateBannerRekomAktifKirimDesa = function() {
+  const banner = document.getElementById('bannerRekomAktifKirimDesa');
+  const textEl = document.getElementById('textRekomAktifKirimDesa');
+  if (!banner || !textEl) return;
+
+  const data = window.getActiveRekomendasiData();
+  if (data && data.namaDesa) {
+    let jenisDanaLabel = 'ADD Reguler';
+    if (data.jenisDana === 'siltap') jenisDanaLabel = 'ADD Siltap';
+    else if (data.jenisDana === 'dbh') jenisDanaLabel = 'PBH / DBH';
+    else if (data.jenisDana === 'dd') jenisDanaLabel = 'Dana Desa (DD)';
+    
+    let infoStr = `Desa ${data.namaDesa} • ${jenisDanaLabel} ${data.tahap} (${data.tahunAnggaran})`;
+    if (data.nomorRekom && !data.nomorRekom.includes('${')) {
+      infoStr += ` • No: ${data.nomorRekom}`;
+    }
+    textEl.textContent = infoStr;
+    banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
+};
+
+// Langsung Buka Tab 4 (Kirim Rekom ke Desa) sesuai data Rekomendasi yang Aktif di Generator
+window.bukaKirimRekomDesaDariRekomAktif = function() {
+  const data = window.getActiveRekomendasiData();
+
+  // 1. Pindah ke Sub-Tab 4: Kirim Rekom Ke Desa
+  switchKecamatanSubTab('kirim_desa');
+
+  // 2. Set filter di Tab 4 agar langsung memfilter ke desa & jenis dana aktif
+  const selDesa = document.getElementById('filterDesaKirim');
+  if (selDesa) selDesa.value = data.namaDesa;
+  const selJenis = document.getElementById('filterJenisKirim');
+  if (selJenis) selJenis.value = data.jenisDana;
+  renderTabelKirimRekomDesa();
+
+  // 3. Buka Modal Kirim Rekomendasi ke Desa dengan prefill data aktif
+  bukaModalKirimRekomDesa(null, data);
+
+  showToast(`Membuka form Kirim Dokumen Rekomendasi ke Desa ${data.namaDesa} (${data.tahap})`, 'success');
+};
+
+// Langsung Buka Tab 4 (Kirim Rekom ke Desa) sesuai data Surat Pengantar yang Aktif
+window.bukaKirimRekomDesaDariSpAktif = function() {
+  const activeDesa = document.getElementById('selectDesaSp')?.value || 'Api-Api';
+  const activeTipe = document.getElementById('selectJenisDanaSp')?.value || 'add_reguler';
+  const activeTahun = (document.getElementById('inputTahunSp')?.value || '2026').trim();
+  const activeTahap = window.normalisasiTahapKirim(document.getElementById('selectTahapSp')?.value || 'Tahap II');
+  
+  const nomorSpKec = (document.getElementById('inputNomorSp')?.value || '').trim();
+  const tanggalSpKec = document.getElementById('inputTanggalSp')?.value || new Date().toISOString().split('T')[0];
+
+  let nomorRekom = (document.getElementById('inputNomorSurat')?.value || '').trim();
+  let tanggalRekom = document.getElementById('inputTanggalSurat')?.value || new Date().toISOString().split('T')[0];
+  let nominalVal = parseCurrencyInput(document.getElementById('inputNominalAngka')?.value || '0');
+
+  const matchRekom = (AppState.riwayat || []).find(r => 
+    r.namaDesa === activeDesa && 
+    String(r.jenisDana).toLowerCase() === String(activeTipe).toLowerCase()
+  );
+  if (matchRekom) {
+    if (!nomorRekom || nomorRekom.includes('...')) nomorRekom = matchRekom.nomorSurat || '';
+    if (matchRekom.tanggalSurat) tanggalRekom = matchRekom.tanggalSurat;
+    if (matchRekom.nominalAngka) nominalVal = matchRekom.nominalAngka;
+  }
+
+  // 1. Pindah ke Sub-Tab 4: Kirim Rekom Ke Desa
+  switchKecamatanSubTab('kirim_desa');
+
+  // 2. Set filter di Tab 4
+  const selDesa = document.getElementById('filterDesaKirim');
+  if (selDesa) selDesa.value = activeDesa;
+  const selJenis = document.getElementById('filterJenisKirim');
+  if (selJenis) selJenis.value = activeTipe;
+  renderTabelKirimRekomDesa();
+
+  // 3. Buka Modal Kirim
+  bukaModalKirimRekomDesa(null, {
+    namaDesa: activeDesa,
+    jenisDana: activeTipe,
+    tahap: activeTahap,
+    tahunAnggaran: activeTahun,
+    nominal: nominalVal,
+    nomorRekom: nomorRekom,
+    tanggalRekom: tanggalRekom,
+    nomorSpKec: nomorSpKec,
+    tanggalSpKec: tanggalSpKec
+  });
+
+  showToast(`Membuka form Kirim Dokumen Rekomendasi ke Desa ${activeDesa} (${activeTahap})`, 'success');
+};
+
 // Buka Modal Kirim Rekom ke Desa
 window.bukaModalKirimRekomDesa = function(editId = null, prefillData = null) {
   const modal = document.getElementById('modalKirimRekomDesa');
@@ -7615,7 +7778,7 @@ window.bukaModalKirimRekomDesa = function(editId = null, prefillData = null) {
 
       if (selDesa) selDesa.value = item.namaDesa || 'Api-Api';
       if (selJenis) selJenis.value = item.jenisDana || 'add_reguler';
-      if (selTahap) selTahap.value = item.tahap || 'Tahap II';
+      if (selTahap) selTahap.value = window.normalisasiTahapKirim(item.tahap || 'Tahap II');
       if (inTahun) inTahun.value = item.tahunAnggaran || '2026';
       if (inNominal) inNominal.value = formatRupiah(item.nominal || 0).replace('Rp ', '');
       if (inNoRekom) inNoRekom.value = item.nomorRekom || '';
@@ -7645,12 +7808,21 @@ window.bukaModalKirimRekomDesa = function(editId = null, prefillData = null) {
     if (tglRekom) tglRekom.value = today;
     if (tglSp) tglSp.value = today;
 
+    if (!prefillData && typeof window.getActiveRekomendasiData === 'function') {
+      prefillData = window.getActiveRekomendasiData();
+    }
+
     if (prefillData) {
       if (prefillData.namaDesa && document.getElementById('selectKirimDesa')) document.getElementById('selectKirimDesa').value = prefillData.namaDesa;
       if (prefillData.jenisDana && document.getElementById('selectKirimJenisDana')) document.getElementById('selectKirimJenisDana').value = prefillData.jenisDana;
-      if (prefillData.tahap && document.getElementById('selectKirimTahap')) document.getElementById('selectKirimTahap').value = prefillData.tahap;
+      if (prefillData.tahap && document.getElementById('selectKirimTahap')) document.getElementById('selectKirimTahap').value = window.normalisasiTahapKirim(prefillData.tahap);
       if (prefillData.tahunAnggaran && document.getElementById('inputKirimTahun')) document.getElementById('inputKirimTahun').value = prefillData.tahunAnggaran;
-      if (prefillData.nominal && document.getElementById('inputKirimNominal')) document.getElementById('inputKirimNominal').value = formatRupiah(prefillData.nominal).replace('Rp ', '');
+      if (prefillData.nominal !== undefined && document.getElementById('inputKirimNominal')) document.getElementById('inputKirimNominal').value = formatRupiah(prefillData.nominal).replace('Rp ', '');
+      if (prefillData.nomorRekom && document.getElementById('inputKirimNomorRekom')) document.getElementById('inputKirimNomorRekom').value = prefillData.nomorRekom;
+      if (prefillData.tanggalRekom && document.getElementById('inputKirimTanggalRekom')) document.getElementById('inputKirimTanggalRekom').value = prefillData.tanggalRekom;
+      if (prefillData.nomorSpKec && document.getElementById('inputKirimNomorSpKec')) document.getElementById('inputKirimNomorSpKec').value = prefillData.nomorSpKec;
+      if (prefillData.tanggalSpKec && document.getElementById('inputKirimTanggalSpKec')) document.getElementById('inputKirimTanggalSpKec').value = prefillData.tanggalSpKec;
+      if (prefillData.catatan && document.getElementById('inputKirimCatatan')) document.getElementById('inputKirimCatatan').value = prefillData.catatan;
     }
   }
 
