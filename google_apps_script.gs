@@ -1348,63 +1348,153 @@ function doPost(e) {
     // -------------------------------------------------------------------------------------
     if (action === "bukaGoogleDocs" || action === "convertToWordDocs") {
       var docTitle = (payload.title || "Dokumen_Rekomendasi").replace(/[\/\\:*?"<>|]/g, "_");
+      var htmlContent = payload.html || "";
       var rawBase64 = payload.base64 || "";
-      var mimeType = payload.type || "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-      if (!rawBase64) {
-        return jsonResponse({ success: false, message: "Data base64 dokumen kosong." });
+      // Jika htmlContent kosong tapi base64 ada (coba decode)
+      if (!htmlContent && rawBase64) {
+        try {
+          var decodedStr = Utilities.newBlob(Utilities.base64Decode(rawBase64)).getDataAsString("UTF-8");
+          if (decodedStr && (decodedStr.indexOf("<html") > -1 || decodedStr.indexOf("<body") > -1)) {
+            htmlContent = decodedStr;
+          }
+        } catch (e) {}
       }
 
       var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
       var docsFolder = getOrCreateFolder("Draft_Google_Docs", mainFolder);
 
-      var decodedBytes = Utilities.base64Decode(rawBase64);
-      var fileNameWithExt = docTitle.toLowerCase().endsWith(".docx") ? docTitle : (docTitle + ".docx");
-      var docxBlob = Utilities.newBlob(decodedBytes, mimeType, fileNameWithExt);
-
       var docFileId = "";
       var docEditUrl = "";
 
-      // 1. Coba konversi langsung ke Google Docs jika Drive API Advanced Service aktif
-      var convertedToNative = false;
-      try {
-        if (typeof Drive !== "undefined" && Drive.Files && typeof Drive.Files.insert === "function") {
-          var resource = {
-            title: docTitle,
-            mimeType: "application/vnd.google-apps.document",
-            parents: [{ id: docsFolder.getId() }]
+      // METODE 1: Menggunakan Google Drive REST API v2 Upload & Convert (Resmi Google)
+      // Endpoint ini mengonversi kode HTML lengkap (tabel, teks, paragraf, kop, garis) menjadi NATIVE Google Docs yang langsung terisi sempurna
+      if (htmlContent) {
+        try {
+          var htmlBlob = Utilities.newBlob(htmlContent, "text/html; charset=UTF-8", docTitle + ".html");
+          var uploadUrl = "https://www.googleapis.com/upload/drive/v2/files?uploadType=media&convert=true";
+          var fetchOptions = {
+            method: "POST",
+            contentType: "text/html; charset=UTF-8",
+            headers: {
+              "Authorization": "Bearer " + ScriptApp.getOAuthToken()
+            },
+            payload: htmlBlob.getBytes(),
+            muteHttpExceptions: true
           };
-          var convertedFile = Drive.Files.insert(resource, docxBlob, { convert: true });
-          docFileId = convertedFile.id;
-          docEditUrl = "https://docs.google.com/document/d/" + docFileId + "/edit";
-          convertedToNative = true;
+
+          var response = UrlFetchApp.fetch(uploadUrl, fetchOptions);
+          if (response.getResponseCode() === 200) {
+            var resJson = JSON.parse(response.getContentText());
+            docFileId = resJson.id;
+            docEditUrl = resJson.alternateLink || ("https://docs.google.com/document/d/" + docFileId + "/edit");
+          } else {
+            Logger.log("UrlFetchApp drive v2 error: " + response.getContentText());
+          }
+        } catch (fetchErr) {
+          Logger.log("Error UrlFetchApp convert: " + fetchErr.toString());
         }
-      } catch (convErr) {
-        Logger.log("Peringatan konversi Drive API native: " + convErr.toString());
       }
 
-      // 2. Jika belum terkonversi (Drive API belum diaktifkan), simpan sebagai file Word di Drive
-      // Google Docs secara otomatis mendukung mode Office Editing untuk file .docx di Google Drive
-      if (!convertedToNative || !docFileId) {
-        var savedWordFile = docsFolder.createFile(docxBlob);
-        docFileId = savedWordFile.getId();
-        docEditUrl = "https://docs.google.com/document/d/" + docFileId + "/edit";
+      // METODE 2: Coba Advanced Drive Service jika aktif di project
+      if (!docFileId && htmlContent) {
+        try {
+          if (typeof Drive !== "undefined" && Drive.Files && typeof Drive.Files.insert === "function") {
+            var resource = {
+              title: docTitle,
+              mimeType: "application/vnd.google-apps.document",
+              parents: [{ id: docsFolder.getId() }]
+            };
+            var hBlob = Utilities.newBlob(htmlContent, "text/html; charset=UTF-8", docTitle + ".html");
+            var convertedFile = Drive.Files.insert(resource, hBlob, { convert: true });
+            docFileId = convertedFile.id;
+            docEditUrl = "https://docs.google.com/document/d/" + docFileId + "/edit";
+          }
+        } catch (convErr) {
+          Logger.log("Peringatan konversi Drive API native: " + convErr.toString());
+        }
       }
 
-      // 3. Set permission edit agar pengguna dapat langsung membuka dan mengedit di browser
-      try {
-        var driveFile = DriveApp.getFileById(docFileId);
-        driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.EDIT);
-      } catch (permErr) {
-        Logger.log("Peringatan izin sharing Drive: " + permErr.toString());
+      // METODE 3: Menggunakan DocumentApp bawaan (Parsing teks & tabel langsung ke Google Docs)
+      if (!docFileId && htmlContent) {
+        try {
+          var newDoc = DocumentApp.create(docTitle);
+          docFileId = newDoc.getId();
+          docEditUrl = newDoc.getUrl();
+          var docBody = newDoc.getBody();
+          docBody.setMarginTop(28.35);    // 1 cm
+          docBody.setMarginBottom(42.52); // 1.5 cm
+          docBody.setMarginLeft(28.35);   // 1 cm
+          docBody.setMarginRight(28.35);  // 1 cm
+
+          // Bersihkan teks dan buat paragraf bersih
+          var cleanText = htmlContent
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<br\s*[\/]?>/gi, '\n')
+            .replace(/<\/p>/gi, '\n')
+            .replace(/<\/div>/gi, '\n')
+            .replace(/<\/tr>/gi, '\n')
+            .replace(/<td[^>]*>/gi, '\t')
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"');
+
+          var lines = cleanText.split('\n');
+          for (var li = 0; li < lines.length; li++) {
+            var trimmedLine = lines[li].trim();
+            if (trimmedLine) {
+              docBody.appendParagraph(trimmedLine);
+            }
+          }
+          newDoc.saveAndClose();
+        } catch (docAppErr) {
+          Logger.log("Error DocumentApp: " + docAppErr.toString());
+        }
+      }
+
+      // METODE 4: Fallback ke penyimpanan file Word docx
+      if (!docFileId && rawBase64) {
+        try {
+          var decodedBytes = Utilities.base64Decode(rawBase64);
+          var fileNameWithExt = docTitle.toLowerCase().endsWith(".docx") ? docTitle : (docTitle + ".docx");
+          var docxBlob = Utilities.newBlob(decodedBytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", fileNameWithExt);
+          var savedWordFile = docsFolder.createFile(docxBlob);
+          docFileId = savedWordFile.getId();
+          docEditUrl = "https://docs.google.com/document/d/" + docFileId + "/edit";
+        } catch (wordErr) {
+          Logger.log("Error fallback docx: " + wordErr.toString());
+        }
+      }
+
+      if (docFileId) {
+        try {
+          var driveFile = DriveApp.getFileById(docFileId);
+          driveFile.setName(docTitle);
+          docsFolder.addFile(driveFile);
+          try {
+            DriveApp.getRootFolder().removeFile(driveFile);
+          } catch(remErr) {}
+          driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.EDIT);
+        } catch (permErr) {
+          Logger.log("Peringatan izin sharing Drive: " + permErr.toString());
+        }
+
+        return jsonResponse({
+          success: true,
+          fileId: docFileId,
+          docUrl: docEditUrl || ("https://docs.google.com/document/d/" + docFileId + "/edit"),
+          name: docTitle,
+          message: "Dokumen berhasil dibuka dan siap diedit di Google Docs."
+        });
       }
 
       return jsonResponse({
-        success: true,
-        fileId: docFileId,
-        docUrl: docEditUrl,
-        name: docTitle,
-        message: "Dokumen berhasil disiapkan untuk diedit di Google Docs."
+        success: false,
+        message: "Gagal membuat dokumen Google Docs."
       });
     }
 

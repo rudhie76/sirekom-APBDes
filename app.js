@@ -3089,7 +3089,7 @@ function bukaPlaceholderTabGoogleDocs(judulDokumen = 'Dokumen') {
  * Mengunggah Dokumen Word (.docx) ke Google Drive & Membuka Langsung di Google Docs Tab Baru
  * Pengguna dapat langsung melihat dan mengedit tanpa harus menyimpan file ke lokal terlebih dahulu
  */
-async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab = null) {
+async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab = null, fullHtml = '') {
   if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
     try {
       showToast('Mengonversi dokumen ke Google Docs...', 'info');
@@ -3106,15 +3106,16 @@ async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholder
         reader.readAsDataURL(blob);
       });
 
-      // 2. Kirim payload ke Web App Google Apps Script
+      // 2. Kirim payload ke Web App Google Apps Script (Sertakan HTML lengkap agar Google Docs terisi penuh)
       const res = await fetch(AppState.gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'bukaGoogleDocs',
           title: safeName,
+          html: fullHtml || '',
           base64: base64Data,
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          type: 'text/html',
           namaDesa: namaDesa || 'Desa'
         })
       });
@@ -3334,7 +3335,7 @@ window.eksporSuratKeDocx = async function() {
     });
 
     // Buka langsung di Google Docs tab baru (jika online), atau unduh lokal sebagai cadangan
-    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab);
+    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
   } catch (err) {
     console.error('Gagal mengekspor dokumen ke DOCX:', err);
     showToast('Terjadi kendala saat membuat file DOCX. ' + (err.message || ''), 'error');
@@ -9649,7 +9650,7 @@ window.eksporSuratPengantarKeDocx = async function() {
     });
 
     // Buka langsung di Google Docs tab baru (jika online), atau unduh lokal sebagai cadangan
-    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab);
+    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
   } catch (err) {
     console.error('Gagal ekspor DOCX Surat Pengantar:', err);
     showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
