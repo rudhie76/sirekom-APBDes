@@ -2406,7 +2406,7 @@ window.toggleDirectEditMode = function() {
     if (btn) {
       btn.className = 'px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer animate-pulse';
     }
-    if (icon) icon.textContent = '🔒';
+    if (icon) icon.textContent = "\uD83D\uDD12";
     if (label) label.textContent = 'Kunci Ketikan';
     if (btnReset) btnReset.classList.remove('hidden');
     showToast('✏️ Mode Edit di Kertas Aktif! Klik bagian mana saja pada surat untuk mengubah/mengetik teks.', 'info');
@@ -2414,7 +2414,7 @@ window.toggleDirectEditMode = function() {
     if (btn) {
       btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
     }
-    if (icon) icon.textContent = '✏️';
+    if (icon) icon.textContent = "\u270F\uFE0F";
     if (label) label.textContent = 'Edit di Kertas';
     if (btnReset) btnReset.classList.remove('hidden');
     showToast('🔒 Teks pada kertas dikunci. Siap dicetak atau dikonversi ke Word.', 'success');
@@ -2429,7 +2429,7 @@ window.resetPreviewFromForm = function() {
     const label = document.getElementById('labelEditDirect');
     const btnReset = document.getElementById('btnResetDirect');
     if (btn) btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
-    if (icon) icon.textContent = '✏️';
+    if (icon) icon.textContent = "\u270F\uFE0F";
     if (label) label.textContent = 'Edit di Kertas';
     if (btnReset) btnReset.classList.add('hidden');
     updateLivePreview(true);
@@ -9563,7 +9563,7 @@ window.toggleDirectEditModeSp = function() {
     if (btn) {
       btn.className = 'px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer animate-pulse';
     }
-    if (icon) icon.textContent = '🔒';
+    if (icon) icon.textContent = "\uD83D\uDD12";
     if (label) label.textContent = 'Kunci Ketikan';
     if (btnReset) btnReset.classList.remove('hidden');
     showToast('✏️ Mode Edit di Kertas Aktif! Klik bagian mana saja pada Surat Pengantar untuk mengedit.', 'info');
@@ -9572,7 +9572,7 @@ window.toggleDirectEditModeSp = function() {
     if (btn) {
       btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
     }
-    if (icon) icon.textContent = '✏️';
+    if (icon) icon.textContent = "\u270F\uFE0F";
     if (label) label.textContent = 'Edit di Kertas';
     if (btnReset) btnReset.classList.remove('hidden');
     showToast('🔒 Teks Surat Pengantar berhasil dikunci. Siap dicetak atau dikonversi ke Word.', 'success');
@@ -9587,7 +9587,7 @@ window.resetPreviewSpFromForm = function() {
     const label = document.getElementById('labelEditDirectSp');
     const btnReset = document.getElementById('btnResetDirectSp');
     if (btn) btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
-    if (icon) icon.textContent = '✏️';
+    if (icon) icon.textContent = "\u270F\uFE0F";
     if (label) label.textContent = 'Edit di Kertas';
     if (btnReset) btnReset.classList.add('hidden');
     updateLivePreviewSp(true);
@@ -10342,7 +10342,7 @@ window.renderRowsCeklistInputs = function() {
   if (rows.length === 0) {
     container.innerHTML = `
       <div class="py-4 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-lg">
-        Belum ada berkas persyaratan. Klik tombol <b>âž• Tambah</b> di atas untuk menambahkan.
+        Belum ada berkas persyaratan. Klik tombol <b>+ Tambah</b> di atas untuk menambahkan.
       </div>
     `;
     return;
@@ -10357,8 +10357,8 @@ window.renderRowsCeklistInputs = function() {
             <span class="text-xs font-bold text-slate-800">Berkas #${index + 1} (${item.checked ? '<span class="text-emerald-700">Lengkap [ V ]</span>' : '<span class="text-rose-600">Belum [   ]</span>'})</span>
           </label>
           <div class="flex items-center gap-1">
-            <button type="button" onclick="hapusBarisCeklist(${index})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1 rounded transition text-xs cursor-pointer" title="Hapus baris ini">
-              ðŸ—‘ï¸
+            <button type="button" onclick="hapusBarisCeklist(${index})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1 rounded transition text-xs cursor-pointer flex items-center justify-center" title="Hapus baris ini">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
           </div>
         </div>
@@ -10532,19 +10532,19 @@ window.toggleDirectEditModeCeklist = function() {
     if (btn) {
       btn.className = 'px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer animate-pulse';
     }
-    if (icon) icon.textContent = 'ðŸ”’';
+    if (icon) icon.textContent = "\uD83D\uDD12";
     if (label) label.textContent = 'Kunci Ketikan';
     if (btnReset) btnReset.classList.remove('hidden');
-    showToast('âœï¸ Mode Edit di Kertas Ceklist Aktif! Klik bagian mana saja pada kertas untuk mengedit.', 'info');
+    showToast("\u270F\uFE0F Mode Edit di Kertas Ceklist Aktif! Klik bagian mana saja pada kertas untuk mengedit.", "info");
   } else {
     sheet.classList.remove('is-editing-direct');
     if (btn) {
       btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
     }
-    if (icon) icon.textContent = 'âœï¸';
+    if (icon) icon.textContent = "\u270F\uFE0F";
     if (label) label.textContent = 'Edit di Kertas';
     if (btnReset) btnReset.classList.remove('hidden');
-    showToast('ðŸ”’ Teks Ceklist berhasil dikunci. Siap dicetak atau dikonversi ke Word.', 'success');
+    showToast("\uD83D\uDD12 Teks Ceklist berhasil dikunci. Siap dicetak atau dikonversi ke Word.", "success");
   }
 };
 
@@ -10556,7 +10556,7 @@ window.resetPreviewCeklistFromForm = function() {
     const label = document.getElementById('labelEditDirectCeklist');
     const btnReset = document.getElementById('btnResetDirectCeklist');
     if (btn) btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
-    if (icon) icon.textContent = 'âœï¸';
+    if (icon) icon.textContent = "\u270F\uFE0F";
     if (label) label.textContent = 'Edit di Kertas';
     if (btnReset) btnReset.classList.add('hidden');
     updateLivePreviewCeklist(true);
