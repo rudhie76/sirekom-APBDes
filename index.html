@@ -154,8 +154,10 @@
       #tabContentKirimRekomDesa,
       #panelFormKiri,
       #panelFormKiriSp,
+      #panelFormKiriCeklist,
       #previewToolbar,
       #previewToolbarSp,
+      #previewToolbarCeklist,
       #containerSplitControls,
       #toastContainer,
       #modalGasSettings,
@@ -197,7 +199,11 @@
       #workspaceSuratPengantar,
       #panelPreviewKananSp,
       #previewViewportSp,
-      #previewSpContainer {
+      #previewSpContainer,
+      #workspaceCeklist,
+      #panelPreviewKananCeklist,
+      #previewViewportCeklist,
+      #previewCeklistContainer {
         display: block !important;
         position: static !important;
         float: none !important;
@@ -238,6 +244,7 @@
       /* Format Lembar Surat Resmi Pemerintah */
       #previewDocumentContainer .surat-sheet,
       #previewSpContainer .surat-sheet,
+      #previewCeklistContainer .surat-sheet,
       #previewDocumentContainer.mode-flow .surat-sheet,
       body.mode-flow-print .surat-sheet,
       .mode-flow-print .surat-sheet,
@@ -1083,8 +1090,11 @@
             <span>✉️ 3. Surat Pengantar Kecamatan</span>
             <span id="badgeTabSpCount" class="bg-teal-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px] hidden">0</span>
           </button>
-          <button id="tabBtnKirimDesa" onclick="switchKecamatanSubTab('kirim_desa')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
-            <span>📤 4. Kirim Rekom Ke Desa</span>
+          <button id="tabBtnCeklist" onclick="switchKecamatanSubTab('ceklist')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
+            <span>📋 4. Ceklist Berkas Kecamatan</span>
+          </button>
+          <button id="tabBtnKirimDesa" onclick="switchKecamatanSubTab('kirim_desa')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
+            <span>📤 5. Kirim Rekom Ke Desa</span>
             <span id="badgeTabKirimDesaCount" class="bg-blue-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px]">0</span>
           </button>
 
@@ -1907,7 +1917,246 @@
     <!-- /#workspaceSuratPengantar -->
 
     <!-- ============================================================================= -->
-    <!-- TAB 4: KIRIM REKOM KE DESA (DOKUMEN RESMI KECAMATAN SIAP BKAD) -->
+    <!-- ============================================================================= -->
+    <!-- TAB 4: CEKLIST KELENGKAPAN BERKAS KECAMATAN (FORMAT RESMI KECAMATAN WARU) -->
+    <!-- ============================================================================= -->
+    <div id="workspaceCeklist" class="hidden flex-1 flex w-full h-full overflow-hidden">
+      
+      <!-- ============================================================================= -->
+      <!-- PANEL KIRI: FORMULIR INPUT DINAMIS CEKLIST -->
+      <!-- ============================================================================= -->
+      <aside id="panelFormKiriCeklist" class="w-full lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200 no-print">
+        
+        <!-- Sub-header Form -->
+        <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+              <span>📋</span>
+              <span>Form Ceklist Berkas Kecamatan</span>
+            </h2>
+            <p class="text-[11px] text-slate-500">Verifikasi kelengkapan berkas pengajuan APBDes dari Desa</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="salinDataDariRekomAktifKeCeklist()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-300 font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Otomatis salin data Desa & Berkas Persyaratan dari Rekomendasi yang aktif di Generator">
+              <span>⚡ Salin dari Rekom</span>
+            </button>
+            <button type="button" onclick="resetCeklistToDefault()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1 cursor-pointer" title="Kembalikan daftar ceklist ke standar bawaan">
+              <span>🔄 Reset</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Inputs -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+
+          <!-- KARTU 1: IDENTITAS DESA & PERIODE -->
+          <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+              <div class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">1</div>
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Identitas Desa & Periode Pengajuan</h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Nama Desa</label>
+                <select id="selectDesaCeklist" onchange="onCeklistDesaChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white">
+                  <option value="Bangun Mulya" selected>Desa Bangun Mulya</option>
+                  <option value="Api-Api">Desa Api-Api</option>
+                  <option value="Sesulu">Desa Sesulu</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Jenis Dana</label>
+                <select id="selectJenisDanaCeklist" onchange="onCeklistJenisDanaChange()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white">
+                  <option value="siltap" selected>ADD Siltap & Tunjangan</option>
+                  <option value="add_reguler">ADD Reguler</option>
+                  <option value="dbh">PBH / DBH</option>
+                  <option value="dd">Dana Desa (DD)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahap / Bulan Penyaluran</label>
+                <input type="text" id="inputTahapCeklist" value="BULAN NOPEMBER" oninput="updateLivePreviewCeklist()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white" placeholder="Contoh: BULAN NOPEMBER atau TAHAP II" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Tahun Anggaran</label>
+                <input type="text" id="inputTahunCeklist" value="2026" oninput="updateLivePreviewCeklist()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+              </div>
+            </div>
+
+            <!-- Teks Judul Dokumen 3 Baris Sesuai Template -->
+            <div class="pt-2 border-t border-slate-100 space-y-2">
+              <label class="block text-[11px] font-semibold text-slate-700">Teks Judul Dokumen Lembar Cetak (Sesuai Template):</label>
+              <div>
+                <span class="text-[10px] text-slate-500 font-medium">Baris 1 (Header Ceklist):</span>
+                <input type="text" id="inputJudulCeklist1" value="CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD" oninput="updateLivePreviewCeklist()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 font-medium">Baris 2 (Rincian Perihal Belanja):</span>
+                <textarea id="inputJudulCeklist2" rows="2" oninput="updateLivePreviewCeklist()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white leading-tight">PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA</textarea>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-500 font-medium">Baris 3 (Bulan & Tahun Anggaran):</span>
+                <input type="text" id="inputJudulCeklist3" value="BULAN NOPEMBER TAHUN ANGGARAN 2026" oninput="updateLivePreviewCeklist()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+              </div>
+            </div>
+          </div>
+
+          <!-- KARTU 2: DAFTAR BERKAS PERSYARATAN CEKLIST -->
+          <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
+            <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">2</div>
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Daftar Berkas Persyaratan (Ceklist)</h3>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="semuaCentangCeklist(true)" class="text-[10px] text-emerald-700 hover:underline font-semibold cursor-pointer">Centang Semua</button>
+                <span class="text-slate-300">|</span>
+                <button type="button" onclick="tambahBarisCeklist()" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                  <span>➕ Tambah</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- List Baris Ceklist -->
+            <div id="containerRowsCeklist" class="space-y-2">
+              <!-- Dirender dinamis oleh renderRowsCeklistInputs() -->
+            </div>
+          </div>
+
+          <!-- KARTU 3: HASIL PERNYATAAN VERIFIKASI -->
+          <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+              <div class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">3</div>
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Hasil Pernyataan Verifikasi</h3>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+              <label class="block text-[11px] font-semibold text-slate-700">Telah diverifikasi dan dinyatakan:</label>
+              <div class="flex items-center gap-4">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-emerald-800">
+                  <input type="radio" name="radioStatusCeklist" id="radioStatusLengkap" value="lengkap" checked onchange="updateLivePreviewCeklist()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+                  <span>[ ✓ ] Lengkap</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-rose-800">
+                  <input type="radio" name="radioStatusCeklist" id="radioStatusRevisi" value="revisi" onchange="updateLivePreviewCeklist()" class="text-rose-600 focus:ring-rose-500 w-4 h-4 cursor-pointer" />
+                  <span>[   ] Perlu Perbaikan</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- KARTU 4: PEJABAT VERIFIKATOR & STEMPEL RESMI -->
+          <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+              <div class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">4</div>
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Pejabat Verifikator & Stempel Resmi</h3>
+            </div>
+
+            <div class="space-y-2.5">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Jabatan Verifikator</label>
+                <input type="text" id="inputJabatanVerifikatorCeklist" value="Kepala Seksi Pemberdayaan Masyarakat" oninput="updateLivePreviewCeklist()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Nama Pejabat</label>
+                  <input type="text" id="inputNamaVerifikatorCeklist" value="Rudiansyah, SE" oninput="updateLivePreviewCeklist()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">NIP Pejabat</label>
+                  <input type="text" id="inputNipVerifikatorCeklist" value="197608312007011009" oninput="updateLivePreviewCeklist()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+                </div>
+              </div>
+
+              <!-- Checkbox Tampilkan Stempel & TTD Asli -->
+              <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="checkStempelCeklist" checked onchange="updateLivePreviewCeklist()" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+                  <span class="text-xs font-bold text-slate-800">Tampilkan Stempel Kecamatan & Tanda Tangan Basah</span>
+                </label>
+                <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">Resmi Template</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- ============================================================================= -->
+      <!-- PANEL KANAN: LIVE PREVIEW LEMBAR DOKUMEN CEKLIST KELENGKAPAN BERKAS -->
+      <!-- ============================================================================= -->
+      <section id="panelPreviewKananCeklist" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-200/80">
+        
+        <!-- Toolbar Atas Preview Ceklist -->
+        <div id="previewToolbarCeklist" class="p-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0 no-print">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+              <span class="font-medium">Kertas:</span>
+              <select id="selectPaperSizeCeklist" onchange="applyPaperSizeCeklist()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-emerald-500">
+                <option value="a4" selected>A4 (210 x 297 mm)</option>
+                <option value="folio">Folio / F4 (215 x 330 mm)</option>
+              </select>
+            </div>
+            <span class="text-slate-300">|</span>
+            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+              <span>Spasi:</span>
+              <select id="selectLineSpacingCeklist" onchange="applyLineSpacingCeklist()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-emerald-500">
+                <option value="1.0">1.0 (Tunggal)</option>
+                <option value="1.15" selected>1.15 (Standar)</option>
+                <option value="1.25">1.25</option>
+                <option value="1.5">1.5 (Longgar)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Tombol Edit Langsung di Kertas Ceklist -->
+            <button type="button" id="btnToggleEditDirectCeklist" onclick="toggleDirectEditModeCeklist()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Edit langsung teks di lembar Ceklist">
+              <span id="iconEditDirectCeklist">✏️</span>
+              <span id="labelEditDirectCeklist">Edit di Kertas</span>
+            </button>
+            
+            <button type="button" id="btnResetDirectCeklist" onclick="resetPreviewCeklistFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="Muat ulang dari form (batalkan ketikan langsung)">
+              <span>🔄 Reset Form</span>
+            </button>
+
+            <!-- Tombol Cetak / PDF -->
+            <button type="button" onclick="triggerPrintCeklist()" class="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Ceklist Kelengkapan Resmi / Simpan PDF">
+              <span>🖨️ Cetak / PDF</span>
+            </button>
+
+            <!-- Tombol Ekspor DOCX -->
+            <button type="button" onclick="eksporCeklistKeDocx()" class="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Unduh File Word (.docx)">
+              <span>&#x1F4DD; Convert to Word</span>
+            </button>
+
+            <!-- Zoom Controls -->
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+              <button type="button" onclick="changeZoomCeklist(-10)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom Out">−</button>
+              <span id="labelZoomPercentCeklist" class="font-mono font-bold text-slate-800 px-1 text-[11px]">100%</span>
+              <button type="button" onclick="changeZoomCeklist(10)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom In">+</button>
+              <button type="button" onclick="resetZoomCeklist()" class="px-1.5 py-0.5 text-[10px] rounded hover:bg-white text-slate-600 transition" title="Reset Zoom">Fit</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Viewport Container Preview Ceklist -->
+        <div id="previewViewportCeklist" class="flex-1 overflow-auto custom-scrollbar p-6 flex justify-center bg-slate-300/60">
+          <div id="previewCeklistContainer" class="origin-top transition-transform duration-100">
+            <!-- Dokumen Ceklist Dirender Otomatis oleh JavaScript -->
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+    <!-- /#workspaceCeklist -->
+
+    <!-- TAB 5: KIRIM REKOM KE DESA (DOKUMEN RESMI KECAMATAN SIAP BKAD) -->
     <!-- ============================================================================= -->
     <div id="tabContentKirimRekomDesa" class="no-print hidden flex-1 flex flex-col overflow-hidden bg-slate-50">
       <!-- Filter & Action Bar -->
@@ -3449,6 +3698,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261023_gdocs_full_content"></script>
+  <script src="app.js?v=20261027_tab_ceklist_kasi"></script>
 </body>
 </html>

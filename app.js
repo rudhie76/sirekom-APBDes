@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =========================================================================================
  * SIP-REKOM APBDES - KECAMATAN WARU, KABUPATEN PENAJAM PASER UTARA
  * Generator Surat Rekomendasi Resmi:
@@ -376,6 +376,35 @@ const AppState = {
       }
     ]
   },
+  isDirectEditModeCeklist: false,
+  ceklistData: {
+    id: null,
+    namaDesa: 'Bangun Mulya',
+    kecamatan: 'Waru',
+    kabupaten: 'Penajam Paser Utara',
+    jenisDana: 'siltap',
+    tahap: 'BULAN NOPEMBER',
+    tahunAnggaran: '2026',
+    judulBaris1: 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD',
+    judulBaris2: 'PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA',
+    judulBaris3: 'BULAN NOPEMBER TAHUN ANGGARAN 2026',
+    statusLengkap: true,
+    namaVerifikator: 'Rudiansyah, SE',
+    nipVerifikator: '197608312007011009',
+    jabatanVerifikator: 'Kepala Seksi Pemberdayaan Masyarakat',
+    tampilkanStempel: true,
+    paperSize: 'a4',
+    lineSpacing: '1.15',
+    zoomPercent: 100,
+    rows: []
+  },
+  ceklistList: (function() {
+    try {
+      return JSON.parse(localStorage.getItem('sip_arsip_ceklist') || '[]');
+    } catch (_) {
+      return [];
+    }
+  })(),
   suratPengantarList: (function() {
     try {
       return JSON.parse(localStorage.getItem('sip_arsip_surat_pengantar') || '[]');
@@ -2238,6 +2267,11 @@ function triggerPrint() {
     tabVerif.style.setProperty('display', 'none', 'important');
   }
 
+  const workspaceSp = document.getElementById('workspaceSuratPengantar');
+  if (workspaceSp) workspaceSp.style.setProperty('display', 'none', 'important');
+  const workspaceCeklist = document.getElementById('workspaceCeklist');
+  if (workspaceCeklist) workspaceCeklist.style.setProperty('display', 'none', 'important');
+
   // Terapkan mode pemisah halaman aktif
   applyPageBreakMode();
 
@@ -3516,7 +3550,12 @@ window.generateCeklistDocxFromItem = async function(item) {
   }
   showToast('Membuat Ceklist Kelengkapan Berkas (.docx)...', 'info');
   try {
-    const logoBase64 = await getLogoPpuBase64();
+    let placeholderTab = null;
+    if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+      placeholderTab = bukaPlaceholderTabGoogleDocs('Ceklist Kelengkapan Berkas');
+    }
+
+    const stempelBase64 = await getStempelTtdBase64();
     const safeDesa = (item.namaDesa || 'Desa').replace(/[^a-zA-Z0-9_-]/g, '_');
     const safeTahap = (item.tahap || 'Tahap').replace(/\s+/g, '_');
     const tahun = item.tahunAnggaran || '2026';
@@ -3531,27 +3570,45 @@ window.generateCeklistDocxFromItem = async function(item) {
     else if (tipe.includes('dd') || tipe === 'dana desa') rawList = DEFAULT_BERKAS_TEMPLATES.dd;
     else rawList = DEFAULT_BERKAS_TEMPLATES.siltap;
 
+    let judul1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+    let judul2 = 'PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA';
+    if (tipe.includes('reguler') || tipe === 'add_reguler') {
+      judul1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+      judul2 = 'ALOKASI DANA DESA (ADD) REGULER';
+    } else if (tipe.includes('dbh')) {
+      judul1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN BAGI HASIL PAJAK DAN RETRIBUSI DAERAH';
+      judul2 = 'BAGI HASIL PAJAK DAN RETRIBUSI DAERAH (PBH/DBH)';
+    } else if (tipe.includes('dd') || tipe === 'dana desa') {
+      judul1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN DANA DESA';
+      judul2 = 'DANA DESA (DD)';
+    }
+    const judul3 = `${(item.tahap || 'BULAN NOPEMBER').toUpperCase()} TAHUN ANGGARAN ${tahun}`;
+
     const checkedIds = Array.isArray(item.kelengkapanBerkas) ? item.kelengkapanBerkas : [];
-    
-    // Format baris tabel kelengkapan
+
     const tableRowsHtml = rawList.map((b, idx) => {
       const isChecked = checkedIds.length > 0 ? checkedIds.includes(b.id) : b.checked !== false;
-      const statusText = isChecked ? 'Lengkap' : 'Tidak Ada';
-      const checkIcon = isChecked ? '&#10003; (Ada)' : '-';
-      const cleanTeks = b.teks.replace(/;$/, '.');
       return `
         <tr>
-          <td width="7%" style="border: 1pt solid #000000; padding: 4pt 3pt; text-align: center; vertical-align: top; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15;">${idx + 1}.</td>
-          <td width="65%" style="border: 1pt solid #000000; padding: 4pt 6pt; text-align: justify; vertical-align: top; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15;">${escapeHtml(cleanTeks)}</td>
-          <td width="14%" style="border: 1pt solid #000000; padding: 4pt 4pt; text-align: center; vertical-align: top; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15; font-weight: bold;">${checkIcon}</td>
-          <td width="14%" style="border: 1pt solid #000000; padding: 4pt 4pt; text-align: center; vertical-align: top; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15;">${statusText}</td>
+          <td width="30" style="width: 30pt; vertical-align: top; padding: 4pt 0 4pt 0;">
+            <table border="1" cellpadding="0" cellspacing="0" style="width: 14pt; height: 14pt; border: 1.5pt solid #000000; text-align: center; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
+              <tr>
+                <td width="14" height="14" style="width: 14pt; height: 14pt; text-align: center; font-size: 11pt; font-weight: bold; font-family: Arial, sans-serif; line-height: 12pt; vertical-align: middle;">
+                  ${isChecked ? 'V' : '&nbsp;'}
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td style="vertical-align: top; padding: 2pt 0 4pt 4pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.25; text-align: justify; color: #000000;">
+            ${escapeHtml(b.teks)}
+          </td>
         </tr>
       `;
     }).join('');
 
-    const logoImgHtml = logoBase64 
-      ? `<img src="data:image/png;base64,${logoBase64}" align="left" width="70" height="82" style="float: left; width: 70px; height: 82px; margin: 0 10pt 0 0;" />`
-      : `<img src="logo_ppu.png" align="left" width="70" height="82" style="float: left; width: 70px; height: 82px; margin: 0 10pt 0 0;" />`;
+    const stempelImgHtml = stempelBase64
+      ? `<img src="data:image/png;base64,${stempelBase64}" width="240" height="185" style="width: 240px; height: 185px; display: block;" />`
+      : `<img src="stempel_ttd_clean.png" width="240" height="185" style="width: 240px; height: 185px; display: block;" />`;
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -3562,16 +3619,16 @@ window.generateCeklistDocxFromItem = async function(item) {
         <style>
           @page {
             size: 21.0cm 29.7cm;
-            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.5cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
           }
           body, p, table, td, th, div, span {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 10pt;
+            font-size: 11pt;
             color: #000000;
-            line-height: 1.15;
+            line-height: 1.2;
           }
           body {
             background-color: #ffffff;
@@ -3583,111 +3640,133 @@ window.generateCeklistDocxFromItem = async function(item) {
             margin-bottom: 0pt;
             mso-para-margin-top: 0pt;
             mso-para-margin-bottom: 0pt;
-            line-height: 1.15;
+            line-height: 1.2;
           }
           table {
             border-collapse: collapse;
             mso-table-lspace: 0pt;
             mso-table-rspace: 0pt;
-            line-height: 1.15;
+            line-height: 1.2;
           }
         </style>
       </head>
       <body>
-        <!-- KOP SURAT RESMI (BUKAN KOLOM) -->
-        <div style="margin-top: 0pt; margin-bottom: 6pt; padding-bottom: 4pt; border-bottom: 3.0pt double #000000; text-align: center; clear: both;">
-          ${logoImgHtml}
-          <div style="text-align: center; margin: 0; padding: 0;">
-            <div style="font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; margin: 0; padding: 0; line-height: 1.15; color: #000000;">
-              PEMERINTAH KABUPATEN PENAJAM PASER UTARA
-            </div>
-            <div style="font-family: Arial, sans-serif; font-size: 15pt; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5pt; margin: 1pt 0 2pt 0; padding: 0; line-height: 1.15; color: #000000;">
-              KECAMATAN WARU
-            </div>
-            <div style="font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.15; margin: 0; padding: 0; color: #000000;">
-              <span>Jalan Propinsi Km. 25, WA. 0821-9564-7788</span><br>
-              <span>Website : <span style="color: #1d4ed8; text-decoration: underline;">https://kecwaru.penajamkab.go.id/</span></span><br>
-              <span>Email : <span style="color: #1d4ed8; text-decoration: underline;">kecamatanwaru2014@gmail.com</span> Pos 76284</span>
-            </div>
+        <!-- JUDUL DOKUMEN 3 BARIS RESMI -->
+        <div style="text-align: center; margin-bottom: 22pt;">
+          <div style="font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; line-height: 1.3; text-transform: uppercase;">
+            ${escapeHtml(judul1)}
           </div>
-          <div style="clear: both; font-size: 1pt; line-height: 1pt; height: 1pt;">&nbsp;</div>
-        </div>
-
-        <!-- JUDUL LEMBAR VERIFIKASI -->
-        <div style="text-align: center; margin-top: 6pt; margin-bottom: 8pt; font-family: Arial, sans-serif;">
-          <div style="font-size: 11.5pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; line-height: 1.15;">
-            LEMBAR VERIFIKASI / CEKLIST KELENGKAPAN BERKAS PENGAJUAN
+          <div style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; line-height: 1.3; text-transform: uppercase; margin-top: 3pt;">
+            ${escapeHtml(judul2)}
           </div>
-          <div style="font-size: 10.5pt; font-weight: bold; text-transform: uppercase; line-height: 1.15; margin-top: 2pt;">
-            PENCAIRAN KEUANGAN DESA TAHUN ANGGARAN ${escapeHtml(tahun)}
+          <div style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; line-height: 1.3; text-transform: uppercase; margin-top: 3pt;">
+            ${escapeHtml(judul3)}
           </div>
         </div>
 
-        <!-- INFORMASI DOKUMEN -->
-        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15; margin-bottom: 6pt;">
+        <!-- IDENTITAS DESA -->
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; margin-bottom: 18pt;">
           <tr>
-            <td width="26%" style="padding: 1pt 0; font-weight: bold;">Nama Desa</td>
-            <td width="3%" style="padding: 1pt 0; text-align: center;">:</td>
-            <td width="71%" style="padding: 1pt 0; font-weight: bold;">Desa ${escapeHtml(item.namaDesa || '-')}</td>
+            <td width="100" style="width: 100pt; padding: 2pt 0; vertical-align: top;">Desa</td>
+            <td width="15" style="width: 15pt; text-align: center; padding: 2pt 0; vertical-align: top;">:</td>
+            <td style="padding: 2pt 0; vertical-align: top;">${escapeHtml(item.namaDesa || 'Bangun Mulya')}</td>
           </tr>
           <tr>
-            <td style="padding: 1pt 0;">Jenis Dana / Sumber</td>
-            <td style="padding: 1pt 0; text-align: center;">:</td>
-            <td style="padding: 1pt 0; font-weight: bold;">${escapeHtml(item.jenisDana ? item.jenisDana.toUpperCase() : '-')}</td>
+            <td style="padding: 2pt 0; vertical-align: top;">Kecamatan</td>
+            <td style="text-align: center; padding: 2pt 0; vertical-align: top;">:</td>
+            <td style="padding: 2pt 0; vertical-align: top;">Waru</td>
           </tr>
           <tr>
-            <td style="padding: 1pt 0;">Tahap / Perihal</td>
-            <td style="padding: 1pt 0; text-align: center;">:</td>
-            <td style="padding: 1pt 0;">${escapeHtml(item.tahap || '-')}</td>
-          </tr>
-          <tr>
-            <td style="padding: 1pt 0;">Jumlah Permohonan</td>
-            <td style="padding: 1pt 0; text-align: center;">:</td>
-            <td style="padding: 1pt 0; font-weight: bold;">Rp ${Number(item.nominalAngka || 0).toLocaleString('id-ID')} (${escapeHtml(item.terbilang || convertTerbilang(Number(item.nominalAngka || 0)))})</td>
-          </tr>
-          <tr>
-            <td style="padding: 1pt 0;">Rekomendasi Camat</td>
-            <td style="padding: 1pt 0; text-align: center;">:</td>
-            <td style="padding: 1pt 0;">Nomor: ${escapeHtml(item.nomorSurat || '-')} &nbsp;|&nbsp; Tanggal: ${formatTanggalIndo(item.tanggalSurat)}</td>
+            <td style="padding: 2pt 0; vertical-align: top;">Kabupaten</td>
+            <td style="text-align: center; padding: 2pt 0; vertical-align: top;">:</td>
+            <td style="padding: 2pt 0; vertical-align: top;">Penajam Paser Utara</td>
           </tr>
         </table>
 
-        <!-- TABEL RINCIAN PERSYARATAN -->
-        <table border="1" cellspacing="0" cellpadding="4" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.15; border: 1pt solid #000000; margin-top: 4pt; margin-bottom: 8pt;">
-          <thead>
-            <tr style="background-color: #f1f5f9;">
-              <th width="7%" style="border: 1pt solid #000000; padding: 4pt 2pt; text-align: center; font-weight: bold;">No</th>
-              <th width="65%" style="border: 1pt solid #000000; padding: 4pt 6pt; text-align: center; font-weight: bold;">Uraian Dokumen / Persyaratan Kelengkapan</th>
-              <th width="14%" style="border: 1pt solid #000000; padding: 4pt 2pt; text-align: center; font-weight: bold;">Keberadaan</th>
-              <th width="14%" style="border: 1pt solid #000000; padding: 4pt 2pt; text-align: center; font-weight: bold;">Hasil Verifikasi</th>
+        <!-- DAFTAR BERKAS PERSYARATAN -->
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; margin-bottom: 20pt;">
+          ${tableRowsHtml}
+        </table>
+
+        <!-- HASIL PERNYATAAN VERIFIKASI -->
+        <div style="margin-bottom: 22pt;">
+          <table border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt;">
+            <tr>
+              <td style="vertical-align: middle; padding-right: 14pt; white-space: nowrap;">
+                Telah diverifikasi dan dinyatakan :
+              </td>
+              <td style="vertical-align: middle; padding-right: 22pt;">
+                <table border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; display: inline-table;">
+                  <tr>
+                    <td style="vertical-align: middle;">
+                      <table border="1" cellpadding="0" cellspacing="0" style="width: 16pt; height: 16pt; border: 1.5pt solid #000000; text-align: center;">
+                        <tr>
+                          <td width="16" height="16" style="width: 16pt; height: 16pt; text-align: center; font-size: 11pt; font-weight: bold; font-family: Arial, sans-serif; line-height: 14pt; vertical-align: middle;">
+                            V
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td style="vertical-align: middle; padding-left: 6pt; font-family: Arial, sans-serif; font-size: 11pt;">
+                      Lengkap
+                    </td>
+                  </tr>
+                </table>
+              </td>
+              <td style="vertical-align: middle;">
+                <table border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; display: inline-table;">
+                  <tr>
+                    <td style="vertical-align: middle;">
+                      <table border="1" cellpadding="0" cellspacing="0" style="width: 16pt; height: 16pt; border: 1.5pt solid #000000; text-align: center;">
+                        <tr>
+                          <td width="16" height="16" style="width: 16pt; height: 16pt; text-align: center; font-size: 11pt; font-family: Arial, sans-serif; line-height: 14pt; vertical-align: middle;">
+                            &nbsp;
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td style="vertical-align: middle; padding-left: 6pt; font-family: Arial, sans-serif; font-size: 11pt;">
+                      Perlu Perbaikan
+                    </td>
+                  </tr>
+                </table>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            ${tableRowsHtml}
-          </tbody>
-        </table>
-
-        <!-- KESIMPULAN VERIFIKASI -->
-        <div style="font-size: 9.5pt; text-align: justify; line-height: 1.15; margin-top: 4pt;">
-          <b>Kesimpulan Tim Verifikasi:</b> Berdasarkan hasil pemeriksaan dokumen kelengkapan administrasi oleh Tim Fasilitasi dan Verifikasi Tingkat Kecamatan Waru, seluruh berkas pengajuan di atas dinyatakan <b>LENGKAP DAN MEMENUHI SYARAT</b> untuk diterbitkan Surat Rekomendasi Camat serta diajukan pencairannya ke Badan Keuangan dan Aset Daerah (BKAD) Kabupaten Penajam Paser Utara.
+          </table>
         </div>
 
-        <!-- TANDA TANGAN -->
-        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.15; margin-top: 12pt;">
+        <!-- PEJABAT VERIFIKATOR & STEMPEL RESMI -->
+        <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; margin-top: 10pt;">
           <tr>
-            <td width="50%" style="text-align: center; vertical-align: top;">
-              <div>Tim Fasilitasi & Verifikasi ADD/DD,</div>
-              <div>Kasi Pemberdayaan Masyarakat & Desa</div>
-              <div style="height: 40pt; font-size: 40pt; line-height: 40pt;">&nbsp;</div>
-              <div style="font-weight: bold; text-decoration: underline;">KASI PMD KECAMATAN WARU</div>
-              <div>NIP. ........................................</div>
-            </td>
-            <td width="50%" style="text-align: center; vertical-align: top;">
-              <div>Mengetahui,</div>
-              <div>Camat Waru,</div>
-              <div style="height: 40pt; font-size: 40pt; line-height: 40pt;">&nbsp;</div>
-              <div style="font-weight: bold; text-decoration: underline;">${escapeHtml(item.namaCamat || AppState.camat?.nama || 'Ahmad Yani, SSTP')}</div>
-              <div>NIP. ${escapeHtml(item.nipCamat || AppState.camat?.nip || '198610082006021001')}</div>
+            <td width="48%" style="width: 48%; vertical-align: top;">&nbsp;</td>
+            <td width="52%" style="width: 52%; vertical-align: top; text-align: left; font-family: Arial, sans-serif; font-size: 11pt;">
+              <div style="margin-bottom: 4pt;">Diverifikasi oleh</div>
+              <table border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; width: 100%; font-size: 11pt; margin-bottom: 4pt;">
+                <tr>
+                  <td width="75" style="width: 75pt; padding: 1pt 0; vertical-align: top;">Nama</td>
+                  <td width="12" style="width: 12pt; text-align: center; padding: 1pt 0; vertical-align: top;">:</td>
+                  <td style="padding: 1pt 0; vertical-align: top; letter-spacing: 1.5pt;">......................................</td>
+                </tr>
+                <tr>
+                  <td style="padding: 1pt 0; vertical-align: top;">NIP</td>
+                  <td style="text-align: center; padding: 1pt 0; vertical-align: top;">:</td>
+                  <td style="padding: 1pt 0; vertical-align: top; letter-spacing: 1.5pt;">......................................</td>
+                </tr>
+                <tr>
+                  <td style="padding: 1pt 0; vertical-align: top;">Jabatan</td>
+                  <td style="text-align: center; padding: 1pt 0; vertical-align: top;">:</td>
+                  <td style="padding: 1pt 0; vertical-align: top; letter-spacing: 1.5pt;">......................................</td>
+                </tr>
+                <tr>
+                  <td style="padding: 2pt 0; vertical-align: top;">Tanda Tangan</td>
+                  <td style="text-align: center; padding: 2pt 0; vertical-align: top;">:</td>
+                  <td style="padding: 2pt 0; vertical-align: top;"></td>
+                </tr>
+              </table>
+
+              <div style="margin-top: 2pt;">
+                ${stempelImgHtml}
+              </div>
             </td>
           </tr>
         </table>
@@ -3697,28 +3776,18 @@ window.generateCeklistDocxFromItem = async function(item) {
 
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
-      margins: { top: 567, right: 567, bottom: 850, left: 567 },
+      margins: { top: 567, right: 567, bottom: 850, left: 850 },
       width: 11906,
       height: 16838
     });
 
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = `${safeName}.docx`;
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => {
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    }, 2000);
-
-    showToast(`Ceklist Kelengkapan Berkas "${safeName}.docx" berhasil diunduh!`, 'success');
+    await bukaDokumenOnlineGoogleDocs(blob, safeName, item.namaDesa, placeholderTab, fullDocumentHtml);
   } catch (err) {
     console.error('Gagal generate Ceklist Docx:', err);
     showToast('Terjadi kendala saat membuat Ceklist DOCX: ' + (err.message || ''), 'error');
   }
 };
+
 
 /**
  * 5. Generator Surat Pengantar Kecamatan Word (.docx) Standar Kedinasan A4
@@ -5466,10 +5535,12 @@ window.switchKecamatanSubTab = function(tabKey) {
   const tabBtnVerif = document.getElementById('tabBtnVerifikasi');
   const tabBtnGen = document.getElementById('tabBtnGenerator');
   const tabBtnSp = document.getElementById('tabBtnSuratPengantar');
+  const tabBtnCeklist = document.getElementById('tabBtnCeklist');
   const tabBtnKirim = document.getElementById('tabBtnKirimDesa');
   const tabContentVerif = document.getElementById('tabContentVerifikasiDesa');
   const tabContentGen = document.getElementById('workspaceKecamatan');
   const tabContentSp = document.getElementById('workspaceSuratPengantar');
+  const tabContentCeklist = document.getElementById('workspaceCeklist');
   const tabContentKirim = document.getElementById('tabContentKirimRekomDesa');
   const splitControls = document.getElementById('containerSplitControls');
   const btnPrintDoc = document.getElementById('btnPrintDoc');
@@ -5481,12 +5552,14 @@ window.switchKecamatanSubTab = function(tabKey) {
   if (tabBtnVerif) tabBtnVerif.className = btnInactive;
   if (tabBtnGen) tabBtnGen.className = btnInactive;
   if (tabBtnSp) tabBtnSp.className = btnInactive;
+  if (tabBtnCeklist) tabBtnCeklist.className = btnInactive;
   if (tabBtnKirim) tabBtnKirim.className = btnInactive;
 
   // Sembunyikan semua kontainer subtab
   if (tabContentVerif) tabContentVerif.classList.add('hidden');
   if (tabContentGen) tabContentGen.classList.add('hidden');
   if (tabContentSp) tabContentSp.classList.add('hidden');
+  if (tabContentCeklist) tabContentCeklist.classList.add('hidden');
   if (tabContentKirim) tabContentKirim.classList.add('hidden');
 
   if (tabKey === 'verifikasi') {
@@ -5513,6 +5586,14 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (btnExportDocx) btnExportDocx.classList.add('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     initSuratPengantarTab();
+  } else if (tabKey === 'ceklist') {
+    if (tabBtnCeklist) tabBtnCeklist.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
+    if (tabContentCeklist) tabContentCeklist.classList.remove('hidden');
+    if (splitControls) splitControls.classList.add('hidden');
+    if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
+    if (btnExportDocx) btnExportDocx.classList.add('hidden');
+    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    initCeklistTab();
   } else if (tabKey === 'kirim_desa') {
     if (tabBtnKirim) tabBtnKirim.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
     if (tabContentKirim) tabContentKirim.classList.remove('hidden');
@@ -9391,6 +9472,8 @@ window.triggerPrintSp = function() {
 
   const workspaceSp = document.getElementById('workspaceSuratPengantar');
   if (workspaceSp) workspaceSp.style.setProperty('display', 'block', 'important');
+  const workspaceCeklist = document.getElementById('workspaceCeklist');
+  if (workspaceCeklist) workspaceCeklist.style.setProperty('display', 'none', 'important');
 
   // Pastikan struktur tabel header 58% / 42% terkunci mutlak saat dicetak ke PDF
   const headerTables = document.querySelectorAll('.header-surat-table');
@@ -9988,3 +10071,902 @@ window.updateBadgeSpCount = function() {
 };
 
 
+
+
+
+/* =============================================================================
+ * TAB 4: CEKLIST KELENGKAPAN BERKAS KECAMATAN (FORMAT RESMI KECAMATAN WARU)
+ * ============================================================================= */
+
+let STEMPEL_TTD_BASE64 = '';
+
+/**
+ * Dapatkan Base64 Stempel & TTD Resmi Kecamatan Waru
+ */
+async function getStempelTtdBase64() {
+  if (STEMPEL_TTD_BASE64) return STEMPEL_TTD_BASE64;
+
+  // 1. Coba ambil dari elemen img yang sudah ter-render di DOM
+  const imgEl = document.querySelector('#previewCeklistContainer img[src*="stempel_ttd_clean"]') || document.querySelector('img[src*="stempel_ttd_clean"]');
+  if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = imgEl.naturalWidth;
+      canvas.height = imgEl.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imgEl, 0, 0);
+      const dataUrl = canvas.toDataURL('image/png');
+      const b64 = dataUrl.split(',')[1];
+      if (b64 && b64.length > 500) {
+        STEMPEL_TTD_BASE64 = b64;
+        return STEMPEL_TTD_BASE64;
+      }
+    } catch (_) {}
+  }
+
+  // 2. Coba fetch stempel_base64.txt
+  try {
+    const resTxt = await fetch('stempel_base64.txt');
+    if (resTxt.ok) {
+      const txt = (await resTxt.text()).trim();
+      if (txt && txt.length > 500) {
+        STEMPEL_TTD_BASE64 = txt;
+        return STEMPEL_TTD_BASE64;
+      }
+    }
+  } catch (_) {}
+
+  // 3. Fallback fetch gambar stempel_ttd_clean.png
+  try {
+    const res = await fetch('stempel_ttd_clean.png');
+    if (res.ok) {
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const b64 = (reader.result || '').split(',')[1] || '';
+          if (b64) STEMPEL_TTD_BASE64 = b64;
+          resolve(STEMPEL_TTD_BASE64);
+        };
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch (_) {}
+
+  return STEMPEL_TTD_BASE64;
+}
+
+/**
+ * Inisialisasi Tab Ceklist saat subtab dibuka
+ */
+window.initCeklistTab = function() {
+  const data = AppState.ceklistData;
+  if (!data) return;
+
+  // Jika daftar baris masih kosong, salin otomatis dari rekomendasi aktif di generator
+  if (!Array.isArray(data.rows) || data.rows.length === 0) {
+    salinDataDariRekomAktifKeCeklist(false);
+    return;
+  }
+
+  // Sinkronisasi data ke input form
+  const selDesa = document.getElementById('selectDesaCeklist');
+  if (selDesa) selDesa.value = data.namaDesa || 'Bangun Mulya';
+
+  const selJenis = document.getElementById('selectJenisDanaCeklist');
+  if (selJenis) selJenis.value = data.jenisDana || 'siltap';
+
+  const inpTahap = document.getElementById('inputTahapCeklist');
+  if (inpTahap) inpTahap.value = data.tahap || 'BULAN NOPEMBER';
+
+  const inpTahun = document.getElementById('inputTahunCeklist');
+  if (inpTahun) inpTahun.value = data.tahunAnggaran || '2026';
+
+  const inpJ1 = document.getElementById('inputJudulCeklist1');
+  if (inpJ1) inpJ1.value = data.judulBaris1 || 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+
+  const inpJ2 = document.getElementById('inputJudulCeklist2');
+  if (inpJ2) inpJ2.value = data.judulBaris2 || 'PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA';
+
+  const inpJ3 = document.getElementById('inputJudulCeklist3');
+  if (inpJ3) inpJ3.value = data.judulBaris3 || 'BULAN NOPEMBER TAHUN ANGGARAN 2026';
+
+  const radLengkap = document.getElementById('radioStatusLengkap');
+  const radRevisi = document.getElementById('radioStatusRevisi');
+  if (radLengkap && radRevisi) {
+    radLengkap.checked = data.statusLengkap !== false;
+    radRevisi.checked = !radLengkap.checked;
+  }
+
+  const inpJabatan = document.getElementById('inputJabatanVerifikatorCeklist');
+  if (inpJabatan) inpJabatan.value = data.jabatanVerifikator || 'Kepala Seksi Pemberdayaan Masyarakat';
+
+  const inpNama = document.getElementById('inputNamaVerifikatorCeklist');
+  if (inpNama) inpNama.value = data.namaVerifikator || 'Rudiansyah, SE';
+
+  const inpNip = document.getElementById('inputNipVerifikatorCeklist');
+  if (inpNip) inpNip.value = data.nipVerifikator || '197608312007011009';
+
+  const chkStempel = document.getElementById('checkStempelCeklist');
+  if (chkStempel) chkStempel.checked = data.tampilkanStempel !== false;
+
+  const selPaper = document.getElementById('selectPaperSizeCeklist');
+  if (selPaper) selPaper.value = data.paperSize || 'a4';
+
+  const selSpacing = document.getElementById('selectLineSpacingCeklist');
+  if (selSpacing) selSpacing.value = data.lineSpacing || '1.15';
+
+  renderRowsCeklistInputs();
+  updateLivePreviewCeklist();
+};
+
+/**
+ * Salin data identitas dan lampiran persyaratan dari Rekomendasi aktif ke Ceklist
+ */
+window.salinDataDariRekomAktifKeCeklist = function(showAlert = true) {
+  const namaDesa = document.getElementById('inputDesa')?.value || 'Bangun Mulya';
+  const jenisDana = AppState.tipeRekomendasi || document.querySelector('input[name="radioJenisDana"]:checked')?.value || 'siltap';
+  const tahap = document.getElementById('inputTahap')?.value || 'BULAN NOPEMBER';
+  const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
+
+  AppState.ceklistData.namaDesa = namaDesa;
+  AppState.ceklistData.jenisDana = jenisDana;
+  AppState.ceklistData.tahap = tahap;
+  AppState.ceklistData.tahunAnggaran = tahunAnggaran;
+
+  const tahapUpper = tahap.toUpperCase();
+  if (jenisDana === 'siltap') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+    AppState.ceklistData.judulBaris2 = 'PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA';
+    AppState.ceklistData.judulBaris3 = `${tahapUpper} TAHUN ANGGARAN ${tahunAnggaran}`;
+  } else if (jenisDana === 'add_reguler') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+    AppState.ceklistData.judulBaris2 = 'ALOKASI DANA DESA (ADD) REGULER';
+    AppState.ceklistData.judulBaris3 = `${tahapUpper} TAHUN ANGGARAN ${tahunAnggaran}`;
+  } else if (jenisDana === 'dbh') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN BAGI HASIL PAJAK DAN RETRIBUSI DAERAH';
+    AppState.ceklistData.judulBaris2 = 'BAGI HASIL PAJAK DAN RETRIBUSI DAERAH (PBH/DBH)';
+    AppState.ceklistData.judulBaris3 = `${tahapUpper} TAHUN ANGGARAN ${tahunAnggaran}`;
+  } else if (jenisDana === 'dd') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN DANA DESA';
+    AppState.ceklistData.judulBaris2 = 'DANA DESA (DD)';
+    AppState.ceklistData.judulBaris3 = `${tahapUpper} TAHUN ANGGARAN ${tahunAnggaran}`;
+  }
+
+  // Ambil daftar berkas aktif dari generator
+  let activeBerkas = [];
+  if (jenisDana === 'add_reguler' && Array.isArray(AppState.berkasAddReguler) && AppState.berkasAddReguler.length > 0) activeBerkas = AppState.berkasAddReguler;
+  else if (jenisDana === 'siltap' && Array.isArray(AppState.berkasSiltap) && AppState.berkasSiltap.length > 0) activeBerkas = AppState.berkasSiltap;
+  else if (jenisDana === 'dbh' && Array.isArray(AppState.berkasDbh) && AppState.berkasDbh.length > 0) activeBerkas = AppState.berkasDbh;
+  else if (jenisDana === 'dd' && Array.isArray(AppState.berkasDd) && AppState.berkasDd.length > 0) activeBerkas = AppState.berkasDd;
+  else activeBerkas = DEFAULT_BERKAS_TEMPLATES[jenisDana] || DEFAULT_BERKAS_TEMPLATES.siltap;
+
+  AppState.ceklistData.rows = activeBerkas.map((b, idx) => ({
+    id: b.id || ('ck_' + idx),
+    teks: b.teks,
+    checked: b.checked !== false
+  }));
+
+  // Update input di formulir
+  const selDesa = document.getElementById('selectDesaCeklist');
+  if (selDesa) selDesa.value = namaDesa;
+  const selJenis = document.getElementById('selectJenisDanaCeklist');
+  if (selJenis) selJenis.value = jenisDana;
+  const inpTahap = document.getElementById('inputTahapCeklist');
+  if (inpTahap) inpTahap.value = tahap;
+  const inpTahun = document.getElementById('inputTahunCeklist');
+  if (inpTahun) inpTahun.value = tahunAnggaran;
+  const inpJ1 = document.getElementById('inputJudulCeklist1');
+  if (inpJ1) inpJ1.value = AppState.ceklistData.judulBaris1;
+  const inpJ2 = document.getElementById('inputJudulCeklist2');
+  if (inpJ2) inpJ2.value = AppState.ceklistData.judulBaris2;
+  const inpJ3 = document.getElementById('inputJudulCeklist3');
+  if (inpJ3) inpJ3.value = AppState.ceklistData.judulBaris3;
+
+  renderRowsCeklistInputs();
+  updateLivePreviewCeklist();
+
+  if (showAlert) {
+    showToast(`Data Ceklist berhasil disalin dari Rekomendasi aktif (${namaDesa} - ${tahap})!`, 'success');
+  }
+};
+
+/**
+ * Handle perubahan Desa pada formulir Ceklist
+ */
+window.onCeklistDesaChange = function() {
+  const sel = document.getElementById('selectDesaCeklist');
+  if (sel) {
+    AppState.ceklistData.namaDesa = sel.value;
+  }
+  updateLivePreviewCeklist();
+};
+
+/**
+ * Handle perubahan Jenis Dana pada formulir Ceklist
+ */
+window.onCeklistJenisDanaChange = function() {
+  const sel = document.getElementById('selectJenisDanaCeklist');
+  const jenis = sel ? sel.value : 'siltap';
+  AppState.ceklistData.jenisDana = jenis;
+
+  const tahap = (document.getElementById('inputTahapCeklist')?.value || 'BULAN NOPEMBER').toUpperCase();
+  const tahun = (document.getElementById('inputTahunCeklist')?.value || '2026').trim();
+
+  if (jenis === 'siltap') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+    AppState.ceklistData.judulBaris2 = 'PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA';
+    AppState.ceklistData.judulBaris3 = `${tahap} TAHUN ANGGARAN ${tahun}`;
+  } else if (jenis === 'add_reguler') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+    AppState.ceklistData.judulBaris2 = 'ALOKASI DANA DESA (ADD) REGULER';
+    AppState.ceklistData.judulBaris3 = `${tahap} TAHUN ANGGARAN ${tahun}`;
+  } else if (jenis === 'dbh') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN BAGI HASIL PAJAK DAN RETRIBUSI DAERAH';
+    AppState.ceklistData.judulBaris2 = 'BAGI HASIL PAJAK DAN RETRIBUSI DAERAH (PBH/DBH)';
+    AppState.ceklistData.judulBaris3 = `${tahap} TAHUN ANGGARAN ${tahun}`;
+  } else if (jenis === 'dd') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN DANA DESA';
+    AppState.ceklistData.judulBaris2 = 'DANA DESA (DD)';
+    AppState.ceklistData.judulBaris3 = `${tahap} TAHUN ANGGARAN ${tahun}`;
+  }
+
+  const inpJ1 = document.getElementById('inputJudulCeklist1');
+  if (inpJ1) inpJ1.value = AppState.ceklistData.judulBaris1;
+  const inpJ2 = document.getElementById('inputJudulCeklist2');
+  if (inpJ2) inpJ2.value = AppState.ceklistData.judulBaris2;
+  const inpJ3 = document.getElementById('inputJudulCeklist3');
+  if (inpJ3) inpJ3.value = AppState.ceklistData.judulBaris3;
+
+  // Muat default berkas untuk jenis dana ini
+  const rawList = DEFAULT_BERKAS_TEMPLATES[jenis] || DEFAULT_BERKAS_TEMPLATES.siltap;
+  AppState.ceklistData.rows = rawList.map((b, idx) => ({
+    id: b.id || ('ck_' + idx),
+    teks: b.teks,
+    checked: true
+  }));
+
+  renderRowsCeklistInputs();
+  updateLivePreviewCeklist();
+  showToast(`Daftar ceklist disesuaikan dengan jenis dana: ${jenis.toUpperCase()}`, 'info');
+};
+
+/**
+ * Render baris-baris berkas persyaratan di panel input formulir
+ */
+window.renderRowsCeklistInputs = function() {
+  const container = document.getElementById('containerRowsCeklist');
+  if (!container) return;
+
+  const rows = AppState.ceklistData.rows || [];
+  if (rows.length === 0) {
+    container.innerHTML = `
+      <div class="py-4 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-lg">
+        Belum ada berkas persyaratan. Klik tombol <b>âž• Tambah</b> di atas untuk menambahkan.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = rows.map((item, index) => {
+    return `
+      <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg hover:border-emerald-300 transition space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRowCeklist(${index})" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+            <span class="text-xs font-bold text-slate-800">Berkas #${index + 1} (${item.checked ? '<span class="text-emerald-700">Lengkap [ V ]</span>' : '<span class="text-rose-600">Belum [   ]</span>'})</span>
+          </label>
+          <div class="flex items-center gap-1">
+            <button type="button" onclick="hapusBarisCeklist(${index})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1 rounded transition text-xs cursor-pointer" title="Hapus baris ini">
+              ðŸ—‘ï¸
+            </button>
+          </div>
+        </div>
+        <textarea rows="2" oninput="updateRowCeklistTeks(${index}, this.value)" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 leading-tight">${escapeHtml(item.teks || '')}</textarea>
+      </div>
+    `;
+  }).join('');
+};
+
+/**
+ * Toggle status centang pada baris Ceklist tertentu
+ */
+window.toggleRowCeklist = function(index) {
+  if (AppState.ceklistData.rows && AppState.ceklistData.rows[index]) {
+    AppState.ceklistData.rows[index].checked = !AppState.ceklistData.rows[index].checked;
+    renderRowsCeklistInputs();
+    updateLivePreviewCeklist();
+  }
+};
+
+/**
+ * Update teks uraian berkas Ceklist
+ */
+window.updateRowCeklistTeks = function(index, value) {
+  if (AppState.ceklistData.rows && AppState.ceklistData.rows[index]) {
+    AppState.ceklistData.rows[index].teks = value;
+    updateLivePreviewCeklist();
+  }
+};
+
+/**
+ * Hapus baris Ceklist
+ */
+window.hapusBarisCeklist = function(index) {
+  if (AppState.ceklistData.rows) {
+    AppState.ceklistData.rows.splice(index, 1);
+    renderRowsCeklistInputs();
+    updateLivePreviewCeklist();
+  }
+};
+
+/**
+ * Tambah baris baru ke Ceklist
+ */
+window.tambahBarisCeklist = function() {
+  if (!Array.isArray(AppState.ceklistData.rows)) {
+    AppState.ceklistData.rows = [];
+  }
+  AppState.ceklistData.rows.push({
+    id: 'ck_' + Date.now(),
+    teks: 'Berkas Persyaratan Tambahan;',
+    checked: true
+  });
+  renderRowsCeklistInputs();
+  updateLivePreviewCeklist();
+  showToast('Baris berkas persyaratan berhasil ditambahkan.', 'info');
+};
+
+/**
+ * Centang semua atau hilangkan centang semua berkas Ceklist
+ */
+window.semuaCentangCeklist = function(val) {
+  (AppState.ceklistData.rows || []).forEach(r => r.checked = val);
+  renderRowsCeklistInputs();
+  updateLivePreviewCeklist();
+  showToast(val ? 'Semua berkas telah dicentang Lengkap.' : 'Semua centang telah dihapus.', 'info');
+};
+
+/**
+ * Reset formulir Ceklist ke format bawaan
+ */
+window.resetCeklistToDefault = function() {
+  if (confirm('Kembalikan susunan Ceklist ke format standar baku template resmi?')) {
+    const jenis = AppState.ceklistData.jenisDana || 'siltap';
+    const rawList = DEFAULT_BERKAS_TEMPLATES[jenis] || DEFAULT_BERKAS_TEMPLATES.siltap;
+    AppState.ceklistData.rows = rawList.map((b, idx) => ({
+      id: b.id || ('ck_' + idx),
+      teks: b.teks,
+      checked: true
+    }));
+    AppState.ceklistData.statusLengkap = true;
+    const radLengkap = document.getElementById('radioStatusLengkap');
+    if (radLengkap) radLengkap.checked = true;
+    renderRowsCeklistInputs();
+    updateLivePreviewCeklist(true);
+    showToast('Ceklist telah dikembalikan ke format standar baku.', 'success');
+  }
+};
+
+/**
+ * Kontrol Zoom Pratinjau Ceklist
+ */
+window.changeZoomCeklist = function(delta) {
+  const current = AppState.ceklistData.zoomPercent || 100;
+  const newZoom = Math.min(Math.max(current + delta, 40), 200);
+  AppState.ceklistData.zoomPercent = newZoom;
+
+  const label = document.getElementById('labelZoomPercentCeklist');
+  if (label) label.textContent = `${newZoom}%`;
+
+  const container = document.getElementById('previewCeklistContainer');
+  if (container) {
+    container.style.transform = `scale(${newZoom / 100})`;
+  }
+};
+
+window.resetZoomCeklist = function() {
+  AppState.ceklistData.zoomPercent = 100;
+  const label = document.getElementById('labelZoomPercentCeklist');
+  if (label) label.textContent = '100%';
+  const container = document.getElementById('previewCeklistContainer');
+  if (container) {
+    container.style.transform = 'scale(1)';
+  }
+};
+
+/**
+ * Pengaturan Ukuran Kertas Ceklist (A4 vs Folio)
+ */
+window.applyPaperSizeCeklist = function() {
+  const sel = document.getElementById('selectPaperSizeCeklist');
+  const paper = sel ? sel.value : 'a4';
+  AppState.ceklistData.paperSize = paper;
+  const sheet = document.querySelector('#previewCeklistContainer .surat-sheet');
+  if (sheet) {
+    if (paper === 'folio') {
+      sheet.style.width = '215mm';
+      sheet.style.minHeight = '330mm';
+    } else {
+      sheet.style.width = '210mm';
+      sheet.style.minHeight = '297mm';
+    }
+  }
+};
+
+/**
+ * Pengaturan Jarak Spasi Baris Ceklist
+ */
+window.applyLineSpacingCeklist = function() {
+  const sel = document.getElementById('selectLineSpacingCeklist');
+  const spacing = sel ? sel.value : '1.15';
+  AppState.ceklistData.lineSpacing = spacing;
+  const sheet = document.querySelector('#previewCeklistContainer .surat-sheet');
+  if (sheet) {
+    sheet.style.setProperty('--surat-line-height', spacing);
+  }
+};
+
+/**
+ * Mode Edit Langsung di Kertas Ceklist (Inline Direct Edit)
+ */
+window.toggleDirectEditModeCeklist = function() {
+  const container = document.getElementById('previewCeklistContainer');
+  if (!container) return;
+  const sheet = container.querySelector('.surat-sheet');
+  if (!sheet) {
+    showToast('Belum ada lembar Ceklist yang siap diedit.', 'warning');
+    return;
+  }
+
+  AppState.isDirectEditModeCeklist = !AppState.isDirectEditModeCeklist;
+  const btn = document.getElementById('btnToggleEditDirectCeklist');
+  const icon = document.getElementById('iconEditDirectCeklist');
+  const label = document.getElementById('labelEditDirectCeklist');
+  const btnReset = document.getElementById('btnResetDirectCeklist');
+
+  sheet.contentEditable = AppState.isDirectEditModeCeklist ? "true" : "false";
+  sheet.spellcheck = false;
+  if (AppState.isDirectEditModeCeklist) {
+    sheet.classList.add('is-editing-direct');
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer animate-pulse';
+    }
+    if (icon) icon.textContent = 'ðŸ”’';
+    if (label) label.textContent = 'Kunci Ketikan';
+    if (btnReset) btnReset.classList.remove('hidden');
+    showToast('âœï¸ Mode Edit di Kertas Ceklist Aktif! Klik bagian mana saja pada kertas untuk mengedit.', 'info');
+  } else {
+    sheet.classList.remove('is-editing-direct');
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
+    }
+    if (icon) icon.textContent = 'âœï¸';
+    if (label) label.textContent = 'Edit di Kertas';
+    if (btnReset) btnReset.classList.remove('hidden');
+    showToast('ðŸ”’ Teks Ceklist berhasil dikunci. Siap dicetak atau dikonversi ke Word.', 'success');
+  }
+};
+
+window.resetPreviewCeklistFromForm = function() {
+  if (confirm('Muat ulang isi Ceklist dari formulir input? Ketikan manual di kertas akan diganti dengan data dari formulir.')) {
+    AppState.isDirectEditModeCeklist = false;
+    const btn = document.getElementById('btnToggleEditDirectCeklist');
+    const icon = document.getElementById('iconEditDirectCeklist');
+    const label = document.getElementById('labelEditDirectCeklist');
+    const btnReset = document.getElementById('btnResetDirectCeklist');
+    if (btn) btn.className = 'px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer';
+    if (icon) icon.textContent = 'âœï¸';
+    if (label) label.textContent = 'Edit di Kertas';
+    if (btnReset) btnReset.classList.add('hidden');
+    updateLivePreviewCeklist(true);
+    showToast('Dokumen Ceklist berhasil dimuat ulang dari formulir input.', 'success');
+  }
+};
+
+/**
+ * Render Lembar Pratinjau Dokumen Ceklist Kelengkapan Berkas (100% Format Template Resmi Scan)
+ */
+window.updateLivePreviewCeklist = function(forceSyncFromForm = false) {
+  const container = document.getElementById('previewCeklistContainer');
+  if (!container) return;
+
+  if (AppState.isDirectEditModeCeklist && !forceSyncFromForm) {
+    return;
+  }
+
+  const namaDesa = document.getElementById('selectDesaCeklist')?.value || AppState.ceklistData.namaDesa || 'Bangun Mulya';
+  const jenisDana = document.getElementById('selectJenisDanaCeklist')?.value || AppState.ceklistData.jenisDana || 'siltap';
+  const tahap = document.getElementById('inputTahapCeklist')?.value || AppState.ceklistData.tahap || 'BULAN NOPEMBER';
+  const tahun = document.getElementById('inputTahunCeklist')?.value || AppState.ceklistData.tahunAnggaran || '2026';
+
+  const judul1 = document.getElementById('inputJudulCeklist1')?.value || AppState.ceklistData.judulBaris1 || 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+  const judul2 = document.getElementById('inputJudulCeklist2')?.value || AppState.ceklistData.judulBaris2 || 'PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA';
+  const judul3 = document.getElementById('inputJudulCeklist3')?.value || AppState.ceklistData.judulBaris3 || 'BULAN NOPEMBER TAHUN ANGGARAN 2026';
+
+  const isLengkap = document.getElementById('radioStatusLengkap')?.checked ?? (AppState.ceklistData.statusLengkap !== false);
+  AppState.ceklistData.statusLengkap = isLengkap;
+
+  const jabatanVerifikator = document.getElementById('inputJabatanVerifikatorCeklist')?.value || 'Kepala Seksi Pemberdayaan Masyarakat';
+  const namaVerifikator = document.getElementById('inputNamaVerifikatorCeklist')?.value || 'Rudiansyah, SE';
+  const nipVerifikator = document.getElementById('inputNipVerifikatorCeklist')?.value || '197608312007011009';
+  const tampilkanStempel = document.getElementById('checkStempelCeklist')?.checked ?? true;
+
+  const paperSize = document.getElementById('selectPaperSizeCeklist')?.value || AppState.ceklistData.paperSize || 'a4';
+  const lineSpacing = document.getElementById('selectLineSpacingCeklist')?.value || AppState.ceklistData.lineSpacing || '1.15';
+  const widthMm = paperSize === 'folio' ? '215mm' : '210mm';
+  const minHeightMm = paperSize === 'folio' ? '330mm' : '297mm';
+
+  const rows = (AppState.ceklistData.rows && AppState.ceklistData.rows.length > 0)
+    ? AppState.ceklistData.rows
+    : (DEFAULT_BERKAS_TEMPLATES[jenisDana] || DEFAULT_BERKAS_TEMPLATES.siltap).map((b, idx) => ({ id: b.id || ('ck_' + idx), teks: b.teks, checked: true }));
+
+  container.innerHTML = `
+    <div class="surat-sheet ceklist-sheet" style="width: ${widthMm}; min-height: ${minHeightMm}; --surat-line-height: ${lineSpacing}; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000000; box-sizing: border-box; background: #ffffff; padding: 22mm 20mm 20mm 22mm; margin: 0 auto; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18);">
+      
+      <!-- 1. Header Centered 3 Baris Bold Uppercase Sesuai Template Resmi -->
+      <div style="text-align: center; margin-bottom: 22pt;">
+        <div style="font-size: 12pt; font-weight: bold; line-height: 1.3; text-transform: uppercase; color: #000000;">
+          ${escapeHtml(judul1)}
+        </div>
+        <div style="font-size: 11pt; font-weight: bold; line-height: 1.3; text-transform: uppercase; margin-top: 3pt; color: #000000;">
+          ${escapeHtml(judul2)}
+        </div>
+        <div style="font-size: 11pt; font-weight: bold; line-height: 1.3; text-transform: uppercase; margin-top: 3pt; color: #000000;">
+          ${escapeHtml(judul3)}
+        </div>
+      </div>
+
+      <!-- 2. Identitas Desa (Left side) -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 18pt; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #000000;">
+        <tr>
+          <td style="width: 95pt; padding: 2pt 0; vertical-align: top;">Desa</td>
+          <td style="width: 15pt; text-align: center; padding: 2pt 0; vertical-align: top;">:</td>
+          <td style="padding: 2pt 0; vertical-align: top;">${escapeHtml(namaDesa)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 2pt 0; vertical-align: top;">Kecamatan</td>
+          <td style="text-align: center; padding: 2pt 0; vertical-align: top;">:</td>
+          <td style="padding: 2pt 0; vertical-align: top;">Waru</td>
+        </tr>
+        <tr>
+          <td style="padding: 2pt 0; vertical-align: top;">Kabupaten</td>
+          <td style="text-align: center; padding: 2pt 0; vertical-align: top;">:</td>
+          <td style="padding: 2pt 0; vertical-align: top;">Penajam Paser Utara</td>
+        </tr>
+      </table>
+
+      <!-- 3. Daftar Berkas Persyaratan Ceklist (Square Box [ V ] di kiri, teks di kanan) -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 22pt; font-family: Arial, sans-serif; font-size: 10.5pt; color: #000000;">
+        ${rows.map(item => `
+          <tr>
+            <td style="width: 32pt; vertical-align: top; padding: 3pt 0 4pt 0;">
+              <div style="width: 16pt; height: 16pt; border: 1.8pt solid #000000; text-align: center; line-height: 14pt; font-weight: 900; font-family: Arial, sans-serif; font-size: 11.5pt; box-sizing: border-box;">
+                ${item.checked ? 'V' : '&nbsp;'}
+              </div>
+            </td>
+            <td style="vertical-align: top; padding: 2pt 0 4pt 0; font-size: 10.5pt; line-height: 1.25; text-align: justify; color: #000000;">
+              ${escapeHtml(item.teks)}
+            </td>
+          </tr>
+        `).join('')}
+      </table>
+
+      <!-- 4. Hasil Pernyataan Verifikasi -->
+      <div style="margin-bottom: 24pt; font-family: Arial, sans-serif; font-size: 11pt; color: #000000;">
+        <table style="border-collapse: collapse;">
+          <tr>
+            <td style="vertical-align: middle; padding-right: 14pt; white-space: nowrap; font-size: 11pt;">
+              Telah diverifikasi dan dinyatakan :
+            </td>
+            <td style="vertical-align: middle; padding-right: 22pt;">
+              <table style="border-collapse: collapse; display: inline-table;">
+                <tr>
+                  <td style="vertical-align: middle;">
+                    <div style="width: 18pt; height: 18pt; border: 1.8pt solid #000000; text-align: center; line-height: 16pt; font-weight: 900; font-family: Arial, sans-serif; font-size: 12pt; box-sizing: border-box;">
+                      ${isLengkap ? 'V' : '&nbsp;'}
+                    </div>
+                  </td>
+                  <td style="vertical-align: middle; padding-left: 6pt; font-size: 11pt; font-weight: 500;">
+                    Lengkap
+                  </td>
+                </tr>
+              </table>
+            </td>
+            <td style="vertical-align: middle;">
+              <table style="border-collapse: collapse; display: inline-table;">
+                <tr>
+                  <td style="vertical-align: middle;">
+                    <div style="width: 18pt; height: 18pt; border: 1.8pt solid #000000; text-align: center; line-height: 16pt; font-weight: 900; font-family: Arial, sans-serif; font-size: 12pt; box-sizing: border-box;">
+                      ${!isLengkap ? 'V' : '&nbsp;'}
+                    </div>
+                  </td>
+                  <td style="vertical-align: middle; padding-left: 6pt; font-size: 11pt; font-weight: 500;">
+                    Perlu Perbaikan
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- 5. Pejabat Verifikator & Stempel Resmi (Kanan Bawah) -->
+      <div style="display: flex; justify-content: flex-end; margin-top: 10pt;">
+        <div style="width: 260pt; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.25; color: #000000;">
+          <div style="margin-bottom: 4pt; font-weight: 500;">Diverifikasi oleh</div>
+          <table style="border-collapse: collapse; width: 100%; font-size: 11pt; margin-bottom: 4pt; color: #000000;">
+            <tr>
+              <td style="width: 75pt; padding: 1pt 0; vertical-align: top;">Nama</td>
+              <td style="width: 12pt; padding: 1pt 0; text-align: center; vertical-align: top;">:</td>
+              <td style="padding: 1pt 0; vertical-align: top; letter-spacing: 1.5pt;">......................................</td>
+            </tr>
+            <tr>
+              <td style="padding: 1pt 0; vertical-align: top;">NIP</td>
+              <td style="padding: 1pt 0; text-align: center; vertical-align: top;">:</td>
+              <td style="padding: 1pt 0; vertical-align: top; letter-spacing: 1.5pt;">......................................</td>
+            </tr>
+            <tr>
+              <td style="padding: 1pt 0; vertical-align: top;">Jabatan</td>
+              <td style="padding: 1pt 0; text-align: center; vertical-align: top;">:</td>
+              <td style="padding: 1pt 0; vertical-align: top; letter-spacing: 1.5pt;">......................................</td>
+            </tr>
+            <tr>
+              <td style="padding: 2pt 0; vertical-align: top;">Tanda Tangan</td>
+              <td style="padding: 2pt 0; text-align: center; vertical-align: top;">:</td>
+              <td style="padding: 2pt 0; vertical-align: top;"></td>
+            </tr>
+          </table>
+
+          <!-- Area Tanda Tangan & Stempel Resmi Template -->
+          ${tampilkanStempel ? `
+            <div style="position: relative; width: 100%; height: 120pt; margin-top: 2pt;">
+              <img src="stempel_ttd_clean.png" alt="Stempel dan Tanda Tangan Resmi Kecamatan Waru" style="position: absolute; left: -25pt; top: -5pt; width: 235pt; max-width: 260px; pointer-events: none; z-index: 10;" />
+            </div>
+          ` : `
+            <div style="margin-top: 6pt; font-weight: bold;">${escapeHtml(jabatanVerifikator)}</div>
+            <div style="height: 55pt;"></div>
+            <div style="font-weight: bold; text-decoration: underline;">${escapeHtml(namaVerifikator)}</div>
+            <div style="font-weight: bold; margin-top: 2pt;">NIP. ${escapeHtml(nipVerifikator)}</div>
+          `}
+        </div>
+      </div>
+
+    </div>
+  `;
+};
+
+/**
+ * Cetak / Simpan PDF Lembar Ceklist Resmi
+ */
+window.triggerPrintCeklist = function() {
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
+  const container = document.getElementById('previewCeklistContainer');
+  const oldTransform = container ? container.style.transform : '';
+  if (container) container.style.transform = 'none';
+
+  const loginPortal = document.getElementById('loginPortalContainer');
+  if (loginPortal) loginPortal.style.setProperty('display', 'none', 'important');
+
+  const workspaceKec = document.getElementById('workspaceKecamatan');
+  if (workspaceKec) workspaceKec.style.setProperty('display', 'none', 'important');
+
+  const workspaceSp = document.getElementById('workspaceSuratPengantar');
+  if (workspaceSp) workspaceSp.style.setProperty('display', 'none', 'important');
+
+  const workspaceCeklist = document.getElementById('workspaceCeklist');
+  if (workspaceCeklist) workspaceCeklist.style.setProperty('display', 'block', 'important');
+
+  window.print();
+
+  setTimeout(() => {
+    if (container) container.style.transform = oldTransform;
+    if (workspaceCeklist) workspaceCeklist.style.display = '';
+  }, 1000);
+};
+
+/**
+ * Bersihkan DOM Lembar Ceklist untuk Konversi ke Format Microsoft Word
+ */
+async function cleanCeklistSheetToWordHtml(sheet, stempelBase64) {
+  const clone = sheet.cloneNode(true);
+  clone.removeAttribute('contenteditable');
+  clone.classList.remove('is-editing-direct');
+  clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  clone.querySelectorAll('.is-editing-direct').forEach(el => el.classList.remove('is-editing-direct'));
+  clone.querySelectorAll('.no-print, button, script').forEach(el => el.remove());
+
+  // Bersihkan outline dan inline background
+  clone.querySelectorAll('*').forEach(el => {
+    if (el.style) {
+      el.style.outline = 'none';
+      if (el.style.boxShadow) el.style.boxShadow = 'none';
+      if (el.style.backgroundColor && el.style.backgroundColor.includes('254, 243, 199')) {
+        el.style.backgroundColor = 'transparent';
+      }
+    }
+  });
+
+  const lineSpacing = AppState.ceklistData.lineSpacing || document.getElementById('selectLineSpacingCeklist')?.value || '1.15';
+
+  // Sanitasi CSS
+  clone.querySelectorAll('*').forEach(el => {
+    let styleStr = el.getAttribute('style') || '';
+    if (styleStr) {
+      styleStr = styleStr
+        .replace(/var\(--surat-line-height[^)]*\)/g, lineSpacing)
+        .replace(/var\(--surat-para-margin[^)]*\)/g, '0pt')
+        .replace(/!important/g, '')
+        .replace(/white-space\s*:\s*pre-wrap;?/g, 'white-space: normal;');
+      el.setAttribute('style', styleStr);
+    }
+  });
+
+  // Ganti src gambar stempel ke data URI Base64 jika tersedia
+  if (stempelBase64) {
+    clone.querySelectorAll('img[src*="stempel_ttd_clean"]').forEach(img => {
+      img.setAttribute('src', 'data:image/png;base64,' + stempelBase64);
+      img.setAttribute('width', '240');
+      img.setAttribute('height', '185');
+      img.style.width = '240px';
+      img.style.height = '185px';
+      img.style.display = 'block';
+    });
+  }
+
+  // Transform blok tanda tangan menjadi tabel 2-kolom Word (Kolom 1: 48%, Kolom 2: 52%)
+  const flexEnds = clone.querySelectorAll('div.flex.justify-end');
+  flexEnds.forEach(el => {
+    const ttdBox = el.firstElementChild || el;
+    const ttdTable = document.createElement('table');
+    ttdTable.setAttribute('border', '0');
+    ttdTable.setAttribute('cellspacing', '0');
+    ttdTable.setAttribute('cellpadding', '0');
+    ttdTable.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Arial, sans-serif; font-size: 11pt; margin-top: 14pt; margin-bottom: 6pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
+
+    ttdTable.innerHTML = `
+      <colgroup>
+        <col width="48%" style="width: 48%;">
+        <col width="52%" style="width: 52%;">
+      </colgroup>
+      <tr>
+        <td width="48%" style="width: 48%; vertical-align: top; line-height: ${lineSpacing};">&nbsp;</td>
+        <td width="52%" style="width: 52%; vertical-align: top; text-align: left; line-height: ${lineSpacing};">${ttdBox.innerHTML}</td>
+      </tr>
+    `;
+    el.parentNode.replaceChild(ttdTable, el);
+  });
+
+  return clone.innerHTML;
+}
+
+/**
+ * Ekspor Dokumen Ceklist Kelengkapan ke Word (.docx) & Buka di Google Docs
+ */
+window.eksporCeklistKeDocx = async function() {
+  if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
+    showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
+    return;
+  }
+
+  // Buka tab placeholder langsung di awal aksi klik pengguna (mencegah pemblokiran popup browser)
+  let placeholderTab = null;
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    placeholderTab = bukaPlaceholderTabGoogleDocs('Ceklist Kelengkapan Berkas');
+  }
+
+  const container = document.getElementById('previewCeklistContainer');
+  if (!container) {
+    showToast('Dokumen preview Ceklist tidak ditemukan.', 'error');
+    return;
+  }
+
+  const sheet = container.querySelector('.surat-sheet');
+  if (!sheet) {
+    showToast('Belum ada dokumen Ceklist yang siap diekspor.', 'warning');
+    return;
+  }
+
+  showToast('Sedang mengonversi dokumen ke Microsoft Word (.docx)...', 'info');
+
+  try {
+    const stempelBase64 = await getStempelTtdBase64();
+    const namaDesa = (document.getElementById('selectDesaCeklist')?.value || 'Desa').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const tahap = (document.getElementById('inputTahapCeklist')?.value || 'Tahap').replace(/\s+/g, '_');
+    const tahun = (document.getElementById('inputTahunCeklist')?.value || '2026').trim();
+
+    const safeName = `Ceklist_Kelengkapan_Berkas_${namaDesa}_${tahap}_${tahun}`;
+
+    const cleanHtml = await cleanCeklistSheetToWordHtml(sheet, stempelBase64);
+    const paperSize = document.getElementById('selectPaperSizeCeklist')?.value || 'a4';
+    const isA4 = paperSize === 'a4';
+    const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
+    const docxMargins = {
+      top: 567,    // 1.0 cm
+      right: 567,  // 1.0 cm
+      bottom: 850, // 1.5 cm
+      left: 850    // 1.5 cm
+    };
+
+    const lineSpacing = AppState.ceklistData.lineSpacing || document.getElementById('selectLineSpacingCeklist')?.value || '1.15';
+
+    const fullDocumentHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(safeName)}</title>
+        <style>
+          @page {
+            size: ${pageCssSize};
+            margin: 1.0cm 1.0cm 1.5cm 1.5cm;
+            mso-page-orientation: portrait;
+            mso-header-margin: 0pt;
+            mso-footer-margin: 0pt;
+          }
+          body, p, table, td, th, div, span {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            color: #000000;
+            line-height: ${lineSpacing};
+          }
+          body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+          }
+          p, div {
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+            mso-para-margin-top: 0pt;
+            mso-para-margin-bottom: 0pt;
+            mso-line-height-rule: exactly;
+            line-height: ${lineSpacing};
+          }
+          table {
+            border-collapse: collapse;
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+            mso-table-tspace: 0pt;
+            mso-table-bspace: 0pt;
+            line-height: ${lineSpacing};
+          }
+          td, th {
+            line-height: ${lineSpacing};
+            vertical-align: top;
+            mso-line-height-rule: exactly;
+          }
+          .font-bold { font-weight: bold; }
+          .font-semibold { font-weight: bold; }
+          .font-black { font-weight: 900; }
+          .uppercase { text-transform: uppercase; }
+          .underline { text-decoration: underline; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .text-justify { text-align: justify; }
+          .text-left { text-align: left; }
+          .align-top { vertical-align: top; }
+          .align-middle { vertical-align: middle; }
+        </style>
+      </head>
+      <body>
+        ${cleanHtml}
+      </body>
+      </html>
+    `;
+
+    const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
+      orientation: 'portrait',
+      margins: docxMargins,
+      width: isA4 ? 11906 : 12189,
+      height: isA4 ? 16838 : 18708
+    });
+
+    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
+  } catch (err) {
+    console.error('Gagal ekspor DOCX Ceklist:', err);
+    showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
+  }
+};
