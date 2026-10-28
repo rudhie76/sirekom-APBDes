@@ -2578,7 +2578,10 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     ? (document.getElementById('selectLineSpacingSp')?.value || AppState.suratPengantarData?.lineSpacing || '1.15')
     : (document.getElementById('selectLineSpacing')?.value || AppState.lineSpacing || '1.15');
 
-  let paraMargin = '0pt';
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
 
   // =========================================================================
   // LANGKAH 0: SANITASI CSS VARIABEL & !IMPORTANT PADA SELURUH ELEMEN DOM
@@ -2589,7 +2592,7 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
     if (styleStr) {
       styleStr = styleStr
         .replace(/var\(--surat-line-height[^)]*\)/g, lineSpacing)
-        .replace(/var\(--surat-para-margin[^)]*\)/g, '0pt')
+        .replace(/var\(--surat-para-margin[^)]*\)/g, paraMargin)
         .replace(/!important/g, '')
         .replace(/white-space\s*:\s*pre-wrap;?/g, 'white-space: normal;');
       el.setAttribute('style', styleStr);
@@ -3043,9 +3046,9 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   clone.querySelectorAll('p, div.indent-10').forEach(p => {
     if (p.closest('.kop-surat') || p.closest('table')) return;
     if (isSp) {
-      p.setAttribute('style', `margin-top: 0; margin-bottom: ${paraMargin}; mso-para-margin-top: 0pt; mso-para-margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-line-height-rule: exactly; text-align: left;`);
+      p.setAttribute('style', `margin-top: ${paraMargin}; margin-bottom: ${paraMargin}; mso-para-margin-top: ${paraMargin}; mso-para-margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; text-align: left;`);
     } else {
-      p.setAttribute('style', `text-indent: 30pt; mso-char-indent-count: 3; mso-text-indent-alt: 30pt; text-align: justify; margin-top: 0; margin-bottom: ${paraMargin}; mso-para-margin-top: 0pt; mso-para-margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-line-height-rule: exactly;`);
+      p.setAttribute('style', `text-indent: 30pt; mso-char-indent-count: 3; mso-text-indent-alt: 30pt; text-align: justify; margin-top: ${paraMargin}; margin-bottom: ${paraMargin}; mso-para-margin-top: ${paraMargin}; mso-para-margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
     }
   });
 
@@ -3315,7 +3318,7 @@ window.eksporSuratKeDocx = async function() {
         <style>
           @page {
             size: ${pageCssSize};
-            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
+            margin: 1.2cm 1.5cm 1.5cm 1.8cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -3661,7 +3664,7 @@ window.generateCeklistDocxFromItem = async function(item) {
         <style>
           @page {
             size: 21.0cm 29.7cm;
-            margin: 1.0cm 1.0cm 1.5cm 1.5cm;
+            margin: 2.2cm 2.0cm 2.0cm 2.2cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -3818,12 +3821,13 @@ window.generateCeklistDocxFromItem = async function(item) {
 
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
-      margins: { top: 567, right: 567, bottom: 850, left: 850 },
+      margins: { top: 1247, right: 1134, bottom: 1134, left: 1247 },
       width: 11906,
       height: 16838
     });
 
-    await bukaDokumenOnlineGoogleDocs(blob, safeName, item.namaDesa, placeholderTab, fullDocumentHtml);
+    unduhFileWordLokal(blob, safeName);
+    showToast(`Ceklist "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
   } catch (err) {
     console.error('Gagal generate Ceklist Docx:', err);
     showToast('Terjadi kendala saat membuat Ceklist DOCX: ' + (err.message || ''), 'error');
@@ -3929,7 +3933,7 @@ window.generateSpDocxFromItem = async function(item) {
         <style>
           @page {
             size: 21.0cm 29.7cm;
-            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
+            margin: 1.2cm 1.5cm 1.5cm 1.8cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -4021,7 +4025,7 @@ window.generateSpDocxFromItem = async function(item) {
 
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
-      margins: { top: 567, right: 567, bottom: 850, left: 567 },
+      margins: { top: 680, right: 850, bottom: 850, left: 1020 },
       width: 11906,
       height: 16838
     });
@@ -9646,12 +9650,6 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
     return;
   }
 
-  // Buka tab placeholder langsung di awal aksi klik pengguna (mencegah pemblokiran popup browser)
-  let placeholderTab = null;
-  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
-    placeholderTab = bukaPlaceholderTabGoogleDocs('Surat Pengantar Kecamatan');
-  }
-
   const container = document.getElementById('previewSpContainer');
   if (!container) {
     showToast('Dokumen preview Surat Pengantar tidak ditemukan.', 'error');
@@ -9664,7 +9662,7 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
     return;
   }
 
-  showToast('Sedang mengonversi dokumen ke Microsoft Word (.docx)...', 'info');
+  showToast('Sedang membuat dokumen Microsoft Word (.docx)...', 'info');
 
   try {
     const logoBase64 = await getLogoPpuBase64();
@@ -9684,14 +9682,17 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
     const isA4 = paperSize === 'a4';
     const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
     const docxMargins = {
-      top: 567,    // 1.0 cm
-      right: 567,  // 1.0 cm
-      bottom: 850, // 1.5 cm
-      left: 567    // 1.0 cm
+      top: 680,    // 1.2 cm (persis live view & cetak PDF)
+      right: 850,  // 1.5 cm (persis live view & cetak PDF)
+      bottom: 850, // 1.5 cm (persis live view & cetak PDF)
+      left: 1020   // 1.8 cm (persis live view & cetak PDF)
     };
 
     const lineSpacing = AppState.suratPengantarData.lineSpacing || document.getElementById('selectLineSpacingSp')?.value || '1.15';
-    const paraMargin = '0pt';
+    let paraMargin = '4pt';
+    if (lineSpacing === '1.0') paraMargin = '2pt';
+    else if (lineSpacing === '1.5') paraMargin = '6pt';
+    else if (lineSpacing === '1.25') paraMargin = '3.5pt';
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -9702,7 +9703,7 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
         <style>
           @page {
             size: ${pageCssSize};
-            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
+            margin: 1.2cm 1.5cm 1.5cm 1.8cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -9719,11 +9720,10 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
             padding: 0;
           }
           p, div {
-            margin-top: 0pt;
-            margin-bottom: 0pt;
-            mso-para-margin-top: 0pt;
-            mso-para-margin-bottom: 0pt;
-            mso-line-height-rule: exactly;
+            margin-top: ${paraMargin};
+            margin-bottom: ${paraMargin};
+            mso-para-margin-top: ${paraMargin};
+            mso-para-margin-bottom: ${paraMargin};
             line-height: ${lineSpacing};
           }
           table {
@@ -9746,7 +9746,6 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
           td, th {
             line-height: ${lineSpacing};
             vertical-align: top;
-            mso-line-height-rule: exactly;
           }
           .font-bold { font-weight: bold; }
           .font-semibold { font-weight: bold; }
@@ -9774,8 +9773,8 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
       height: isA4 ? 16838 : 18708
     });
 
-    // Buka langsung di Google Docs tab baru (jika online), atau unduh lokal sebagai cadangan
-    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
+    unduhFileWordLokal(blob, safeName);
+    showToast(`Dokumen "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
   } catch (err) {
     console.error('Gagal ekspor DOCX Surat Pengantar:', err);
     showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
@@ -10893,12 +10892,6 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
     return;
   }
 
-  // Buka tab placeholder langsung di awal aksi klik pengguna (mencegah pemblokiran popup browser)
-  let placeholderTab = null;
-  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
-    placeholderTab = bukaPlaceholderTabGoogleDocs('Ceklist Kelengkapan Berkas');
-  }
-
   const container = document.getElementById('previewCeklistContainer');
   if (!container) {
     showToast('Dokumen preview Ceklist tidak ditemukan.', 'error');
@@ -10911,7 +10904,7 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
     return;
   }
 
-  showToast('Sedang mengonversi dokumen ke Microsoft Word (.docx)...', 'info');
+  showToast('Sedang membuat dokumen Microsoft Word (.docx)...', 'info');
 
   try {
     const stempelBase64 = await getStempelTtdBase64();
@@ -10926,10 +10919,10 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
     const isA4 = paperSize === 'a4';
     const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
     const docxMargins = {
-      top: 567,    // 1.0 cm
-      right: 567,  // 1.0 cm
-      bottom: 850, // 1.5 cm
-      left: 850    // 1.5 cm
+      top: 1247,   // 2.2 cm (persis live view 22mm)
+      right: 1134, // 2.0 cm (persis live view 20mm)
+      bottom: 1134,// 2.0 cm (persis live view 20mm)
+      left: 1247   // 2.2 cm (persis live view 22mm)
     };
 
     const lineSpacing = AppState.ceklistData.lineSpacing || document.getElementById('selectLineSpacingCeklist')?.value || '1.15';
@@ -10943,7 +10936,7 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
         <style>
           @page {
             size: ${pageCssSize};
-            margin: 1.0cm 1.0cm 1.5cm 1.5cm;
+            margin: 2.2cm 2.0cm 2.0cm 2.2cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -10960,11 +10953,10 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
             padding: 0;
           }
           p, div {
-            margin-top: 0pt;
-            margin-bottom: 0pt;
-            mso-para-margin-top: 0pt;
-            mso-para-margin-bottom: 0pt;
-            mso-line-height-rule: exactly;
+            margin-top: 2pt;
+            margin-bottom: 2pt;
+            mso-para-margin-top: 2pt;
+            mso-para-margin-bottom: 2pt;
             line-height: ${lineSpacing};
           }
           table {
@@ -10975,10 +10967,18 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
             mso-table-bspace: 0pt;
             line-height: ${lineSpacing};
           }
+          table p, table div, td, th {
+            text-indent: 0 !important;
+            mso-char-indent-count: 0 !important;
+            mso-text-indent-alt: 0pt !important;
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+            mso-para-margin-top: 0pt;
+            mso-para-margin-bottom: 0pt;
+          }
           td, th {
             line-height: ${lineSpacing};
             vertical-align: top;
-            mso-line-height-rule: exactly;
           }
           .font-bold { font-weight: bold; }
           .font-semibold { font-weight: bold; }
@@ -11006,7 +11006,8 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
       height: isA4 ? 16838 : 18708
     });
 
-    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
+    unduhFileWordLokal(blob, safeName);
+    showToast(`Dokumen "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
   } catch (err) {
     console.error('Gagal ekspor DOCX Ceklist:', err);
     showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
