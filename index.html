@@ -48,14 +48,14 @@
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
       font-family: Arial, Helvetica, sans-serif !important;
       font-size: 11pt !important;
-      line-height: var(--surat-line-height, 1.5) !important;
-      padding: 1.0cm 1.5cm 1.5cm 1.5cm;
+      line-height: var(--surat-line-height, 1.15) !important;
+      padding: 1.2cm 1.5cm 1.5cm 1.8cm;
     }
 
     /* Pengaturan variabel spasi dinamis dokumen */
     :root {
-      --surat-line-height: 1.5;
-      --surat-para-margin: 0pt;
+      --surat-line-height: 1.15;
+      --surat-para-margin: 4pt;
     }
 
     /* Seluruh elemen di dalam surat menggunakan spasi baris yang dapat disesuaikan (default 1.15) */
@@ -70,12 +70,12 @@
     .surat-sheet td,
     .surat-sheet ol,
     .surat-sheet li {
-      line-height: var(--surat-line-height, 1.5) !important;
+      line-height: var(--surat-line-height, 1.15) !important;
     }
 
     .surat-sheet p {
-      margin-top: var(--surat-para-margin, 0pt);
-      margin-bottom: var(--surat-para-margin, 0pt);
+      margin-top: var(--surat-para-margin, 4pt);
+      margin-bottom: var(--surat-para-margin, 4pt);
     }
 
     /* Mode Edit Langsung pada Kertas Dokumen */
@@ -271,7 +271,7 @@
         box-shadow: none !important;
         font-family: Arial, Helvetica, sans-serif !important;
         font-size: 11pt !important;
-        line-height: var(--surat-line-height, 1.5) !important;
+        line-height: var(--surat-line-height, 1.15) !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         page-break-after: page !important;
@@ -281,7 +281,7 @@
       #previewDocumentContainer .surat-sheet *,
       #previewSpContainer .surat-sheet *,
       .surat-sheet * {
-        line-height: var(--surat-line-height, 1.5) !important;
+        line-height: var(--surat-line-height, 1.15) !important;
       }
 
       .surat-sheet:last-of-type,
@@ -1583,9 +1583,9 @@
             <span>Spasi:</span>
             <select id="selectLineSpacing" onchange="applyLineSpacing()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
               <option value="1.0">1.0 (Tunggal)</option>
-              <option value="1.15">1.15 (Standar)</option>
+              <option value="1.15" selected>1.15 (Standar)</option>
               <option value="1.25">1.25</option>
-              <option value="1.5" selected>1.5 (Longgar)</option>
+              <option value="1.5">1.5 (Longgar)</option>
             </select>
           </div>
         </div>
@@ -1875,9 +1875,9 @@
               <span>Spasi:</span>
               <select id="selectLineSpacingSp" onchange="applyLineSpacingSp()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
                 <option value="1.0">1.0 (Tunggal)</option>
-                <option value="1.15">1.15 (Standar)</option>
-              <option value="1.25">1.25</option>
-              <option value="1.5" selected>1.5 (Longgar)</option>
+                <option value="1.15" selected>1.15 (Standar)</option>
+                <option value="1.25">1.25</option>
+                <option value="1.5">1.5 (Longgar)</option>
               </select>
             </div>
           </div>
@@ -2130,9 +2130,9 @@
               <span>Spasi:</span>
               <select id="selectLineSpacingCeklist" onchange="applyLineSpacingCeklist()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
                 <option value="1.0">1.0 (Tunggal)</option>
-                <option value="1.15">1.15 (Standar)</option>
-              <option value="1.25">1.25</option>
-              <option value="1.5" selected>1.5 (Longgar)</option>
+                <option value="1.15" selected>1.15 (Standar)</option>
+                <option value="1.25">1.25</option>
+                <option value="1.5">1.5 (Longgar)</option>
               </select>
             </div>
           </div>
@@ -3724,6 +3724,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261028_msword_margins_spacing"></script>
+  <script src="app.js?v=20261028_direct_ms_word"></script>
 </body>
 </html>

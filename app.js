@@ -345,7 +345,7 @@ const AppState = {
   paperSize: 'a4',
   pageBreakMode: 'separated',
   viewMode: 'split',
-  lineSpacing: '1.5',
+  lineSpacing: '1.15',
   isDirectEditMode: false,
   isDirectEditModeSp: false,
 
@@ -365,7 +365,7 @@ const AppState = {
     nipPengirim: '198610082006021001',
     metodeTte: 'srikandi',
     paperSize: 'a4',
-    lineSpacing: '1.5',
+    lineSpacing: '1.15',
     zoomPercent: 100,
     rows: [
       {
@@ -394,7 +394,7 @@ const AppState = {
     jabatanVerifikator: 'Kepala Seksi Pemberdayaan Masyarakat',
     tampilkanStempel: true,
     paperSize: 'a4',
-    lineSpacing: '1.5',
+    lineSpacing: '1.15',
     zoomPercent: 100,
     rows: []
   },
@@ -1396,11 +1396,11 @@ function updateLivePreview(force = false) {
   applyPageBreakMode();
 
   // Terapkan spasi baris aktif
-  const lineSpacing = AppState.lineSpacing || document.getElementById('selectLineSpacing')?.value || '1.5';
-  let paraMargin = '0pt';
-  if (lineSpacing === '1.0') paraMargin = '0pt';
-  else if (lineSpacing === '1.5') paraMargin = '0pt';
-  else if (lineSpacing === '1.25') paraMargin = '0pt';
+  const lineSpacing = AppState.lineSpacing || document.getElementById('selectLineSpacing')?.value || '1.15';
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
   previewDoc.style.setProperty('--surat-line-height', lineSpacing);
   previewDoc.style.setProperty('--surat-para-margin', paraMargin);
 
@@ -2200,13 +2200,13 @@ window.applyPageBreakMode = applyPageBreakMode;
  */
 window.applyLineSpacing = function(val) {
   const select = document.getElementById('selectLineSpacing');
-  const lineSpacing = val || select?.value || '1.5';
+  const lineSpacing = val || select?.value || '1.15';
   AppState.lineSpacing = lineSpacing;
 
-  let paraMargin = '0pt';
-  if (lineSpacing === '1.0') paraMargin = '0pt';
-  else if (lineSpacing === '1.5') paraMargin = '0pt';
-  else if (lineSpacing === '1.25') paraMargin = '0pt';
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
 
   const container = document.getElementById('previewDocumentContainer');
   if (container) {
@@ -2486,12 +2486,12 @@ async function getLogoPpuBase64() {
  * Kolom 2: Konten teks item
  * Ini 100% mencegah Microsoft Word me-reset nomor urut pada Halaman 2 dan 3!
  */
-function convertOlToTable(ol, lineSpacing = '1.5') {
+function convertOlToTable(ol, lineSpacing) {
   const table = document.createElement('table');
   table.setAttribute('border', '0');
   table.setAttribute('cellspacing', '0');
   table.setAttribute('cellpadding', '0');
-  table.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 0pt; margin-bottom: 0pt; mso-para-margin: 0pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
+  table.setAttribute('style', `width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 2pt; margin-bottom: 3pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-table-lspace: 0pt; mso-table-rspace: 0pt;`);
   
   let startNum = 1;
   const startAttr = ol.getAttribute('start');
@@ -2505,9 +2505,9 @@ function convertOlToTable(ol, lineSpacing = '1.5') {
   lis.forEach(li => {
     rowsHtml += `
       <tr>
-        <td width="24" style="width: 24pt; min-width: 24pt; max-width: 24pt; vertical-align: top; padding: 1pt 0; line-height: ${lineSpacing}; margin: 0; mso-para-margin: 0pt;">&nbsp;</td>
-        <td width="18" style="width: 18pt; min-width: 18pt; max-width: 18pt; vertical-align: top; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; margin: 0; mso-para-margin: 0pt;">${currentNum}.</td>
-        <td width="496" style="width: 496pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; margin: 0; mso-para-margin: 0pt;">${li.innerHTML}</td>
+        <td width="24" style="width: 24pt; min-width: 24pt; max-width: 24pt; vertical-align: top; padding: 1pt 0; line-height: ${lineSpacing}; mso-line-height-rule: exactly;">&nbsp;</td>
+        <td width="18" style="width: 18pt; min-width: 18pt; max-width: 18pt; vertical-align: top; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${currentNum}.</td>
+        <td width="496" style="width: 496pt; vertical-align: top; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; padding: 1pt 0; mso-line-height-rule: exactly;">${li.innerHTML}</td>
       </tr>
     `;
     currentNum++;
@@ -2573,8 +2573,11 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   // Tentukan apakah sheet ini adalah Surat Pengantar
   const isSp = clone.textContent.includes('SURAT PENGANTAR') || AppState.activeTab === 'surat-pengantar';
 
-  // Tentukan spasi baris yang aktif untuk Word (1.5)
-  const lineSpacing = '1.5';
+  // Tentukan spasi baris yang aktif (1.0, 1.15, 1.25, 1.5)
+  const lineSpacing = isSp
+    ? (document.getElementById('selectLineSpacingSp')?.value || AppState.suratPengantarData?.lineSpacing || '1.15')
+    : (document.getElementById('selectLineSpacing')?.value || AppState.lineSpacing || '1.15');
+
   let paraMargin = '0pt';
 
   // =========================================================================
@@ -3040,9 +3043,9 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
   clone.querySelectorAll('p, div.indent-10').forEach(p => {
     if (p.closest('.kop-surat') || p.closest('table')) return;
     if (isSp) {
-      p.setAttribute('style', `margin-top: 0pt; margin-bottom: 0pt; mso-para-margin-top: 0pt; mso-para-margin-bottom: 0pt; mso-para-margin: 0pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; text-align: left;`);
+      p.setAttribute('style', `margin-top: 0; margin-bottom: ${paraMargin}; mso-para-margin-top: 0pt; mso-para-margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-line-height-rule: exactly; text-align: left;`);
     } else {
-      p.setAttribute('style', `text-indent: 30pt; mso-char-indent-count: 3; mso-text-indent-alt: 30pt; text-align: justify; margin-top: 0pt; margin-bottom: 0pt; mso-para-margin-top: 0pt; mso-para-margin-bottom: 0pt; mso-para-margin: 0pt; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing};`);
+      p.setAttribute('style', `text-indent: 30pt; mso-char-indent-count: 3; mso-text-indent-alt: 30pt; text-align: justify; margin-top: 0; margin-bottom: ${paraMargin}; mso-para-margin-top: 0pt; mso-para-margin-bottom: ${paraMargin}; font-family: Arial, sans-serif; font-size: 11pt; line-height: ${lineSpacing}; mso-line-height-rule: exactly;`);
     }
   });
 
@@ -3296,12 +3299,12 @@ window.eksporSuratKeDocx = async function() {
     const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
     const docxMargins = {
       top: 567,    // 1.0 cm
-      right: 850,  // 1.5 cm
+      right: 567,  // 1.0 cm
       bottom: 850, // 1.5 cm
-      left: 850    // 1.5 cm
+      left: 567    // 1.0 cm
     };
 
-    const lineSpacing = '1.5';
+    const lineSpacing = AppState.lineSpacing || document.getElementById('selectLineSpacing')?.value || '1.15';
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -3312,7 +3315,7 @@ window.eksporSuratKeDocx = async function() {
         <style>
           @page {
             size: ${pageCssSize};
-            margin: 1.0cm 1.5cm 1.5cm 1.5cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -3658,7 +3661,7 @@ window.generateCeklistDocxFromItem = async function(item) {
         <style>
           @page {
             size: 21.0cm 29.7cm;
-            margin: 1.0cm 1.5cm 1.5cm 1.5cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.5cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -3815,13 +3818,12 @@ window.generateCeklistDocxFromItem = async function(item) {
 
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
-      margins: { top: 567, right: 850, bottom: 850, left: 850 },
+      margins: { top: 567, right: 567, bottom: 850, left: 850 },
       width: 11906,
       height: 16838
     });
 
-    unduhFileWordLokal(blob, safeName);
-    showToast(`Ceklist "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
+    await bukaDokumenOnlineGoogleDocs(blob, safeName, item.namaDesa, placeholderTab, fullDocumentHtml);
   } catch (err) {
     console.error('Gagal generate Ceklist Docx:', err);
     showToast('Terjadi kendala saat membuat Ceklist DOCX: ' + (err.message || ''), 'error');
@@ -3927,7 +3929,7 @@ window.generateSpDocxFromItem = async function(item) {
         <style>
           @page {
             size: 21.0cm 29.7cm;
-            margin: 1.0cm 1.5cm 1.5cm 1.5cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -4019,7 +4021,7 @@ window.generateSpDocxFromItem = async function(item) {
 
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
-      margins: { top: 567, right: 850, bottom: 850, left: 850 },
+      margins: { top: 567, right: 567, bottom: 850, left: 567 },
       width: 11906,
       height: 16838
     });
@@ -9280,11 +9282,11 @@ window.updateLivePreviewSp = function(force = false) {
   const rows = AppState.suratPengantarData.rows || [];
 
   // Terapkan spasi baris aktif
-  const lineSpacing = AppState.suratPengantarData.lineSpacing || document.getElementById('selectLineSpacingSp')?.value || '1.5';
-  let paraMargin = '0pt';
-  if (lineSpacing === '1.0') paraMargin = '0pt';
-  else if (lineSpacing === '1.5') paraMargin = '0pt';
-  else if (lineSpacing === '1.25') paraMargin = '0pt';
+  const lineSpacing = AppState.suratPengantarData.lineSpacing || document.getElementById('selectLineSpacingSp')?.value || '1.15';
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
   container.style.setProperty('--surat-line-height', lineSpacing);
   container.style.setProperty('--surat-para-margin', paraMargin);
 
@@ -9443,13 +9445,13 @@ window.applyPaperSizeSp = function() {
  */
 window.applyLineSpacingSp = function(val) {
   const select = document.getElementById('selectLineSpacingSp');
-  const lineSpacing = val || select?.value || '1.5';
+  const lineSpacing = val || select?.value || '1.15';
   AppState.suratPengantarData.lineSpacing = lineSpacing;
 
-  let paraMargin = '0pt';
-  if (lineSpacing === '1.0') paraMargin = '0pt';
-  else if (lineSpacing === '1.5') paraMargin = '0pt';
-  else if (lineSpacing === '1.25') paraMargin = '0pt';
+  let paraMargin = '4pt';
+  if (lineSpacing === '1.0') paraMargin = '2pt';
+  else if (lineSpacing === '1.5') paraMargin = '6pt';
+  else if (lineSpacing === '1.25') paraMargin = '3.5pt';
 
   const container = document.getElementById('previewSpContainer');
   if (container) {
@@ -9644,6 +9646,12 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
     return;
   }
 
+  // Buka tab placeholder langsung di awal aksi klik pengguna (mencegah pemblokiran popup browser)
+  let placeholderTab = null;
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    placeholderTab = bukaPlaceholderTabGoogleDocs('Surat Pengantar Kecamatan');
+  }
+
   const container = document.getElementById('previewSpContainer');
   if (!container) {
     showToast('Dokumen preview Surat Pengantar tidak ditemukan.', 'error');
@@ -9656,7 +9664,7 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
     return;
   }
 
-  showToast('Sedang membuat dokumen Microsoft Word (.docx)...', 'info');
+  showToast('Sedang mengonversi dokumen ke Microsoft Word (.docx)...', 'info');
 
   try {
     const logoBase64 = await getLogoPpuBase64();
@@ -9677,12 +9685,13 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
     const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
     const docxMargins = {
       top: 567,    // 1.0 cm
-      right: 850,  // 1.5 cm
+      right: 567,  // 1.0 cm
       bottom: 850, // 1.5 cm
-      left: 850    // 1.5 cm
+      left: 567    // 1.0 cm
     };
 
-    const lineSpacing = '1.5';
+    const lineSpacing = AppState.suratPengantarData.lineSpacing || document.getElementById('selectLineSpacingSp')?.value || '1.15';
+    const paraMargin = '0pt';
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -9693,7 +9702,7 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
         <style>
           @page {
             size: ${pageCssSize};
-            margin: 1.0cm 1.5cm 1.5cm 1.5cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.0cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -9714,7 +9723,7 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
             margin-bottom: 0pt;
             mso-para-margin-top: 0pt;
             mso-para-margin-bottom: 0pt;
-            mso-para-margin: 0pt;
+            mso-line-height-rule: exactly;
             line-height: ${lineSpacing};
           }
           table {
@@ -9733,12 +9742,11 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
             margin-bottom: 0pt;
             mso-para-margin-top: 0pt;
             mso-para-margin-bottom: 0pt;
-            mso-para-margin: 0pt;
-            line-height: ${lineSpacing};
           }
           td, th {
             line-height: ${lineSpacing};
             vertical-align: top;
+            mso-line-height-rule: exactly;
           }
           .font-bold { font-weight: bold; }
           .font-semibold { font-weight: bold; }
@@ -9766,8 +9774,8 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
       height: isA4 ? 16838 : 18708
     });
 
-    unduhFileWordLokal(blob, safeName);
-    showToast(`Dokumen "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
+    // Buka langsung di Google Docs tab baru (jika online), atau unduh lokal sebagai cadangan
+    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
   } catch (err) {
     console.error('Gagal ekspor DOCX Surat Pengantar:', err);
     showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
@@ -10533,7 +10541,7 @@ window.applyPaperSizeCeklist = function() {
  */
 window.applyLineSpacingCeklist = function() {
   const sel = document.getElementById('selectLineSpacingCeklist');
-  const spacing = sel ? sel.value : '1.5';
+  const spacing = sel ? sel.value : '1.15';
   AppState.ceklistData.lineSpacing = spacing;
   const sheet = document.querySelector('#previewCeklistContainer .surat-sheet');
   if (sheet) {
@@ -10627,7 +10635,7 @@ window.updateLivePreviewCeklist = function(forceSyncFromForm = false) {
   const tampilkanStempel = document.getElementById('checkStempelCeklist')?.checked ?? true;
 
   const paperSize = document.getElementById('selectPaperSizeCeklist')?.value || AppState.ceklistData.paperSize || 'a4';
-  const lineSpacing = document.getElementById('selectLineSpacingCeklist')?.value || AppState.ceklistData.lineSpacing || '1.5';
+  const lineSpacing = document.getElementById('selectLineSpacingCeklist')?.value || AppState.ceklistData.lineSpacing || '1.15';
   const widthMm = paperSize === 'folio' ? '215mm' : '210mm';
   const minHeightMm = paperSize === 'folio' ? '330mm' : '297mm';
 
@@ -10636,7 +10644,7 @@ window.updateLivePreviewCeklist = function(forceSyncFromForm = false) {
     : (DEFAULT_BERKAS_TEMPLATES[jenisDana] || DEFAULT_BERKAS_TEMPLATES.siltap).map((b, idx) => ({ id: b.id || ('ck_' + idx), teks: b.teks, checked: true }));
 
   container.innerHTML = `
-    <div class="surat-sheet ceklist-sheet" style="width: ${widthMm}; min-height: ${minHeightMm}; --surat-line-height: ${lineSpacing}; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000000; box-sizing: border-box; background: #ffffff; padding: 1.0cm 1.5cm 1.5cm 1.5cm; margin: 0 auto; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18);">
+    <div class="surat-sheet ceklist-sheet" style="width: ${widthMm}; min-height: ${minHeightMm}; --surat-line-height: ${lineSpacing}; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000000; box-sizing: border-box; background: #ffffff; padding: 22mm 20mm 20mm 22mm; margin: 0 auto; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18);">
       
       <!-- 1. Header Centered 3 Baris Bold Uppercase Sesuai Template Resmi -->
       <div style="text-align: center; margin-bottom: 22pt;">
@@ -10823,7 +10831,7 @@ async function cleanCeklistSheetToWordHtml(sheet, stempelBase64) {
     }
   });
 
-  const lineSpacing = '1.5';
+  const lineSpacing = AppState.ceklistData.lineSpacing || document.getElementById('selectLineSpacingCeklist')?.value || '1.15';
 
   // Sanitasi CSS
   clone.querySelectorAll('*').forEach(el => {
@@ -10885,6 +10893,12 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
     return;
   }
 
+  // Buka tab placeholder langsung di awal aksi klik pengguna (mencegah pemblokiran popup browser)
+  let placeholderTab = null;
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    placeholderTab = bukaPlaceholderTabGoogleDocs('Ceklist Kelengkapan Berkas');
+  }
+
   const container = document.getElementById('previewCeklistContainer');
   if (!container) {
     showToast('Dokumen preview Ceklist tidak ditemukan.', 'error');
@@ -10897,7 +10911,7 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
     return;
   }
 
-  showToast('Sedang membuat dokumen Microsoft Word (.docx)...', 'info');
+  showToast('Sedang mengonversi dokumen ke Microsoft Word (.docx)...', 'info');
 
   try {
     const stempelBase64 = await getStempelTtdBase64();
@@ -10913,12 +10927,12 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
     const pageCssSize = isA4 ? '21.0cm 29.7cm' : '21.5cm 33.0cm';
     const docxMargins = {
       top: 567,    // 1.0 cm
-      right: 850,  // 1.5 cm
+      right: 567,  // 1.0 cm
       bottom: 850, // 1.5 cm
       left: 850    // 1.5 cm
     };
 
-    const lineSpacing = '1.5';
+    const lineSpacing = AppState.ceklistData.lineSpacing || document.getElementById('selectLineSpacingCeklist')?.value || '1.15';
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -10929,7 +10943,7 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
         <style>
           @page {
             size: ${pageCssSize};
-            margin: 1.0cm 1.5cm 1.5cm 1.5cm;
+            margin: 1.0cm 1.0cm 1.5cm 1.5cm;
             mso-page-orientation: portrait;
             mso-header-margin: 0pt;
             mso-footer-margin: 0pt;
@@ -10950,7 +10964,7 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
             margin-bottom: 0pt;
             mso-para-margin-top: 0pt;
             mso-para-margin-bottom: 0pt;
-            mso-para-margin: 0pt;
+            mso-line-height-rule: exactly;
             line-height: ${lineSpacing};
           }
           table {
@@ -10961,20 +10975,10 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
             mso-table-bspace: 0pt;
             line-height: ${lineSpacing};
           }
-          table p, table div, td, th {
-            text-indent: 0 !important;
-            mso-char-indent-count: 0 !important;
-            mso-text-indent-alt: 0pt !important;
-            margin-top: 0pt;
-            margin-bottom: 0pt;
-            mso-para-margin-top: 0pt;
-            mso-para-margin-bottom: 0pt;
-            mso-para-margin: 0pt;
-            line-height: ${lineSpacing};
-          }
           td, th {
             line-height: ${lineSpacing};
             vertical-align: top;
+            mso-line-height-rule: exactly;
           }
           .font-bold { font-weight: bold; }
           .font-semibold { font-weight: bold; }
@@ -11002,8 +11006,7 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
       height: isA4 ? 16838 : 18708
     });
 
-    unduhFileWordLokal(blob, safeName);
-    showToast(`Dokumen "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
+    await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
   } catch (err) {
     console.error('Gagal ekspor DOCX Ceklist:', err);
     showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
