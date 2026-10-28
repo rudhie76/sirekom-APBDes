@@ -3079,44 +3079,6 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
  * Membuka Tab Baru Placeholder untuk Google Docs secara Instan (Anti Popup Blocker)
  */
 
-// =============================================================================
-// MODAL PILIHAN EKSPOR WORD (.DOCX / GOOGLE DOCS)
-// =============================================================================
-let activeWordExportContext = 'rekom';
-
-window.bukaModalPilihanWord = function(konteks = 'rekom') {
-  activeWordExportContext = konteks || 'rekom';
-  const modal = document.getElementById('modalPilihanWord');
-  if (modal) modal.classList.remove('hidden');
-};
-
-window.tutupModalPilihanWord = function() {
-  const modal = document.getElementById('modalPilihanWord');
-  if (modal) modal.classList.add('hidden');
-};
-
-window.eksekusiUnduhWordDocx = async function() {
-  tutupModalPilihanWord();
-  if (activeWordExportContext === 'sp') {
-    await eksporSuratPengantarKeDocx(true);
-  } else if (activeWordExportContext === 'ceklist') {
-    await eksporCeklistKeDocx(true);
-  } else {
-    await eksporSuratKeDocx(true);
-  }
-};
-
-window.eksekusiBukaGoogleDocsOnline = async function() {
-  tutupModalPilihanWord();
-  if (activeWordExportContext === 'sp') {
-    await eksporSuratPengantarKeDocx(false);
-  } else if (activeWordExportContext === 'ceklist') {
-    await eksporCeklistKeDocx(false);
-  } else {
-    await eksporSuratKeDocx(false);
-  }
-};
-
 function bukaPlaceholderTabGoogleDocs(judulDokumen = 'Dokumen') {
   try {
     const newTab = window.open('about:blank', '_blank');
@@ -3285,16 +3247,10 @@ async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholder
   return false;
 }
 
-window.eksporSuratKeDocx = async function(downloadOnly = true) {
+window.eksporSuratKeDocx = async function() {
   if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
     showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
     return;
-  }
-
-  // Buka tab placeholder langsung di awal aksi klik pengguna (mencegah pemblokiran popup browser)
-  let placeholderTab = null;
-  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
-    placeholderTab = bukaPlaceholderTabGoogleDocs('Surat Rekomendasi Camat');
   }
 
   const container = document.getElementById('previewDocumentContainer');
@@ -3309,7 +3265,7 @@ window.eksporSuratKeDocx = async function(downloadOnly = true) {
     return;
   }
 
-  showToast('Sedang mengonversi dokumen ke Microsoft Word (.docx)...', 'info');
+  showToast('Sedang membuat dokumen Microsoft Word (.docx)...', 'info');
 
   try {
     const logoBase64 = await getLogoPpuBase64();
@@ -3349,7 +3305,6 @@ window.eksporSuratKeDocx = async function(downloadOnly = true) {
     };
 
     const lineSpacing = AppState.lineSpacing || document.getElementById('selectLineSpacing')?.value || '1.15';
-    const paraMargin = '0pt';
 
     const fullDocumentHtml = `
       <!DOCTYPE html>
@@ -3449,7 +3404,7 @@ window.eksporSuratKeDocx = async function(downloadOnly = true) {
       </html>
     `;
 
-    // Buat Blob DOCX OpenXML
+    // Buat Blob DOCX OpenXML baku Microsoft Word
     const blob = window.htmlDocx.asBlob(fullDocumentHtml, {
       orientation: 'portrait',
       margins: docxMargins,
@@ -3457,22 +3412,15 @@ window.eksporSuratKeDocx = async function(downloadOnly = true) {
       height: isA4 ? 16838 : 18708
     });
 
-    // Buka langsung di Google Docs tab baru (jika online), atau unduh lokal sebagai cadangan
-    if (downloadOnly) {
-      unduhFileWordLokal(blob, safeName);
-      showToast(`Dokumen "${safeName}.docx" berhasil diunduh! Buka dengan Microsoft Word / WPS Office untuk tampilan 100% rapi & identik.`, 'success');
-    } else {
-      await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
-    }
+    // Langsung unduh file Word (.docx) resmi ke komputer pengguna
+    unduhFileWordLokal(blob, safeName);
+    showToast(`Dokumen "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
   } catch (err) {
     console.error('Gagal mengekspor dokumen ke DOCX:', err);
     showToast('Terjadi kendala saat membuat file DOCX. ' + (err.message || ''), 'error');
   }
 };
 
-/**
- * Ekspor Rekomendasi dari Riwayat Database Langsung ke File DOCX
- */
 window.eksporRekomendasiByIdKeDocx = function(id) {
   loadHistoryItem(id);
   setTimeout(() => {
