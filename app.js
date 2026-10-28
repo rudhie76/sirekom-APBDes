@@ -3082,6 +3082,52 @@ function cleanSheetToWordHtml(sheet, logoBase64) {
  * Membuka Tab Baru Placeholder untuk Google Docs secara Instan (Anti Popup Blocker)
  */
 
+// =============================================================================
+// MODAL PILIHAN EKSPOR WORD (.DOCX / GOOGLE DOCS)
+// =============================================================================
+let activeWordExportContext = 'rekom';
+
+window.bukaModalPilihanWord = function(konteks = 'rekom') {
+  activeWordExportContext = konteks || 'rekom';
+  const modal = document.getElementById('modalPilihanWord');
+  if (modal) modal.classList.remove('hidden');
+};
+
+window.tutupModalPilihanWord = function() {
+  const modal = document.getElementById('modalPilihanWord');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.eksekusiUnduhWordDocx = async function() {
+  tutupModalPilihanWord();
+  if (activeWordExportContext === 'sp') {
+    await eksporSuratPengantarKeDocx(true);
+  } else if (activeWordExportContext === 'ceklist') {
+    await eksporCeklistKeDocx(true);
+  } else {
+    await eksporSuratKeDocx(true);
+  }
+};
+
+window.eksekusiBukaGoogleDocsOnline = async function() {
+  tutupModalPilihanWord();
+  let placeholderTab = null;
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    let title = 'Dokumen';
+    if (activeWordExportContext === 'sp') title = 'Surat Pengantar Kecamatan';
+    else if (activeWordExportContext === 'ceklist') title = 'Ceklist Kelengkapan Berkas';
+    else title = 'Surat Rekomendasi Camat';
+    placeholderTab = bukaPlaceholderTabGoogleDocs(title);
+  }
+  if (activeWordExportContext === 'sp') {
+    await eksporSuratPengantarKeDocx(false, placeholderTab);
+  } else if (activeWordExportContext === 'ceklist') {
+    await eksporCeklistKeDocx(false, placeholderTab);
+  } else {
+    await eksporSuratKeDocx(false, placeholderTab);
+  }
+};
+
 function bukaPlaceholderTabGoogleDocs(judulDokumen = 'Dokumen') {
   try {
     const newTab = window.open('about:blank', '_blank');
@@ -3187,7 +3233,9 @@ async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholder
       showToast('Mengonversi dokumen ke Google Docs...', 'info');
 
       // 1. Bersihkan base64 gambar berukuran besar dari payload HTML untuk transmisi super cepat
-      const cleanHtmlForGas = (fullHtml || '').replace(/data:image\/[^;]+;base64,[^"']+/g, '');
+      const cleanHtmlForGas = (fullHtml || '')
+        .replace(/<img[^>]+src=["']data:image\/[^"']+["'][^>]*>/gi, '<div style="font-weight: bold; font-size: 10pt; color: #333333; text-align: center; margin-bottom: 4pt;">[ LAMBANG DAERAH ]</div>')
+        .replace(/<img[^>]+src=["']logo_ppu\.png["'][^>]*>/gi, '<div style="font-weight: bold; font-size: 10pt; color: #333333; text-align: center; margin-bottom: 4pt;">[ LAMBANG DAERAH ]</div>');
 
       // 2. Konversi blob ke base64 (cadangan)
       const base64Data = await new Promise((resolve, reject) => {
@@ -3250,7 +3298,7 @@ async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholder
   return false;
 }
 
-window.eksporSuratKeDocx = async function() {
+window.eksporSuratKeDocx = async function(downloadOnly = true, placeholderTab = null) {
   if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
     showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
     return;
@@ -3415,9 +3463,12 @@ window.eksporSuratKeDocx = async function() {
       height: isA4 ? 16838 : 18708
     });
 
-    // Langsung unduh file Word (.docx) resmi ke komputer pengguna
-    unduhFileWordLokal(blob, safeName);
-    showToast(`Dokumen "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
+    if (downloadOnly) {
+      unduhFileWordLokal(blob, safeName);
+      showToast(`Dokumen "${safeName}.docx" berhasil diunduh untuk Microsoft Word!`, 'success');
+    } else {
+      await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
+    }
   } catch (err) {
     console.error('Gagal mengekspor dokumen ke DOCX:', err);
     showToast('Terjadi kendala saat membuat file DOCX. ' + (err.message || ''), 'error');
@@ -9644,7 +9695,7 @@ window.resetPreviewSpFromForm = function() {
 /**
  * Ekspor Surat Pengantar ke Microsoft Word (.docx)
  */
-window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
+window.eksporSuratPengantarKeDocx = async function(downloadOnly = true, placeholderTab = null) {
   if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
     showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
     return;
@@ -9773,8 +9824,12 @@ window.eksporSuratPengantarKeDocx = async function(downloadOnly = true) {
       height: isA4 ? 16838 : 18708
     });
 
-    unduhFileWordLokal(blob, safeName);
-    showToast(`Dokumen "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
+    if (downloadOnly) {
+      unduhFileWordLokal(blob, safeName);
+      showToast(`Dokumen "${safeName}.docx" berhasil diunduh untuk Microsoft Word!`, 'success');
+    } else {
+      await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
+    }
   } catch (err) {
     console.error('Gagal ekspor DOCX Surat Pengantar:', err);
     showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
@@ -10886,7 +10941,7 @@ async function cleanCeklistSheetToWordHtml(sheet, stempelBase64) {
 /**
  * Ekspor Dokumen Ceklist Kelengkapan ke Word (.docx) & Buka di Google Docs
  */
-window.eksporCeklistKeDocx = async function(downloadOnly = true) {
+window.eksporCeklistKeDocx = async function(downloadOnly = true, placeholderTab = null) {
   if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
     showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');
     return;
@@ -11006,8 +11061,12 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true) {
       height: isA4 ? 16838 : 18708
     });
 
-    unduhFileWordLokal(blob, safeName);
-    showToast(`Dokumen "${safeName}.docx" berhasil diekspor ke Microsoft Word! Silakan buka file hasil unduhan.`, 'success');
+    if (downloadOnly) {
+      unduhFileWordLokal(blob, safeName);
+      showToast(`Dokumen "${safeName}.docx" berhasil diunduh untuk Microsoft Word!`, 'success');
+    } else {
+      await bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab, fullDocumentHtml);
+    }
   } catch (err) {
     console.error('Gagal ekspor DOCX Ceklist:', err);
     showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
