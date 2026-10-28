@@ -814,7 +814,7 @@
           <span>🖨️ Cetak / PDF</span>
         </button>
 
-        <button id="btnExportDocx" onclick="eksporSuratKeDocx()" class="hidden px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
+        <button id="btnExportDocx" onclick="bukaModalPilihanWord('rekom')" class="hidden px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
           <span>&#x1F4DD; Convert to Word</span>
         </button>
 
@@ -1607,7 +1607,7 @@
           </button>
 
           <!-- Tombol Ekspor Word (.docx) -->
-          <button onclick="eksporSuratKeDocx()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
+          <button onclick="bukaModalPilihanWord('rekom')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
             <span>&#x1F4DD; Convert to Word</span>
           </button>
 
@@ -1899,7 +1899,7 @@
             </button>
 
             <!-- Tombol Ekspor Word (.docx) (Hijau Emerald) -->
-            <button type="button" onclick="eksporSuratPengantarKeDocx()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
+            <button type="button" onclick="bukaModalPilihanWord('sp')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
               <span>&#x1F4DD; Convert to Word</span>
             </button>
 
@@ -2154,7 +2154,7 @@
             </button>
 
             <!-- Tombol Ekspor Word (.docx) (Hijau Emerald) -->
-            <button type="button" onclick="eksporCeklistKeDocx()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
+            <button type="button" onclick="bukaModalPilihanWord('ceklist')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka & Edit Langsung di Google Docs (Word Online)">
               <span>&#x1F4DD; Convert to Word</span>
             </button>
 
@@ -3717,12 +3717,109 @@
     </div>
   </div>
 
+  
+  <!-- ============================================================================= -->
+  <!-- MODAL PILIHAN KONVERSI WORD (.DOCX / GOOGLE DOCS) -->
+  <!-- ============================================================================= -->
+  <div id="modalPilihanWord" class="no-print fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Header Modal -->
+      <div class="px-5 py-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-lg">
+            &#x1F4DD;
+          </div>
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wide">Pilihan Konversi ke Word</h3>
+            <p class="text-[11px] text-emerald-100">Pilih format pembukaan dokumen yang Anda butuhkan</p>
+          </div>
+        </div>
+        <button onclick="tutupModalPilihanWord()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs transition cursor-pointer">
+          &#x2715;
+        </button>
+      </div>
+
+      <!-- Konten Pilihan -->
+      <div class="p-5 space-y-3.5">
+        
+        <!-- Opsi 1: Unduh File Word (.docx) - REKOMENDASI UTAMA -->
+        <div class="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 hover:bg-emerald-50 transition cursor-pointer flex flex-col gap-2 group shadow-xs" onclick="eksekusiUnduhWordDocx()">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm">
+                &#x1F4C4;
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition flex items-center gap-2">
+                  <span>Unduh File Word (.docx)</span>
+                  <span class="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-600 text-white shadow-2xs">Direkomendasikan</span>
+                </div>
+                <div class="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                  100% Rapi, Resmi, &amp; Identik dengan Tampilan Aplikasi
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11.5px] text-slate-600 leading-relaxed pl-11.5">
+            Buka langsung dengan <strong>Microsoft Word</strong> atau <strong>WPS Office</strong> di laptop/komputer Anda. Garis ganda kop surat, lambang daerah, kolom nomor/tanggal, dan posisi tanda tangan Camat tampil <strong>100% presisi dan resmi</strong> sesuai pratinjau.
+          </p>
+          <div class="pl-11.5 pt-1">
+            <button type="button" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 pointer-events-none">
+              <span>&#x1F4E5; Unduh File Word (.docx) Sekarang</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Opsi 2: Buka di Google Docs (Online) -->
+        <div class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition cursor-pointer flex flex-col gap-2 group" onclick="eksekusiBukaGoogleDocsOnline()">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-lg shadow-sm">
+                &#x1F310;
+              </div>
+              <div>
+                <div class="text-xs font-bold text-slate-800 group-hover:text-blue-700 transition flex items-center gap-2">
+                  <span>Buka di Google Docs (Online)</span>
+                  <span class="px-2 py-0.5 rounded-full text-[9.5px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Mode Online</span>
+                </div>
+                <div class="text-[11px] text-slate-500 font-medium mt-0.5">
+                  Edit langsung di browser via Google Docs
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11.5px] text-slate-500 leading-relaxed pl-11.5">
+            Membuka lembar kerja Google Docs di tab baru tanpa menyimpan file ke komputer.
+            <span class="block text-[10.5px] text-amber-800 bg-amber-50 rounded-lg p-2 mt-1.5 border border-amber-200">
+              &#x26A0;&#xFE0F; <em>Catatan:</em> Karena keterbatasan mesin Google Docs, garis ganda kop surat dan lebar kolom tabel disederhanakan oleh Google Docs.
+            </span>
+          </p>
+          <div class="pl-11.5 pt-1">
+            <button type="button" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 pointer-events-none">
+              <span>&#x1F517; Buka via Google Docs Online</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Modal -->
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
+        <button type="button" onclick="tutupModalPilihanWord()" class="px-4 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold transition cursor-pointer">
+          Tutup
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Library HTML to DOCX Generator (Standalone Offline Support) -->
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261028_fix_gdocs_white_screen"></script>
+  <script src="app.js?v=20261028_modal_word_export"></script>
 </body>
 </html>
