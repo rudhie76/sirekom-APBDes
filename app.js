@@ -3091,23 +3091,28 @@ function bukaPlaceholderTabGoogleDocs(judulDokumen = 'Dokumen') {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Membuka di Google Docs...</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f1f5f9; color: #0f172a; }
-          .card { text-align: center; padding: 2.25rem 2rem; background: #ffffff; border-radius: 1.25rem; box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04); border: 1px solid #e2e8f0; max-width: 440px; width: 90%; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f8fafc; color: #0f172a; }
+          .card { text-align: center; padding: 2.25rem 2rem; background: #ffffff; border-radius: 1.25rem; box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04); border: 1px solid #e2e8f0; max-width: 480px; width: 92%; }
           .icon-doc { width: 56px; height: 56px; margin: 0 auto 1.25rem; background: #eff6ff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
-          .spinner { width: 36px; height: 36px; border: 3.5px solid #dbeafe; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.25rem; }
+          .spinner { width: 38px; height: 38px; border: 3.5px solid #dbeafe; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.25rem; }
           @keyframes spin { to { transform: rotate(360deg); } }
-          h3 { margin: 0 0 0.5rem; font-size: 17px; font-weight: 700; color: #1e293b; }
-          p { margin: 0 0 1rem; font-size: 13px; color: #64748b; line-height: 1.55; }
-          .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 9999px; font-size: 11px; font-weight: 600; color: #334155; }
+          h3 { margin: 0 0 0.5rem; font-size: 17.5px; font-weight: 700; color: #1e293b; }
+          p { margin: 0 0 1rem; font-size: 13.5px; color: #64748b; line-height: 1.55; }
+          .tip-box { text-align: left; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin-top: 1rem; font-size: 12px; color: #166534; line-height: 1.55; }
+          .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 9999px; font-size: 11px; font-weight: 600; color: #334155; margin-bottom: 0.75rem; }
         </style>
       </head>
       <body>
         <div class="card">
+          <span class="badge">&#x1F310; Mode Online Google Docs</span>
           <div class="icon-doc">&#x1F4DD;</div>
           <div class="spinner"></div>
-          <h3>Membuka Lembar Kerja Google Docs...</h3>
-          <p>Dokumen <strong>${judulDokumen}</strong> sedang dikonversi dan disiapkan. Tab ini akan otomatis beralih ke editor Google Docs dalam beberapa detik.</p>
-          <span class="badge">&#x1F310; Mode Online Google Docs</span>
+          <h3>Menyiapkan Lembar Kerja Google Docs...</h3>
+          <p>Dokumen <strong>${escapeHtml(judulDokumen)}</strong> sedang dikonversi ke editor Google Docs online.</p>
+          <div class="tip-box">
+            <strong>&#x1F4CB; Teks &amp; Format Tersalin Otomatis:</strong><br>
+            Seluruh isi surat, kop, dan tabel telah disalin ke Clipboard Anda. Jika lembar Google Docs baru terbuka dalam keadaan kosong, cukup tekan tombol <strong>Ctrl + V</strong> di keyboard untuk langsung memunculkan seluruh isi dokumen!
+          </div>
         </div>
       </body>
       </html>
@@ -3120,15 +3125,67 @@ function bukaPlaceholderTabGoogleDocs(judulDokumen = 'Dokumen') {
 }
 
 /**
+ * Salin Format HTML Surat ke Clipboard Sistem Pengguna
+ */
+async function copyFormattedHtmlToClipboard(fullHtml) {
+  try {
+    if (!navigator.clipboard || !window.ClipboardItem || !fullHtml) return false;
+    let clipHtml = fullHtml;
+    if (fullHtml.includes('<body') && fullHtml.includes('</body>')) {
+      clipHtml = fullHtml.substring(fullHtml.indexOf('<body'), fullHtml.indexOf('</body>') + 7);
+    }
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = clipHtml;
+    const plainText = tempDiv.innerText || tempDiv.textContent || '';
+
+    const blobHtml = new Blob([clipHtml], { type: 'text/html' });
+    const blobText = new Blob([plainText], { type: 'text/plain' });
+
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'text/html': blobHtml,
+        'text/plain': blobText
+      })
+    ]);
+    return true;
+  } catch (clipErr) {
+    console.warn('Clipboard write error:', clipErr);
+    return false;
+  }
+}
+
+/**
+ * Unduh File Word (.docx) Secara Lokal ke Komputer
+ */
+function unduhFileWordLokal(blob, safeName) {
+  const blobUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = safeName.toLowerCase().endsWith('.docx') ? safeName : `${safeName}.docx`;
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
+  }, 2000);
+}
+
+/**
  * Mengunggah Dokumen Word (.docx) ke Google Drive & Membuka Langsung di Google Docs Tab Baru
  * Pengguna dapat langsung melihat dan mengedit tanpa harus menyimpan file ke lokal terlebih dahulu
  */
 async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholderTab = null, fullHtml = '') {
+  // Salin isi dokumen ke clipboard sistem pengguna agar siap ditempel (Ctrl + V)
+  await copyFormattedHtmlToClipboard(fullHtml);
+
   if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
     try {
       showToast('Mengonversi dokumen ke Google Docs...', 'info');
 
-      // 1. Konversi blob ke base64
+      // 1. Bersihkan base64 gambar berukuran besar dari payload HTML untuk transmisi super cepat
+      const cleanHtmlForGas = (fullHtml || '').replace(/data:image\/[^;]+;base64,[^"']+/g, '');
+
+      // 2. Konversi blob ke base64 (cadangan)
       const base64Data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -3140,14 +3197,14 @@ async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholder
         reader.readAsDataURL(blob);
       });
 
-      // 2. Kirim payload ke Web App Google Apps Script (Sertakan HTML lengkap agar Google Docs terisi penuh)
+      // 3. Kirim payload ke Web App Google Apps Script
       const res = await fetch(AppState.gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'bukaGoogleDocs',
           title: safeName,
-          html: fullHtml || '',
+          html: cleanHtmlForGas,
           base64: base64Data,
           type: 'text/html',
           namaDesa: namaDesa || 'Desa'
@@ -3161,29 +3218,25 @@ async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholder
         } else {
           window.open(result.docUrl, '_blank');
         }
-        showToast(`Dokumen "${safeName}" berhasil dibuka di Google Docs!`, 'success');
+        showToast(`Dokumen "${safeName}" berhasil dibuka di Google Docs! (Teks juga tersalin di clipboard)`, 'success');
         return true;
+      } else {
+        const msg = (result && result.message) ? result.message : 'Gagal membuat Google Docs.';
+        console.warn('GAS bukaGoogleDocs return:', result);
+        showToast(`${msg} Mengunduh file Word (.docx) ke komputer...`, 'warning');
       }
     } catch (gasErr) {
       console.warn('Gagal membuka via Google Docs online:', gasErr);
+      showToast('Gagal menghubungi Google Docs. Mengunduh file Word (.docx) ke komputer...', 'warning');
     }
   }
 
-  // Fallback: Jika GAS offline atau belum terhubung, tutup tab placeholder & unduh file lokal
+  // Fallback: Jika GAS offline, error, atau belum terhubung, tutup tab placeholder & unduh file lokal
   if (placeholderTab && !placeholderTab.closed) {
     placeholderTab.close();
   }
 
-  const blobUrl = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = blobUrl;
-  link.download = `${safeName}.docx`;
-  document.body.appendChild(link);
-  link.click();
-  setTimeout(() => {
-    document.body.removeChild(link);
-    URL.revokeObjectURL(blobUrl);
-  }, 2000);
+  unduhFileWordLokal(blob, safeName);
 
   if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) {
     showToast('Koneksi Google Drive belum aktif di Konfigurasi. File Word diunduh ke komputer Anda.', 'warning');
@@ -3193,9 +3246,6 @@ async function bukaDokumenOnlineGoogleDocs(blob, safeName, namaDesa, placeholder
   return false;
 }
 
-/**
- * Ekspor Hasil Cetak Surat Rekomendasi Menjadi Dokumen Microsoft Word (.docx) & Buka di Google Docs
- */
 window.eksporSuratKeDocx = async function() {
   if (typeof window.htmlDocx === 'undefined' || typeof window.htmlDocx.asBlob !== 'function') {
     showToast('Modul pembaca DOCX belum termuat sempurna. Silakan muat ulang halaman (Ctrl + F5).', 'error');

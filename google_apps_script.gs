@@ -60,10 +60,18 @@ var NAMA_FOLDER_UTAMA_DRIVE = "SIP-REKOM APBDES KECAMATAN WARU";
 function AKTIFKAN_IZIN_DAN_TEST() {
   initSheets();
   var mainFolder = getOrCreateFolder(NAMA_FOLDER_UTAMA_DRIVE);
-  Logger.log("✅ BERHASIL! Izin Google Drive & Spreadsheet sudah aktif.");
+  try {
+    var testDoc = DocumentApp.create("TEST_IZIN_GOOGLE_DOCS");
+    var docId = testDoc.getId();
+    testDoc.saveAndClose();
+    DriveApp.getFileById(docId).setTrashed(true);
+  } catch (docErr) {
+    Logger.log("Info izin DocumentApp: " + docErr.toString());
+  }
+  Logger.log("✅ BERHASIL! Izin Google Drive, Docs & Spreadsheet sudah aktif.");
   Logger.log("📁 Folder Google Drive: " + mainFolder.getName());
   Logger.log("🔗 URL Folder: " + mainFolder.getUrl());
-  return "Izin Google Drive & Spreadsheet BERHASIL diaktifkan!";
+  return "Izin Google Drive, Docs & Spreadsheet BERHASIL diaktifkan!";
 }
 
 /**
@@ -1347,7 +1355,7 @@ function doPost(e) {
     // AKSI 9: BUKA DOKUMEN REKOMENDASI / SP LANGSUNG DI GOOGLE DOCS (CONVERT TO WORD ONLINE)
     // -------------------------------------------------------------------------------------
     if (action === "bukaGoogleDocs" || action === "convertToWordDocs") {
-      var docTitle = (payload.title || "Dokumen_Rekomendasi").replace(/[\/\\:*?"<>|]/g, "_");
+      var docTitle = (payload.title || "Dokumen_Rekomendasi").replace(/[\/\\:*?"<>|]/g, "_").replace(/\.docx$/i, "").trim();
       var htmlContent = payload.html || "";
       var rawBase64 = payload.base64 || "";
 
@@ -1367,37 +1375,107 @@ function doPost(e) {
       var docFileId = "";
       var docEditUrl = "";
 
-      // METODE 1: Menggunakan Google Drive REST API v2 Upload & Convert (Resmi Google)
-      // Endpoint ini mengonversi kode HTML lengkap (tabel, teks, paragraf, kop, garis) menjadi NATIVE Google Docs yang langsung terisi sempurna
-      if (htmlContent) {
+      // Bersihkan gambar base64 besar dari HTML agar Google Drive API tidak error/timeout
+      var safeHtml = htmlContent;
+      if (safeHtml) {
+        safeHtml = safeHtml.replace(/<img[^>]+src=["']data:image\/[^"']+["'][^>]*>/gi, '<div style="text-align: center; font-weight: bold; font-size: 10pt; color: #444444; margin-bottom: 4pt;">[ LOGO DAERAH KABUPATEN PENAJAM PASER UTARA ]</div>');
+      }
+
+      // METODE 1: Menggunakan Google Drive REST API v2 Upload & Convert via Multipart
+      // Mengonversi kode HTML lengkap (tabel, teks, paragraf, garis) menjadi NATIVE Google Docs
+      if (safeHtml) {
         try {
-          var htmlBlob = Utilities.newBlob(htmlContent, "text/html; charset=UTF-8", docTitle + ".html");
-          var uploadUrl = "https://www.googleapis.com/upload/drive/v2/files?uploadType=media&convert=true";
-          var fetchOptions = {
+          var boundary = "----SIPRekomBoundary" + Utilities.getUuid().replace(/-/g, "");
+          var delimiter = "\r\n--" + boundary + "\r\n";
+          var closeDelimiter = "\r\n--" + boundary + "--";
+
+          var metadata = {
+            title: docTitle,
+            mimeType: "application/vnd.google-apps.document",
+            parents: [{ id: docsFolder.getId() }]
+          };
+
+          var multipartBody =
+            delimiter +
+            "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+            JSON.stringify(metadata) +
+            delimiter +
+            "Content-Type: text/html; charset=UTF-8\r\n\r\n" +
+            safeHtml +
+            closeDelimiter;
+
+          var uploadUrl = "https://www.googleapis.com/upload/drive/v2/files?uploadType=multipart&convert=true";
+          var response = UrlFetchApp.fetch(uploadUrl, {
             method: "POST",
-            contentType: "text/html; charset=UTF-8",
+            contentType: "multipart/related; boundary=" + boundary,
             headers: {
               "Authorization": "Bearer " + ScriptApp.getOAuthToken()
             },
-            payload: htmlBlob.getBytes(),
+            payload: multipartBody,
             muteHttpExceptions: true
-          };
+          });
 
-          var response = UrlFetchApp.fetch(uploadUrl, fetchOptions);
-          if (response.getResponseCode() === 200) {
+          var code = response.getResponseCode();
+          if (code === 200 || code === 201) {
             var resJson = JSON.parse(response.getContentText());
             docFileId = resJson.id;
             docEditUrl = resJson.alternateLink || ("https://docs.google.com/document/d/" + docFileId + "/edit");
           } else {
-            Logger.log("UrlFetchApp drive v2 error: " + response.getContentText());
+            Logger.log("UrlFetchApp drive v2 error (" + code + "): " + response.getContentText());
           }
         } catch (fetchErr) {
-          Logger.log("Error UrlFetchApp convert: " + fetchErr.toString());
+          Logger.log("Error UrlFetchApp convert v2: " + fetchErr.toString());
         }
       }
 
-      // METODE 2: Coba Advanced Drive Service jika aktif di project
-      if (!docFileId && htmlContent) {
+      // METODE 2: Menggunakan Google Drive REST API v3 Multipart jika v2 tidak merespon
+      if (!docFileId && safeHtml) {
+        try {
+          var boundary3 = "----SIPRekomBoundaryV3" + Utilities.getUuid().replace(/-/g, "");
+          var delimiter3 = "\r\n--" + boundary3 + "\r\n";
+          var closeDelimiter3 = "\r\n--" + boundary3 + "--";
+
+          var metadata3 = {
+            name: docTitle,
+            mimeType: "application/vnd.google-apps.document",
+            parents: [docsFolder.getId()]
+          };
+
+          var multipartBody3 =
+            delimiter3 +
+            "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+            JSON.stringify(metadata3) +
+            delimiter3 +
+            "Content-Type: text/html; charset=UTF-8\r\n\r\n" +
+            safeHtml +
+            closeDelimiter3;
+
+          var uploadUrl3 = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+          var response3 = UrlFetchApp.fetch(uploadUrl3, {
+            method: "POST",
+            contentType: "multipart/related; boundary=" + boundary3,
+            headers: {
+              "Authorization": "Bearer " + ScriptApp.getOAuthToken()
+            },
+            payload: multipartBody3,
+            muteHttpExceptions: true
+          });
+
+          var code3 = response3.getResponseCode();
+          if (code3 === 200 || code3 === 201) {
+            var resJson3 = JSON.parse(response3.getContentText());
+            docFileId = resJson3.id;
+            docEditUrl = "https://docs.google.com/document/d/" + docFileId + "/edit";
+          } else {
+            Logger.log("UrlFetchApp drive v3 error (" + code3 + "): " + response3.getContentText());
+          }
+        } catch (v3Err) {
+          Logger.log("Error Drive v3: " + v3Err.toString());
+        }
+      }
+
+      // METODE 3: Coba Advanced Drive Service jika aktif di project
+      if (!docFileId && safeHtml) {
         try {
           if (typeof Drive !== "undefined" && Drive.Files && typeof Drive.Files.insert === "function") {
             var resource = {
@@ -1405,7 +1483,7 @@ function doPost(e) {
               mimeType: "application/vnd.google-apps.document",
               parents: [{ id: docsFolder.getId() }]
             };
-            var hBlob = Utilities.newBlob(htmlContent, "text/html; charset=UTF-8", docTitle + ".html");
+            var hBlob = Utilities.newBlob(safeHtml, "text/html; charset=UTF-8", docTitle + ".html");
             var convertedFile = Drive.Files.insert(resource, hBlob, { convert: true });
             docFileId = convertedFile.id;
             docEditUrl = "https://docs.google.com/document/d/" + docFileId + "/edit";
@@ -1415,8 +1493,8 @@ function doPost(e) {
         }
       }
 
-      // METODE 3: Menggunakan DocumentApp bawaan (Parsing teks & tabel langsung ke Google Docs)
-      if (!docFileId && htmlContent) {
+      // METODE 4: Fallback DocumentApp (Membuat Google Doc terformat secara langsung agar tidak kosong)
+      if (!docFileId && safeHtml) {
         try {
           var newDoc = DocumentApp.create(docTitle);
           docFileId = newDoc.getId();
@@ -1427,15 +1505,15 @@ function doPost(e) {
           docBody.setMarginLeft(28.35);   // 1 cm
           docBody.setMarginRight(28.35);  // 1 cm
 
-          // Bersihkan teks dan buat paragraf bersih
-          var cleanText = htmlContent
+          // Bersihkan teks dan buat paragraf bersih terstruktur
+          var cleanText = safeHtml
             .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
             .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
             .replace(/<br\s*[\/]?>/gi, '\n')
             .replace(/<\/p>/gi, '\n')
             .replace(/<\/div>/gi, '\n')
             .replace(/<\/tr>/gi, '\n')
-            .replace(/<td[^>]*>/gi, '\t')
+            .replace(/<td[^>]*>/gi, '   |   ')
             .replace(/<[^>]+>/g, '')
             .replace(/&nbsp;/g, ' ')
             .replace(/&amp;/g, '&')
@@ -1447,7 +1525,10 @@ function doPost(e) {
           for (var li = 0; li < lines.length; li++) {
             var trimmedLine = lines[li].trim();
             if (trimmedLine) {
-              docBody.appendParagraph(trimmedLine);
+              var p = docBody.appendParagraph(trimmedLine);
+              if (trimmedLine.toUpperCase() === trimmedLine && trimmedLine.length > 8 && !trimmedLine.includes('|')) {
+                p.setHeading(DocumentApp.ParagraphHeading.HEADING3);
+              }
             }
           }
           newDoc.saveAndClose();
@@ -1456,20 +1537,7 @@ function doPost(e) {
         }
       }
 
-      // METODE 4: Fallback ke penyimpanan file Word docx
-      if (!docFileId && rawBase64) {
-        try {
-          var decodedBytes = Utilities.base64Decode(rawBase64);
-          var fileNameWithExt = docTitle.toLowerCase().endsWith(".docx") ? docTitle : (docTitle + ".docx");
-          var docxBlob = Utilities.newBlob(decodedBytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", fileNameWithExt);
-          var savedWordFile = docsFolder.createFile(docxBlob);
-          docFileId = savedWordFile.getId();
-          docEditUrl = "https://docs.google.com/document/d/" + docFileId + "/edit";
-        } catch (wordErr) {
-          Logger.log("Error fallback docx: " + wordErr.toString());
-        }
-      }
-
+      // Jika dokumen berhasil dibuat dalam format Google Docs Asli
       if (docFileId) {
         try {
           var driveFile = DriveApp.getFileById(docFileId);
@@ -1492,9 +1560,11 @@ function doPost(e) {
         });
       }
 
+      // CATATAN: JANGAN menyimpan file altChunk (.docx) mentah untuk dibuka di Google Docs
+      // karena Google Docs web viewer tidak mendukung altChunk dan akan menampilkan layar putih kosong.
       return jsonResponse({
         success: false,
-        message: "Gagal membuat dokumen Google Docs."
+        message: "Gagal membuat dokumen Google Docs online. Silakan perbarui deployment Google Apps Script atau unduh file Word (.docx)."
       });
     }
 
