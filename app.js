@@ -3682,15 +3682,16 @@ window.generateCeklistDocxFromItem = async function(item) {
 
     const checkedIds = Array.isArray(item.kelengkapanBerkas) ? item.kelengkapanBerkas : [];
 
-    const tableRowsHtml = rawList.map((b, idx) => {
-      const isChecked = checkedIds.length > 0 ? checkedIds.includes(b.id) : b.checked !== false;
+    const tableRowsHtml = rawList.filter((b, idx) => {
+      return checkedIds.length > 0 ? checkedIds.includes(b.id) : b.checked !== false;
+    }).map((b, idx) => {
       return `
         <tr>
           <td width="30" style="width: 30pt; vertical-align: top; padding: 4pt 0 4pt 0;">
             <table border="1" cellpadding="0" cellspacing="0" style="width: 14pt; height: 14pt; border: 1.5pt solid #000000; text-align: center; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
               <tr>
                 <td width="14" height="14" style="width: 14pt; height: 14pt; text-align: center; font-size: 11pt; font-weight: bold; font-family: Arial, sans-serif; line-height: 12pt; vertical-align: middle;">
-                  ${isChecked ? 'V' : '&nbsp;'}
+                  V
                 </td>
               </tr>
             </table>
@@ -10751,7 +10752,7 @@ window.renderRowsCeklistInputs = function() {
         <div class="flex items-center justify-between gap-2">
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRowCeklist(${index})" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
-            <span class="text-xs font-bold text-slate-800">Berkas #${index + 1} (${item.checked ? '<span class="text-emerald-700">Lengkap [ V ]</span>' : '<span class="text-rose-600">Belum [   ]</span>'})</span>
+            <span class="text-xs font-bold text-slate-800">Berkas #${index + 1} (${item.checked ? '<span class="text-emerald-700">Lengkap [ V ]</span>' : '<span class="text-slate-400 font-normal italic">Tidak Ditampilkan di Lembar</span>'})</span>
           </label>
           <div class="flex items-center gap-1">
             <button type="button" onclick="hapusBarisCeklist(${index})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1 rounded transition text-xs cursor-pointer flex items-center justify-center" title="Hapus baris ini">
@@ -10998,6 +10999,9 @@ window.updateLivePreviewCeklist = function(forceSyncFromForm = false) {
     ? AppState.ceklistData.rows
     : (DEFAULT_BERKAS_TEMPLATES[jenisDana] || DEFAULT_BERKAS_TEMPLATES.siltap).map((b, idx) => ({ id: b.id || ('ck_' + idx), teks: b.teks, checked: true }));
 
+  // Filter hanya berkas yang dicentang (checked !== false) agar yang tidak dicentang otomatis hilang/tidak muncul
+  const visibleRows = rows.filter(item => item.checked !== false);
+
   container.innerHTML = `
     <div class="surat-sheet ceklist-sheet" style="width: ${widthMm}; min-height: ${minHeightMm}; --surat-line-height: ${lineSpacing}; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000000; box-sizing: border-box; background: #ffffff; padding: 22mm 20mm 20mm 22mm; margin: 0 auto; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18);">
       
@@ -11033,13 +11037,19 @@ window.updateLivePreviewCeklist = function(forceSyncFromForm = false) {
         </tr>
       </table>
 
-      <!-- 3. Daftar Berkas Persyaratan Ceklist (Square Box [ V ] di kiri, teks di kanan) -->
+      <!-- 3. Daftar Berkas Persyaratan Ceklist (Hanya berkas yang dicentang yang tampil di lembar) -->
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 22pt; font-family: Arial, sans-serif; font-size: 10.5pt; color: #000000;">
-        ${rows.map(item => `
+        ${visibleRows.length === 0 ? `
+          <tr>
+            <td colspan="2" style="padding: 16pt 0; text-align: center; font-style: italic; color: #64748b; font-size: 10pt;">
+              (Tidak ada berkas persyaratan yang dicentang untuk ditampilkan)
+            </td>
+          </tr>
+        ` : visibleRows.map(item => `
           <tr>
             <td style="width: 32pt; vertical-align: top; padding: 3pt 0 4pt 0;">
               <div style="width: 16pt; height: 16pt; border: 1.8pt solid #000000; text-align: center; line-height: 14pt; font-weight: 900; font-family: Arial, sans-serif; font-size: 11.5pt; box-sizing: border-box;">
-                ${item.checked ? 'V' : '&nbsp;'}
+                V
               </div>
             </td>
             <td style="vertical-align: top; padding: 2pt 0 4pt 0; font-size: 10.5pt; line-height: 1.25; text-align: justify; color: #000000;">
