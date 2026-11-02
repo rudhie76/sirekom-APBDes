@@ -6953,7 +6953,7 @@ window.renderTabelPengajuanKecamatan = function() {
       `;
     }
 
-    // Pilihan Tindakan Kecamatan (Data OK -> Buat Rekom Camat | Tidak OK -> Kembalikan dengan Catatan)
+    // Pilihan Tindakan Kecamatan (Data OK -> Buat Rekom Camat, SPengantar, Ceklist | Tidak OK -> Kembalikan)
     let tindakanHtml = '';
     if (isSelesai) {
       tindakanHtml = `
@@ -6964,6 +6964,12 @@ window.renderTabelPengajuanKecamatan = function() {
           <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka formulir data rekomendasi camat">
             <span>⚡ Buka Rekom</span>
           </button>
+          <button onclick="prosesPengajuanKeSuratPengantar('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 hover:border-teal-300 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka & Buat Surat Pengantar Kecamatan untuk pengajuan ini">
+            <span>📨 Buat SPengantar</span>
+          </button>
+          <button onclick="prosesPengajuanKeCeklist('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka & Buat Ceklist Kelengkapan Berkas untuk pengajuan ini">
+            <span>📋 Ceklist</span>
+          </button>
         </div>
       `;
     } else if (item.status === 'Dikembalikan') {
@@ -6971,6 +6977,12 @@ window.renderTabelPengajuanKecamatan = function() {
         <div class="flex flex-col gap-1.5">
           <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="w-full px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-bold transition shadow-xs flex items-center justify-center gap-1 cursor-pointer" title="Data berkas sudah diperbaiki & OK: Lanjutkan pembuatan Rekomendasi Camat">
             <span>⚡ Data OK: Buat Rekom</span>
+          </button>
+          <button onclick="prosesPengajuanKeSuratPengantar('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 hover:border-teal-300 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka & Buat Surat Pengantar Kecamatan">
+            <span>📨 Buat SPengantar</span>
+          </button>
+          <button onclick="prosesPengajuanKeCeklist('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka & Buat Ceklist Kelengkapan Berkas">
+            <span>📋 Ceklist</span>
           </button>
           <button onclick="bukaModalKembalikanPengajuan('${item.id}')" class="w-full px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-300 hover:border-rose-400 rounded-lg text-[11px] font-bold transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer" title="Perbarui catatan revisi untuk pihak desa">
             <span>✏️ Ubah Catatan Revisi</span>
@@ -6986,6 +6998,12 @@ window.renderTabelPengajuanKecamatan = function() {
           <button onclick="prosesPengajuanKeRekomendasi('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka kembali formulir generator rekomendasi camat">
             <span>⚡ Buka Rekom</span>
           </button>
+          <button onclick="prosesPengajuanKeSuratPengantar('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 hover:border-teal-300 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka & Buat Surat Pengantar Kecamatan untuk pengajuan ini">
+            <span>📨 Buat SPengantar</span>
+          </button>
+          <button onclick="prosesPengajuanKeCeklist('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka & Buat Ceklist Kelengkapan Berkas untuk pengajuan ini">
+            <span>📋 Ceklist</span>
+          </button>
           <button onclick="bukaModalKembalikanPengajuan('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-300 rounded-lg text-[10px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Koreksi dan kembalikan berkas ke desa">
             <span>↩️ Koreksi / Kembalikan</span>
           </button>
@@ -7000,6 +7018,14 @@ window.renderTabelPengajuanKecamatan = function() {
             <span>⚡ Data OK: Buat Rekom</span>
           </button>
 
+          <button onclick="prosesPengajuanKeSuratPengantar('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 hover:border-teal-300 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka & Buat Surat Pengantar Kecamatan untuk pengajuan ini">
+            <span>📨 Buat SPengantar</span>
+          </button>
+
+          <button onclick="prosesPengajuanKeCeklist('${item.id}')" class="w-full px-2 py-1 bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 rounded-lg text-[10.5px] font-semibold transition flex items-center justify-center gap-1 cursor-pointer" title="Buka & Buat Ceklist Kelengkapan Berkas untuk pengajuan ini">
+            <span>📋 Ceklist</span>
+          </button>
+
           <!-- Pilihan 2: Jika Data TIDAK OK -->
           <button onclick="bukaModalKembalikanPengajuan('${item.id}')" class="w-full px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-300 hover:border-rose-400 rounded-lg text-[11px] font-bold transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer" title="Data berkas belum lengkap atau salah: Kembalikan ke desa dengan catatan perbaikan">
             <span>↩️ Tidak OK: Kembalikan</span>
@@ -7012,7 +7038,6 @@ window.renderTabelPengajuanKecamatan = function() {
         </div>
       `;
     }
-
     return `
       <tr class="hover:bg-slate-50 transition border-b border-slate-100 ${item.status === 'Dikembalikan' ? 'bg-rose-50/20' : ''}">
         <td class="py-3 px-3 text-center text-slate-500 font-mono text-xs">${index + 1}</td>
@@ -7420,6 +7445,282 @@ window.prosesPengajuanKeRekomendasi = function(id) {
   updateLivePreview();
 
   showToast(`Data pengajuan Desa ${item.namaDesa} berhasil disinkronkan ke Surat Rekomendasi Camat!`, 'success');
+};
+
+/**
+ * Helper memastikan nama desa ada di dalam elemen <select>, jika belum ada ditambahkan secara dinamis
+ */
+function ensureDesaOptionInSelect(selectEl, namaDesa) {
+  if (!selectEl || !namaDesa) return;
+  const exists = Array.from(selectEl.options).some(o => o.value.toLowerCase() === String(namaDesa).toLowerCase());
+  if (!exists) {
+    const opt = document.createElement('option');
+    opt.value = namaDesa;
+    opt.textContent = `Desa ${namaDesa}`;
+    selectEl.appendChild(opt);
+  }
+  selectEl.value = namaDesa;
+}
+
+/**
+ * Mengambil Data Pengajuan Desa dan Memasukkannya Langsung ke Surat Pengantar Kecamatan
+ */
+window.prosesPengajuanKeSuratPengantar = function(id) {
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa') {
+    showToast('⚠️ Akses Terkunci: Pembuatan Surat Pengantar Kecamatan adalah kewenangan pihak Kecamatan Waru.', 'warning');
+    return;
+  }
+  const item = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id));
+  if (!item) {
+    showToast('Data pengajuan berkas tidak ditemukan.', 'error');
+    return;
+  }
+
+  // 1. Sinkronkan ke generator rekomendasi agar data global (desa & jenis) sejalan
+  pilihTipeRekomendasi(item.jenisDana);
+  const selectDesa = document.getElementById('selectNamaDesa');
+  if (selectDesa) {
+    selectDesa.value = item.namaDesa;
+    triggerAutoFillDesa();
+  }
+  if (item.tahap) {
+    const selectTahap = document.getElementById('selectTahapReguler');
+    if (selectTahap) selectTahap.value = item.tahap;
+    const selectBulan = document.getElementById('selectBulanGaji');
+    if (selectBulan && item.tahap.startsWith('Bulan')) {
+      selectBulan.value = item.tahap.replace('Bulan', '').trim();
+    }
+  }
+  if (item.tahunAnggaran) {
+    const inputTahun = document.getElementById('inputTahunAnggaran');
+    if (inputTahun) inputTahun.value = item.tahunAnggaran;
+    const inputTahunReguler = document.getElementById('inputTahunAnggaranReguler');
+    if (inputTahunReguler) inputTahunReguler.value = item.tahunAnggaran;
+  }
+
+  // 2. Tandai status pengajuan sebagai Diterbitkan jika sebelumnya Menunggu Verifikasi
+  if (!item.status || item.status === 'Menunggu Verifikasi') {
+    item.status = 'Diterbitkan';
+    localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+    updateBadgePengajuanDesa();
+    if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+      fetch(AppState.gasUrl, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'updateStatusPengajuan',
+          id: item.id,
+          status: 'Diterbitkan',
+          catatan: 'Diproses pembuatan dokumen resmi Kecamatan Waru'
+        })
+      }).catch(e => console.error('Gagal update status pengajuan ke gas:', e));
+    }
+  }
+
+  // 3. Cek apakah ada arsip SP tersimpan di AppState.suratPengantarList untuk pengajuan ini
+  const existingSp = (AppState.suratPengantarList || []).find(sp => 
+    sp.namaDesa === item.namaDesa &&
+    String(sp.jenisDana || '').toLowerCase() === String(item.jenisDana || '').toLowerCase() &&
+    String(sp.tahap || '').toLowerCase() === String(item.tahap || '').toLowerCase()
+  );
+
+  if (existingSp) {
+    muatArsipSpKeEditor(existingSp.id);
+  } else {
+    // Siapkan data baru di AppState.suratPengantarData
+    AppState.suratPengantarData.id = null;
+    AppState.suratPengantarData.namaDesa = item.namaDesa;
+    AppState.suratPengantarData.jenisDana = item.jenisDana;
+    AppState.suratPengantarData.tahap = item.tahap;
+    AppState.suratPengantarData.tahunAnggaran = item.tahunAnggaran || '2026';
+
+    let perihal = buildPerihalFromSpParams(item.namaDesa, item.jenisDana, item.tahap, item.tahunAnggaran || '2026');
+    if (!perihal.toLowerCase().startsWith('kelengkapan berkas')) {
+      perihal = `Kelengkapan berkas ${perihal}.`;
+    }
+
+    AppState.suratPengantarData.rows = [{
+      no: 1,
+      jenis: perihal,
+      banyak: '1 (satu) Berkas',
+      keterangan: 'Dikirim dengan hormat kepada Bapak untuk dapat diproses penyaluran/pencairan dana lebih lanjut. Terima kasih.'
+    }];
+
+    // Sinkronkan ke form Surat Pengantar
+    const selDesaSp = document.getElementById('selectDesaSp');
+    if (selDesaSp) {
+      ensureDesaOptionInSelect(selDesaSp, item.namaDesa);
+    }
+    const selJenisSp = document.getElementById('selectJenisDanaSp');
+    if (selJenisSp) selJenisSp.value = item.jenisDana;
+
+    const selTahapSp = document.getElementById('selectTahapSp');
+    if (selTahapSp) {
+      const optMatch = Array.from(selTahapSp.options).find(o => 
+        o.value.toLowerCase() === String(item.tahap).toLowerCase() || 
+        o.value.toLowerCase() === `bulan ${String(item.tahap).toLowerCase()}`
+      );
+      if (optMatch) selTahapSp.value = optMatch.value;
+      else selTahapSp.value = item.tahap;
+    }
+
+    const inpTahunSp = document.getElementById('inputTahunSp');
+    if (inpTahunSp) inpTahunSp.value = item.tahunAnggaran || '2026';
+
+    // Buat nomor urut otomatis
+    const today = new Date();
+    const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const romanMonth = romanMonths[today.getMonth()];
+    const year = today.getFullYear();
+    const existingCount = (AppState.suratPengantarList || []).length;
+    const nomorUrut = String(120 + existingCount + 1).padStart(3, '0');
+    const nomorBaru = `000.1.5 / ${nomorUrut} / Ekbang / ${romanMonth} / ${year}`;
+    const inpNomorSp = document.getElementById('inputNomorSp');
+    if (inpNomorSp) inpNomorSp.value = nomorBaru;
+    AppState.suratPengantarData.nomorSurat = nomorBaru;
+
+    renderRowsSpInputs();
+    updateLivePreviewSp();
+  }
+
+  // 4. Tutup modal (jika terbuka) & navigasi ke Tab Surat Pengantar
+  closeModalPengajuanKecamatan();
+  navigateToMenu('verifikasi_rekom');
+  switchKecamatanSubTab('surat_pengantar');
+
+  showToast(`Data pengajuan Desa ${item.namaDesa} berhasil disinkronkan ke Surat Pengantar!`, 'success');
+};
+
+/**
+ * Mengambil Data Pengajuan Desa dan Memasukkannya Langsung ke Ceklist Kelengkapan Kecamatan
+ */
+window.prosesPengajuanKeCeklist = function(id) {
+  const user = AppState.currentUser;
+  if (user && user.role === 'desa') {
+    showToast('⚠️ Akses Terkunci: Pembuatan Ceklist Kelengkapan adalah kewenangan pihak Kecamatan Waru.', 'warning');
+    return;
+  }
+  const item = (AppState.pengajuanDesa || []).find(p => String(p.id) === String(id));
+  if (!item) {
+    showToast('Data pengajuan berkas tidak ditemukan.', 'error');
+    return;
+  }
+
+  // 1. Sinkronkan ke generator rekomendasi agar data global (desa & jenis) sejalan
+  pilihTipeRekomendasi(item.jenisDana);
+  const selectDesa = document.getElementById('selectNamaDesa');
+  if (selectDesa) {
+    selectDesa.value = item.namaDesa;
+    triggerAutoFillDesa();
+  }
+  if (item.tahap) {
+    const selectTahap = document.getElementById('selectTahapReguler');
+    if (selectTahap) selectTahap.value = item.tahap;
+    const selectBulan = document.getElementById('selectBulanGaji');
+    if (selectBulan && item.tahap.startsWith('Bulan')) {
+      selectBulan.value = item.tahap.replace('Bulan', '').trim();
+    }
+  }
+  if (item.tahunAnggaran) {
+    const inputTahun = document.getElementById('inputTahunAnggaran');
+    if (inputTahun) inputTahun.value = item.tahunAnggaran;
+    const inputTahunReguler = document.getElementById('inputTahunAnggaranReguler');
+    if (inputTahunReguler) inputTahunReguler.value = item.tahunAnggaran;
+  }
+
+  // 2. Tandai status pengajuan sebagai Diterbitkan jika sebelumnya Menunggu Verifikasi
+  if (!item.status || item.status === 'Menunggu Verifikasi') {
+    item.status = 'Diterbitkan';
+    localStorage.setItem('sip_pengajuan_desa', JSON.stringify(AppState.pengajuanDesa));
+    updateBadgePengajuanDesa();
+    if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+      fetch(AppState.gasUrl, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'updateStatusPengajuan',
+          id: item.id,
+          status: 'Diterbitkan',
+          catatan: 'Diproses pembuatan dokumen resmi Kecamatan Waru'
+        })
+      }).catch(e => console.error('Gagal update status pengajuan ke gas:', e));
+    }
+  }
+
+  // 3. Konfigurasi data Ceklist
+  const namaDesa = item.namaDesa || 'Api-Api';
+  const jenisDana = item.jenisDana || 'add_reguler';
+  let tahap = item.tahap || 'Tahap II';
+  if (jenisDana === 'siltap' && !tahap.toLowerCase().startsWith('bulan')) {
+    tahap = `BULAN ${tahap.toUpperCase()}`;
+  }
+  const tahunAnggaran = item.tahunAnggaran || '2026';
+
+  AppState.ceklistData.namaDesa = namaDesa;
+  AppState.ceklistData.jenisDana = jenisDana;
+  AppState.ceklistData.tahap = tahap;
+  AppState.ceklistData.tahunAnggaran = tahunAnggaran;
+
+  const tahapUpper = tahap.toUpperCase();
+  if (jenisDana === 'siltap') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+    AppState.ceklistData.judulBaris2 = 'PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA';
+    AppState.ceklistData.judulBaris3 = `${tahapUpper} TAHUN ANGGARAN ${tahunAnggaran}`;
+  } else if (jenisDana === 'add_reguler') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
+    AppState.ceklistData.judulBaris2 = 'ALOKASI DANA DESA (ADD) REGULER';
+    AppState.ceklistData.judulBaris3 = `${tahapUpper} TAHUN ANGGARAN ${tahunAnggaran}`;
+  } else if (jenisDana === 'dbh') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN BAGI HASIL PAJAK DAN RETRIBUSI DAERAH';
+    AppState.ceklistData.judulBaris2 = 'BAGI HASIL PAJAK DAN RETRIBUSI DAERAH (PBH/DBH)';
+    AppState.ceklistData.judulBaris3 = `${tahapUpper} TAHUN ANGGARAN ${tahunAnggaran}`;
+  } else if (jenisDana === 'dd') {
+    AppState.ceklistData.judulBaris1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN DANA DESA';
+    AppState.ceklistData.judulBaris2 = 'DANA DESA (DD)';
+    AppState.ceklistData.judulBaris3 = `${tahapUpper} TAHUN ANGGARAN ${tahunAnggaran}`;
+  }
+
+  let activeBerkas = [];
+  if (jenisDana === 'add_reguler' && Array.isArray(AppState.berkasAddReguler) && AppState.berkasAddReguler.length > 0) activeBerkas = AppState.berkasAddReguler;
+  else if (jenisDana === 'siltap' && Array.isArray(AppState.berkasSiltap) && AppState.berkasSiltap.length > 0) activeBerkas = AppState.berkasSiltap;
+  else if (jenisDana === 'dbh' && Array.isArray(AppState.berkasDbh) && AppState.berkasDbh.length > 0) activeBerkas = AppState.berkasDbh;
+  else if (jenisDana === 'dd' && Array.isArray(AppState.berkasDd) && AppState.berkasDd.length > 0) activeBerkas = AppState.berkasDd;
+  else activeBerkas = (typeof DEFAULT_BERKAS_TEMPLATES !== 'undefined' && DEFAULT_BERKAS_TEMPLATES[jenisDana]) ? DEFAULT_BERKAS_TEMPLATES[jenisDana] : [];
+
+  if (activeBerkas.length > 0) {
+    AppState.ceklistData.rows = activeBerkas.map((b, idx) => ({
+      id: b.id || ('ck_' + idx),
+      teks: b.teks,
+      checked: b.checked !== false
+    }));
+  }
+
+  // Sinkronkan ke formulir Ceklist
+  const selDesaCeklist = document.getElementById('selectDesaCeklist');
+  if (selDesaCeklist) {
+    ensureDesaOptionInSelect(selDesaCeklist, namaDesa);
+  }
+  const selJenisCeklist = document.getElementById('selectJenisDanaCeklist');
+  if (selJenisCeklist) selJenisCeklist.value = jenisDana;
+  const inpTahap = document.getElementById('inputTahapCeklist');
+  if (inpTahap) inpTahap.value = tahap;
+  const inpTahun = document.getElementById('inputTahunCeklist');
+  if (inpTahun) inpTahun.value = tahunAnggaran;
+  const inpJ1 = document.getElementById('inputJudulCeklist1');
+  if (inpJ1) inpJ1.value = AppState.ceklistData.judulBaris1;
+  const inpJ2 = document.getElementById('inputJudulCeklist2');
+  if (inpJ2) inpJ2.value = AppState.ceklistData.judulBaris2;
+  const inpJ3 = document.getElementById('inputJudulCeklist3');
+  if (inpJ3) inpJ3.value = AppState.ceklistData.judulBaris3;
+
+  renderRowsCeklistInputs();
+  updateLivePreviewCeklist();
+
+  // 4. Tutup modal (jika terbuka) & navigasi ke Tab Ceklist
+  closeModalPengajuanKecamatan();
+  navigateToMenu('verifikasi_rekom');
+  switchKecamatanSubTab('ceklist');
+
+  showToast(`Data pengajuan Desa ${namaDesa} berhasil disinkronkan ke Ceklist Kelengkapan!`, 'success');
 };
 
 /**
