@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -425,6 +425,58 @@
 
     #containerSplitControls.hidden {
       display: none !important;
+    }
+    /* ========================================================================= */
+    /* RESPONSIVE TOOLBAR PREVIEW DOKUMEN: AMAN SAAT ZOOM LAYAR / LAYAR SEMPIT   */
+    /* ========================================================================= */
+    #previewToolbar,
+    #previewToolbarSp,
+    #previewToolbarCeklist {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 0.375rem 0.625rem !important;
+      overflow: visible !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    #previewToolbar > div:first-child,
+    #previewToolbarSp > div:first-child,
+    #previewToolbarCeklist > div:first-child {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      gap: 0.25rem 0.5rem !important;
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+    }
+
+    #previewToolbar > div:last-child,
+    #previewToolbarSp > div:last-child,
+    #previewToolbarCeklist > div:last-child {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      gap: 0.25rem 0.375rem !important;
+      flex: 0 0 auto !important;
+      margin-left: auto !important;
+      justify-content: flex-end !important;
+    }
+
+    /* Pastikan tombol, dropdown, dan kontrol zoom selalu utuh dan tidak terpotong */
+    #previewToolbar button,
+    #previewToolbarSp button,
+    #previewToolbarCeklist button,
+    #previewToolbar select,
+    #previewToolbarSp select,
+    #previewToolbarCeklist select,
+    #previewToolbar span,
+    #previewToolbarSp span,
+    #previewToolbarCeklist span {
+      flex-shrink: 0;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -1164,12 +1216,12 @@
       </div>
 
       <!-- Tab 2: Generator Rekomendasi Camat (Workspace Kecamatan) -->
-      <div id="workspaceKecamatan" class="hidden flex-1 flex w-full h-full overflow-hidden">
+      <div id="workspaceKecamatan" class="hidden flex-1 flex flex-col md:flex-row w-full h-full overflow-hidden">
       
       <!-- ============================================================================= -->
       <!-- PANEL KIRI: FORMULIR INPUT DINAMIS -->
       <!-- ============================================================================= -->
-      <aside id="panelFormKiri" class="w-full lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200">
+      <aside id="panelFormKiri" class="w-full md:w-[45%] lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200">
       
       <!-- Sub-header Form -->
       <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
@@ -1552,68 +1604,68 @@
     <!-- =============================================================================== -->
     <!-- PANEL KANAN: LIVE PREVIEW DOKUMEN RESMI (SESUAI DOKUMEN ASLI KECAMATAN WARU) -->
     <!-- =============================================================================== -->
-    <section id="panelPreviewKanan" class="w-full lg:w-[55%] xl:w-[58%] bg-slate-300/80 flex flex-col h-full overflow-hidden transition-all duration-200">
+    <section id="panelPreviewKanan" class="w-full md:w-[55%] lg:w-[55%] xl:w-[58%] bg-slate-300/80 flex flex-col h-full overflow-hidden transition-all duration-200">
       
       <!-- Toolbar Atas Preview -->
-      <div id="previewToolbar" class="bg-white px-4 py-2 border-b border-slate-300 flex items-center justify-between gap-3 flex-shrink-0 shadow-xs z-10">
+      <div id="previewToolbar" class="bg-white px-2.5 sm:px-4 py-2 border-b border-slate-300 flex flex-wrap items-center justify-between gap-y-2 gap-x-2 flex-shrink-0 shadow-xs z-10">
         
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Live Document Preview
+            <span class="hidden sm:inline">Live Document </span>Preview
           </span>
-          <span class="text-slate-300">|</span>
-          <div class="flex items-center gap-1.5 text-xs text-slate-600">
+          <span class="text-slate-300 hidden sm:inline">|</span>
+          <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
             <span>Kertas:</span>
-            <select id="selectPaperSize" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500">
-              <option value="a4" selected>A4 (210 x 297 mm)</option>
-              <option value="folio">Folio / F4 (215 x 330 mm)</option>
+            <select id="selectPaperSize" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500">
+              <option value="a4" selected title="A4 (210 x 297 mm)">A4</option>
+              <option value="folio" title="Folio / F4 (215 x 330 mm)">Folio / F4</option>
             </select>
           </div>
-          <span class="text-slate-300">|</span>
-          <div class="flex items-center gap-1.5 text-xs text-slate-600">
+          <span class="text-slate-300 hidden sm:inline">|</span>
+          <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
             <span>Pemisah:</span>
-            <select id="selectPageBreakMode" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Pilih mode halaman untuk hasil cetak">
-              <option value="separated" selected>📄 Per Halaman (Baku Resmi)</option>
-              <option value="flow">📜 Tanpa Page Break (Mengalir)</option>
+            <select id="selectPageBreakMode" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Pilih mode halaman untuk hasil cetak">
+              <option value="separated" selected title="Per Halaman (Baku Resmi)">&#x1F4C4; Per Hal</option>
+              <option value="flow" title="Tanpa Page Break (Mengalir)">&#x1F4DC; Mengalir</option>
             </select>
           </div>
-          <span class="text-slate-300">|</span>
-          <div class="flex items-center gap-1.5 text-xs text-slate-600">
+          <span class="text-slate-300 hidden sm:inline">|</span>
+          <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
             <span>Spasi:</span>
-            <select id="selectLineSpacing" onchange="applyLineSpacing()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
-              <option value="1.0">1.0 (Tunggal)</option>
-              <option value="1.15" selected>1.15 (Standar)</option>
-              <option value="1.25">1.25</option>
-              <option value="1.5">1.5 (Longgar)</option>
+            <select id="selectLineSpacing" onchange="applyLineSpacing()" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
+              <option value="1.0" title="1.0 (Tunggal)">1.0</option>
+              <option value="1.15" selected title="1.15 (Standar)">1.15</option>
+              <option value="1.25" title="1.25">1.25</option>
+              <option value="1.5" title="1.5 (Longgar)">1.5</option>
             </select>
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-1.5 flex-shrink-0 ml-auto">
           <!-- Tombol Edit Langsung di Kertas -->
-          <button type="button" id="btnToggleEditDirect" onclick="toggleDirectEditMode()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Edit langsung teks di lembar dokumen">
-            <span id="iconEditDirect">✏️</span>
+          <button type="button" id="btnToggleEditDirect" onclick="toggleDirectEditMode()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Edit langsung teks di lembar dokumen">
+            <span id="iconEditDirect">&#x270F;&#xFE0F;</span>
             <span id="labelEditDirect">Edit di Kertas</span>
           </button>
           
-          <button type="button" id="btnResetDirect" onclick="resetPreviewFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="Muat ulang dari form (batalkan ketikan langsung)">
-            <span>🔄 Reset Form</span>
+          <button type="button" id="btnResetDirect" onclick="resetPreviewFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer whitespace-nowrap flex-shrink-0" title="Muat ulang dari form (batalkan ketikan langsung)">
+            <span>&#x1F504; Reset Form</span>
           </button>
 
           <!-- Tombol Cetak Langsung -->
-          <button onclick="triggerPrint()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Surat Resmi / Simpan PDF">
-            <span>🖨️ Cetak / PDF</span>
+          <button type="button" onclick="triggerPrint()" class="px-2.5 sm:px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Cetak Surat Resmi / Simpan PDF">
+            <span>&#x1F5A8;&#xFE0F; Cetak / PDF</span>
           </button>
 
           <!-- Tombol Ekspor Word (.docx) -->
-          <button onclick="bukaModalPilihanWord('rekom')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Pilihan Ekspor: Buka di Google Docs (Online) atau Unduh Ms Word (.docx)">
+          <button type="button" onclick="bukaModalPilihanWord('rekom')" class="px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Pilihan Ekspor: Buka di Google Docs (Online) atau Unduh Ms Word (.docx)">
             <span>&#x1F4DD; Convert to Word</span>
           </button>
 
           <!-- Zoom Controls -->
-          <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
-            <button id="btnZoomOut" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom Out">−</button>
+          <div class="flex items-center gap-1 bg-slate-100 p-0.5 sm:p-1 rounded-lg border border-slate-200 text-xs whitespace-nowrap flex-shrink-0">
+            <button id="btnZoomOut" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom Out">&minus;</button>
             <span id="labelZoomPercent" class="font-mono font-bold text-slate-800 px-1 text-[11px]">100%</span>
             <button id="btnZoomIn" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom In">+</button>
             <button id="btnZoomReset" class="px-1.5 py-0.5 text-[10px] rounded hover:bg-white text-slate-600 transition" title="Reset Zoom">Fit</button>
@@ -1637,12 +1689,12 @@
     <!-- ============================================================================= -->
     <!-- TAB 3: SURAT PENGANTAR KECAMATAN KE BKAD / DINAS (TEMPLATE RESMI KECAMATAN) -->
     <!-- ============================================================================= -->
-    <div id="workspaceSuratPengantar" class="hidden flex-1 flex w-full h-full overflow-hidden">
+    <div id="workspaceSuratPengantar" class="hidden flex-1 flex flex-col md:flex-row w-full h-full overflow-hidden">
       
       <!-- ============================================================================= -->
       <!-- PANEL KIRI: FORMULIR INPUT DINAMIS SURAT PENGANTAR -->
       <!-- ============================================================================= -->
-      <aside id="panelFormKiriSp" class="w-full lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200 no-print">
+      <aside id="panelFormKiriSp" class="w-full md:w-[45%] lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200 no-print">
         
         <!-- Sub-header Form -->
         <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
@@ -1844,67 +1896,67 @@
       <!-- ============================================================================= -->
       <!-- PANEL KANAN: LIVE PREVIEW DOKUMEN RESMI SURAT PENGANTAR -->
       <!-- ============================================================================= -->
-      <section id="panelPreviewKananSp" class="w-full lg:w-[55%] xl:w-[58%] bg-slate-300/80 flex flex-col h-full overflow-hidden transition-all duration-200">
+      <section id="panelPreviewKananSp" class="w-full md:w-[55%] lg:w-[55%] xl:w-[58%] bg-slate-300/80 flex flex-col h-full overflow-hidden transition-all duration-200">
         
                         <!-- Toolbar Atas Preview SP (Identik dengan Rekomendasi) -->
-        <div id="previewToolbarSp" class="bg-white px-4 py-2 border-b border-slate-300 flex items-center justify-between gap-3 flex-shrink-0 shadow-xs z-10 no-print">
+        <div id="previewToolbarSp" class="bg-white px-2.5 sm:px-4 py-2 border-b border-slate-300 flex flex-wrap items-center justify-between gap-y-2 gap-x-2 flex-shrink-0 shadow-xs z-10 no-print">
           
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Live Document Preview
+              <span class="hidden sm:inline">Live Document </span>Preview
             </span>
-            <span class="text-slate-300">|</span>
-            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span class="text-slate-300 hidden sm:inline">|</span>
+            <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
               <span>Kertas:</span>
-              <select id="selectPaperSizeSp" onchange="applyPaperSizeSp()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500">
-                <option value="a4" selected>A4 (210 x 297 mm)</option>
-                <option value="folio">Folio / F4 (215 x 330 mm)</option>
+              <select id="selectPaperSizeSp" onchange="applyPaperSizeSp()" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500">
+                <option value="a4" selected title="A4 (210 x 297 mm)">A4</option>
+                <option value="folio" title="Folio / F4 (215 x 330 mm)">Folio / F4</option>
               </select>
             </div>
-            <span class="text-slate-300">|</span>
-            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span class="text-slate-300 hidden sm:inline">|</span>
+            <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
               <span>Pemisah:</span>
-              <select id="selectPageBreakModeSp" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Pilih mode halaman untuk hasil cetak">
-                <option value="separated" selected>&#x1F4C4; Per Halaman (Baku Resmi)</option>
-                <option value="flow">&#x1F4DC; Tanpa Page Break (Mengalir)</option>
+              <select id="selectPageBreakModeSp" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Pilih mode halaman untuk hasil cetak">
+                <option value="separated" selected title="Per Halaman (Baku Resmi)">&#x1F4C4; Per Hal</option>
+                <option value="flow" title="Tanpa Page Break (Mengalir)">&#x1F4DC; Mengalir</option>
               </select>
             </div>
-            <span class="text-slate-300">|</span>
-            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span class="text-slate-300 hidden sm:inline">|</span>
+            <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
               <span>Spasi:</span>
-              <select id="selectLineSpacingSp" onchange="applyLineSpacingSp()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
-                <option value="1.0">1.0 (Tunggal)</option>
-                <option value="1.15" selected>1.15 (Standar)</option>
-                <option value="1.25">1.25</option>
-                <option value="1.5">1.5 (Longgar)</option>
+              <select id="selectLineSpacingSp" onchange="applyLineSpacingSp()" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
+                <option value="1.0" title="1.0 (Tunggal)">1.0</option>
+                <option value="1.15" selected title="1.15 (Standar)">1.15</option>
+                <option value="1.25" title="1.25">1.25</option>
+                <option value="1.5" title="1.5 (Longgar)">1.5</option>
               </select>
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-1.5 flex-shrink-0 ml-auto">
             <!-- Tombol Edit Langsung di Kertas -->
-            <button type="button" id="btnToggleEditDirectSp" onclick="toggleDirectEditModeSp()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Edit langsung teks di lembar dokumen">
+            <button type="button" id="btnToggleEditDirectSp" onclick="toggleDirectEditModeSp()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Edit langsung teks di lembar dokumen">
               <span id="iconEditDirectSp">&#x270F;&#xFE0F;</span>
               <span id="labelEditDirectSp">Edit di Kertas</span>
             </button>
             
-            <button type="button" id="btnResetDirectSp" onclick="resetPreviewSpFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="Muat ulang dari form (batalkan ketikan langsung)">
+            <button type="button" id="btnResetDirectSp" onclick="resetPreviewSpFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer whitespace-nowrap flex-shrink-0" title="Muat ulang dari form (batalkan ketikan langsung)">
               <span>&#x1F504; Reset Form</span>
             </button>
 
             <!-- Tombol Cetak Langsung (Biru) -->
-            <button type="button" onclick="triggerPrintSp()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Surat Resmi / Simpan PDF">
+            <button type="button" onclick="triggerPrintSp()" class="px-2.5 sm:px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Cetak Surat Resmi / Simpan PDF">
               <span>&#x1F5A8;&#xFE0F; Cetak / PDF</span>
             </button>
 
             <!-- Tombol Ekspor Word (.docx) (Hijau Emerald) -->
-            <button type="button" onclick="bukaModalPilihanWord('sp')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Pilihan Ekspor: Buka di Google Docs (Online) atau Unduh Ms Word (.docx)">
+            <button type="button" onclick="bukaModalPilihanWord('sp')" class="px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Pilihan Ekspor: Buka di Google Docs (Online) atau Unduh Ms Word (.docx)">
               <span>&#x1F4DD; Convert to Word</span>
             </button>
 
             <!-- Zoom Controls -->
-            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+            <div class="flex items-center gap-1 bg-slate-100 p-0.5 sm:p-1 rounded-lg border border-slate-200 text-xs whitespace-nowrap flex-shrink-0">
               <button type="button" onclick="changeZoomSp(-10)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom Out">&minus;</button>
               <span id="labelZoomPercentSp" class="font-mono font-bold text-slate-800 px-1 text-[11px]">100%</span>
               <button type="button" onclick="changeZoomSp(10)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom In">+</button>
@@ -1930,12 +1982,12 @@
     <!-- ============================================================================= -->
     <!-- TAB 4: CEKLIST KELENGKAPAN BERKAS KECAMATAN (FORMAT RESMI KECAMATAN WARU) -->
     <!-- ============================================================================= -->
-    <div id="workspaceCeklist" class="hidden flex-1 flex w-full h-full overflow-hidden">
+    <div id="workspaceCeklist" class="hidden flex-1 flex flex-col md:flex-row w-full h-full overflow-hidden">
       
       <!-- ============================================================================= -->
       <!-- PANEL KIRI: FORMULIR INPUT DINAMIS CEKLIST -->
       <!-- ============================================================================= -->
-      <aside id="panelFormKiriCeklist" class="w-full lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200 no-print">
+      <aside id="panelFormKiriCeklist" class="w-full md:w-[45%] lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200 no-print">
         
         <!-- Sub-header Form -->
         <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
@@ -2099,67 +2151,67 @@
       <!-- ============================================================================= -->
       <!-- PANEL KANAN: LIVE PREVIEW LEMBAR DOKUMEN CEKLIST KELENGKAPAN BERKAS -->
       <!-- ============================================================================= -->
-      <section id="panelPreviewKananCeklist" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-200/80">
+      <section id="panelPreviewKananCeklist" class="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-slate-200/80">
         
                         <!-- Toolbar Atas Preview Ceklist (Identik dengan Rekomendasi) -->
-        <div id="previewToolbarCeklist" class="bg-white px-4 py-2 border-b border-slate-300 flex items-center justify-between gap-3 flex-shrink-0 shadow-xs z-10 no-print">
+        <div id="previewToolbarCeklist" class="bg-white px-2.5 sm:px-4 py-2 border-b border-slate-300 flex flex-wrap items-center justify-between gap-y-2 gap-x-2 flex-shrink-0 shadow-xs z-10 no-print">
           
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Live Document Preview
+              <span class="hidden sm:inline">Live Document </span>Preview
             </span>
-            <span class="text-slate-300">|</span>
-            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span class="text-slate-300 hidden sm:inline">|</span>
+            <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
               <span>Kertas:</span>
-              <select id="selectPaperSizeCeklist" onchange="applyPaperSizeCeklist()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500">
-                <option value="a4" selected>A4 (210 x 297 mm)</option>
-                <option value="folio">Folio / F4 (215 x 330 mm)</option>
+              <select id="selectPaperSizeCeklist" onchange="applyPaperSizeCeklist()" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500">
+                <option value="a4" selected title="A4 (210 x 297 mm)">A4</option>
+                <option value="folio" title="Folio / F4 (215 x 330 mm)">Folio / F4</option>
               </select>
             </div>
-            <span class="text-slate-300">|</span>
-            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span class="text-slate-300 hidden sm:inline">|</span>
+            <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
               <span>Pemisah:</span>
-              <select id="selectPageBreakModeCeklist" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Pilih mode halaman untuk hasil cetak">
-                <option value="separated" selected>&#x1F4C4; Per Halaman (Baku Resmi)</option>
-                <option value="flow">&#x1F4DC; Tanpa Page Break (Mengalir)</option>
+              <select id="selectPageBreakModeCeklist" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Pilih mode halaman untuk hasil cetak">
+                <option value="separated" selected title="Per Halaman (Baku Resmi)">&#x1F4C4; Per Hal</option>
+                <option value="flow" title="Tanpa Page Break (Mengalir)">&#x1F4DC; Mengalir</option>
               </select>
             </div>
-            <span class="text-slate-300">|</span>
-            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span class="text-slate-300 hidden sm:inline">|</span>
+            <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
               <span>Spasi:</span>
-              <select id="selectLineSpacingCeklist" onchange="applyLineSpacingCeklist()" class="bg-slate-100 border border-slate-300 rounded px-2 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
-                <option value="1.0">1.0 (Tunggal)</option>
-                <option value="1.15" selected>1.15 (Standar)</option>
-                <option value="1.25">1.25</option>
-                <option value="1.5">1.5 (Longgar)</option>
+              <select id="selectLineSpacingCeklist" onchange="applyLineSpacingCeklist()" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Atur jarak spasi baris dokumen (Line Spacing)">
+                <option value="1.0" title="1.0 (Tunggal)">1.0</option>
+                <option value="1.15" selected title="1.15 (Standar)">1.15</option>
+                <option value="1.25" title="1.25">1.25</option>
+                <option value="1.5" title="1.5 (Longgar)">1.5</option>
               </select>
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-1.5 flex-shrink-0 ml-auto">
             <!-- Tombol Edit Langsung di Kertas -->
-            <button type="button" id="btnToggleEditDirectCeklist" onclick="toggleDirectEditModeCeklist()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Edit langsung teks di lembar dokumen">
+            <button type="button" id="btnToggleEditDirectCeklist" onclick="toggleDirectEditModeCeklist()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Edit langsung teks di lembar dokumen">
               <span id="iconEditDirectCeklist">&#x270F;&#xFE0F;</span>
               <span id="labelEditDirectCeklist">Edit di Kertas</span>
             </button>
             
-            <button type="button" id="btnResetDirectCeklist" onclick="resetPreviewCeklistFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer" title="Muat ulang dari form (batalkan ketikan langsung)">
+            <button type="button" id="btnResetDirectCeklist" onclick="resetPreviewCeklistFromForm()" class="hidden px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium transition flex items-center gap-1 cursor-pointer whitespace-nowrap flex-shrink-0" title="Muat ulang dari form (batalkan ketikan langsung)">
               <span>&#x1F504; Reset Form</span>
             </button>
 
             <!-- Tombol Cetak Langsung (Biru) -->
-            <button type="button" onclick="triggerPrintCeklist()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Surat Resmi / Simpan PDF">
+            <button type="button" onclick="triggerPrintCeklist()" class="px-2.5 sm:px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Cetak Surat Resmi / Simpan PDF">
               <span>&#x1F5A8;&#xFE0F; Cetak / PDF</span>
             </button>
 
             <!-- Tombol Ekspor Word (.docx) (Hijau Emerald) -->
-            <button type="button" onclick="bukaModalPilihanWord('ceklist')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Pilihan Ekspor: Buka di Google Docs (Online) atau Unduh Ms Word (.docx)">
+            <button type="button" onclick="bukaModalPilihanWord('ceklist')" class="px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Pilihan Ekspor: Buka di Google Docs (Online) atau Unduh Ms Word (.docx)">
               <span>&#x1F4DD; Convert to Word</span>
             </button>
 
             <!-- Zoom Controls -->
-            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+            <div class="flex items-center gap-1 bg-slate-100 p-0.5 sm:p-1 rounded-lg border border-slate-200 text-xs whitespace-nowrap flex-shrink-0">
               <button type="button" onclick="changeZoomCeklist(-10)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom Out">&minus;</button>
               <span id="labelZoomPercentCeklist" class="font-mono font-bold text-slate-800 px-1 text-[11px]">100%</span>
               <button type="button" onclick="changeZoomCeklist(10)" class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-slate-700 transition" title="Zoom In">+</button>
@@ -3815,6 +3867,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261102_ceklist_filter_checked"></script>
+  <script src="app.js?v=20261110_responsive_preview_toolbar"></script>
 </body>
 </html>

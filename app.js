@@ -4647,16 +4647,16 @@ function setViewMode(mode) {
 
   if (mode === 'split') {
     left.classList.remove('hidden', 'w-full');
-    left.classList.add('w-full', 'lg:w-[45%]', 'xl:w-[42%]');
+    left.classList.add('w-full', 'md:w-[45%]', 'lg:w-[45%]', 'xl:w-[42%]');
     right.classList.remove('hidden', 'w-full');
-    right.classList.add('w-full', 'lg:w-[55%]', 'xl:w-[58%]');
+    right.classList.add('w-full', 'md:w-[55%]', 'lg:w-[55%]', 'xl:w-[58%]');
   } else if (mode === 'form') {
-    left.classList.remove('hidden', 'lg:w-[45%]', 'xl:w-[42%]');
+    left.classList.remove('hidden', 'md:w-[45%]', 'lg:w-[45%]', 'xl:w-[42%]');
     left.classList.add('w-full');
     right.classList.add('hidden');
   } else if (mode === 'preview') {
     left.classList.add('hidden');
-    right.classList.remove('hidden', 'lg:w-[55%]', 'xl:w-[58%]');
+    right.classList.remove('hidden', 'md:w-[55%]', 'lg:w-[55%]', 'xl:w-[58%]');
     right.classList.add('w-full');
   }
 
