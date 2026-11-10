@@ -2323,6 +2323,9 @@
               <input type="text" id="inputSearchRiwayatCeklist" oninput="renderTabelRiwayatCeklist()" placeholder="Cari desa, periode, jenis dana..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-slate-800" />
               <span class="absolute left-2.5 top-2 text-slate-400 text-xs">&#x1F50D;</span>
             </div>
+            <button type="button" onclick="tarikCeklistDariGoogleSheets(false)" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Tarik dan sinkronkan data Ceklist dari Google Sheets">
+              <span>&#x1F504; Tarik dari Sheets</span>
+            </button>
             <button type="button" onclick="switchSubViewCeklist('form')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-2xs cursor-pointer">
               <span>+ Buat Ceklist Baru</span>
             </button>
@@ -3299,6 +3302,13 @@
           <div class="text-xs font-bold text-slate-800 mb-1">Sinkronisasi Data Desa (Master_Desa):</div>
           <button type="button" onclick="sinkronMasterDesaDariGoogleSheets(false)" class="w-full px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer" title="Tarik nama Kepala Desa, Kaur Keuangan, dan Rekening dari sheet Master_Desa">
             <span>🔄 Tarik & Sinkronkan Data Desa (Kades, Kaur, RKD) dari Sheet</span>
+          </button>
+        </div>
+
+        <div class="pt-3 border-t border-slate-200">
+          <div class="text-xs font-bold text-slate-800 mb-1">Database Sheet Ceklist (Ceklist_Kelengkapan):</div>
+          <button type="button" onclick="buatSheetCeklistDiDatabase()" class="w-full px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer" title="Buat otomatis sheet Ceklist_Kelengkapan di Google Spreadsheet">
+            <span>&#x1F4CB; Inisialisasi / Buat Sheet Ceklist di Spreadsheet</span>
           </button>
         </div>
 

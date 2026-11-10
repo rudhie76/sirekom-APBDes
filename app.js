@@ -624,7 +624,24 @@ function isBerkasChecked(id) {
 
 function getActiveBerkasList(tipe = AppState.tipeRekomendasi) {
   const list = getRawBerkasList(tipe);
-  return list.filter(item => item.checked !== false);
+  return (list || []).filter(item => item.checked !== false);
+}
+
+function formatBerkasItemsHtml(items) {
+  if (!items || items.length === 0) return '';
+  return items.map((item, idx, arr) => {
+    let teks = (item.teks || '').trim();
+    if (idx === arr.length - 1) {
+      teks = teks.replace(/;\s*dan$/i, '').replace(/;$/, '').replace(/\.$/, '') + '.';
+    } else if (idx === arr.length - 2) {
+      if (!/;\s*dan$/i.test(teks)) {
+        teks = teks.replace(/;$/, '').replace(/\.$/, '') + '; dan';
+      }
+    } else {
+      teks = teks.replace(/;\s*dan$/i, '').replace(/\.$/, '') + ';';
+    }
+    return `<li class="pl-1">${escapeHtml(teks)}</li>`;
+  }).join('');
 }
 
 window.handleBerkasCheckboxChange = function(id, isChecked) {
@@ -1169,20 +1186,7 @@ function setupEventListeners() {
     }
   });
 
-  document.addEventListener('change', (e) => {
-    if (e.target && e.target.classList.contains('berkas-checkbox')) {
-      const id = e.target.id.replace('berkas_', '');
-      const allLists = [AppState.berkasSiltap, AppState.berkasAddReguler, AppState.berkasDbh, AppState.berkasDd];
-      for (const list of allLists) {
-        const item = list.find(b => b.id === id);
-        if (item) {
-          item.checked = Boolean(e.target.checked);
-          break;
-        }
-      }
-      updateLivePreview();
-    }
-  });
+  // Event listener centang berkas diproses langsung oleh onchange="handleBerkasCheckboxChange(...)"
 
   // Auto Generate Nomor
   document.getElementById('btnGenNomorSurat')?.addEventListener('click', () => {
@@ -1312,6 +1316,7 @@ function triggerAutoFillDesa() {
 
   autoUpdatePerihal();
   renderDasarChecklist();
+  renderBerkasChecklist();
   updateLivePreview();
 }
 
@@ -1489,7 +1494,7 @@ function renderLivePreviewSiltap() {
 
         <div class="my-2 pl-4">
           <ol class="list-decimal pl-4 space-y-0.5">
-            ${getActiveBerkasList('siltap').map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+            ${formatBerkasItemsHtml(getActiveBerkasList('siltap'))}
           </ol>
         </div>
 
@@ -1589,7 +1594,7 @@ function renderLivePreviewAddReguler() {
 
         <div class="my-2 pl-4">
           <ol class="list-decimal pl-5 space-y-0.5">
-            ${activeBerkasAdd.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+            ${formatBerkasItemsHtml(activeBerkasAdd)}
           </ol>
         </div>
 
@@ -1684,7 +1689,7 @@ function renderLivePreviewDbh() {
 
         <div class="my-2 pl-4">
           <ol class="list-decimal pl-4 space-y-0.5">
-            ${getActiveBerkasList('dbh').map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+            ${formatBerkasItemsHtml(getActiveBerkasList('dbh'))}
           </ol>
         </div>
 
@@ -1781,7 +1786,7 @@ function renderLivePreviewDd() {
 
         <div class="my-2 pl-4">
           <ol class="list-decimal pl-5 space-y-0.5">
-            ${berkasFiltered.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+            ${formatBerkasItemsHtml(berkasFiltered)}
           </ol>
         </div>
 
@@ -8020,6 +8025,11 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
       await tarikSuratPengantarDariGoogleSheets(true);
     } catch (_) {}
   }
+  if (typeof tarikCeklistDariGoogleSheets === 'function') {
+    try {
+      await tarikCeklistDariGoogleSheets(true);
+    } catch (_) {}
+  }
 };
 
 /**
@@ -10633,9 +10643,9 @@ window.initCeklistTab = function() {
  * Salin data identitas dan lampiran persyaratan dari Rekomendasi aktif ke Ceklist
  */
 window.salinDataDariRekomAktifKeCeklist = function(showAlert = true) {
-  const namaDesa = document.getElementById('inputDesa')?.value || 'Bangun Mulya';
-  const jenisDana = AppState.tipeRekomendasi || document.querySelector('input[name="radioJenisDana"]:checked')?.value || 'siltap';
-  const tahap = document.getElementById('inputTahap')?.value || 'BULAN NOPEMBER';
+  const namaDesa = document.getElementById('selectNamaDesa')?.value || 'Api-Api';
+  const jenisDana = AppState.tipeRekomendasi || 'siltap';
+  const tahap = (document.getElementById('inputPerihalSurat')?.value || document.getElementById('selectTahapReguler')?.value || document.getElementById('selectBulanGaji')?.value || 'BULAN NOPEMBER');
   const tahunAnggaran = document.getElementById('inputTahunAnggaran')?.value || '2026';
 
   AppState.ceklistData.namaDesa = namaDesa;
@@ -11961,6 +11971,98 @@ window.renderEditingCeklistBanner = function() {
     if (txt) txt.textContent = `${AppState.ceklistData.namaDesa || 'Desa'} (${AppState.ceklistData.tahap || 'Tahap'})`;
   } else {
     banner.classList.add('hidden');
+  }
+};
+
+/**
+ * Sinkronisasi Riwayat Ceklist dari Google Sheets (Sheet "Ceklist_Kelengkapan")
+ */
+window.buatSheetCeklistDiDatabase = async function() {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) {
+    showToast('Atur URL Web App Google Apps Script terlebih dahulu di Pengaturan.', 'warning');
+    return;
+  }
+  showToast('Membuat sheet "Ceklist_Kelengkapan" di Google Spreadsheet...', 'info');
+  try {
+    const res = await fetch(`${AppState.gasUrl}?action=buatSheetCeklist&_t=${Date.now()}`);
+    const json = await res.json();
+    if (json.success) {
+      showToast('âœ… Berhasil! Sheet "Ceklist_Kelengkapan" telah siap di Google Spreadsheet.', 'success');
+      if (typeof tarikCeklistDariGoogleSheets === 'function') {
+        tarikCeklistDariGoogleSheets(true);
+      }
+    } else {
+      showToast(json.message || 'Gagal membuat sheet.', 'warning');
+    }
+  } catch (err) {
+    console.warn('Gagal buat sheet ceklist di database:', err);
+    showToast('Kendala jaringan atau Web App saat membuat sheet ceklist.', 'error');
+  }
+};
+
+window.tarikCeklistDariGoogleSheets = async function(isSilent = true) {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) return;
+  try {
+    const url = `${AppState.gasUrl}?action=getCeklist&_t=${Date.now()}`;
+    const res = await fetch(url);
+    const result = await res.json();
+    if (result.success && Array.isArray(result.data)) {
+      const cloudList = result.data.map(row => {
+        const id = String(getSheetVal(row, ['ID Ceklist', 'ID'], `CK-${Date.now()}`)).trim();
+        const rawWaktu = getSheetVal(row, ['Waktu Simpan (WITA)', 'Timestamp', 'Waktu'], '');
+        let rawRows = getSheetVal(row, ['Rincian Berkas (JSON)', 'Rows', 'Daftar Berkas'], '[]');
+        let parsedRows = [];
+        try {
+          if (typeof rawRows === 'string') parsedRows = JSON.parse(rawRows);
+          else if (Array.isArray(rawRows)) parsedRows = rawRows;
+        } catch (e) {
+          parsedRows = [];
+        }
+
+        const statusStr = String(getSheetVal(row, ['Status Verifikasi', 'Status'], 'Lengkap')).trim().toLowerCase();
+        const isLengkap = !statusStr.includes('revisi') && !statusStr.includes('perbaikan');
+
+        return {
+          id: id,
+          waktuSimpan: rawWaktu || new Date().toLocaleString('id-ID'),
+          namaDesa: getSheetVal(row, ['Nama Desa', 'Desa'], ''),
+          kecamatan: getSheetVal(row, ['Kecamatan'], 'Waru'),
+          kabupaten: getSheetVal(row, ['Kabupaten'], 'Penajam Paser Utara'),
+          jenisDana: getSheetVal(row, ['Jenis Dana', 'Dana'], 'siltap'),
+          tahap: getSheetVal(row, ['Tahap / Bulan', 'Tahap', 'Bulan'], ''),
+          tahunAnggaran: String(getSheetVal(row, ['Tahun Anggaran', 'Tahun'], '2026')),
+          statusLengkap: isLengkap,
+          judulBaris1: getSheetVal(row, ['Judul Baris 1'], ''),
+          judulBaris2: getSheetVal(row, ['Judul Baris 2'], ''),
+          judulBaris3: getSheetVal(row, ['Judul Baris 3'], ''),
+          jabatanVerifikator: getSheetVal(row, ['Jabatan Verifikator'], 'Kepala Seksi Pemberdayaan Masyarakat'),
+          namaVerifikator: getSheetVal(row, ['Nama Verifikator'], 'Rudiansyah, SE'),
+          nipVerifikator: getSheetVal(row, ['NIP Verifikator'], '197608312007011009'),
+          tampilkanStempel: String(getSheetVal(row, ['Tampilkan Stempel'], 'Ya')).toLowerCase() !== 'tidak',
+          paperSize: getSheetVal(row, ['Ukuran Kertas'], 'a4'),
+          lineSpacing: getSheetVal(row, ['Spasi'], '1.15'),
+          rows: parsedRows
+        };
+      });
+
+      if (cloudList.length > 0) {
+        const localList = AppState.ceklistList || [];
+        const merged = [...cloudList];
+        localList.forEach(loc => {
+          if (!merged.some(c => c.id === loc.id)) {
+            merged.push(loc);
+          }
+        });
+        AppState.ceklistList = merged;
+        localStorage.setItem('sip_arsip_ceklist', JSON.stringify(merged));
+        renderTabelRiwayatCeklist();
+        updateBadgeCeklistCount();
+        if (!isSilent) showToast(`Berhasil menyinkronkan ${cloudList.length} arsip Ceklist dari Google Sheets!`, 'success');
+      }
+    }
+  } catch (err) {
+    console.warn('Gagal tarik data Ceklist dari Google Sheets:', err);
+    if (!isSilent) showToast('Gagal terhubung ke Google Sheets untuk Ceklist.', 'warning');
   }
 };
 

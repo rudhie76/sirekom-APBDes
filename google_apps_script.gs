@@ -36,6 +36,7 @@ var SHEET_MASTER_DESA     = "Master_Desa";
 var SHEET_USER            = "Data_User";
 var SHEET_KIRIM_REKOM_DESA = "Kirim_Rekom_Desa";
 var SHEET_SURAT_PENGANTAR = "Surat_Pengantar";
+var SHEET_CEKLIST         = "Ceklist_Kelengkapan";
 
 // Nama Folder Induk di Google Drive
 var NAMA_FOLDER_UTAMA_DRIVE = "SIP-REKOM APBDES KECAMATAN WARU";
@@ -326,6 +327,42 @@ function initSheets() {
     headerRangeSP.setFontColor("#FFFFFF");
     headerRangeSP.setFontWeight("bold");
     sheetSP.setFrozenRows(1);
+  }
+
+  // 7. Sheet Ceklist Kelengkapan Berkas Tim Verifikasi Kecamatan
+  var sheetCeklist = ss.getSheetByName(SHEET_CEKLIST) || ss.getSheetByName("Ceklist") || ss.getSheetByName("ceklist");
+  if (!sheetCeklist) {
+    sheetCeklist = ss.insertSheet(SHEET_CEKLIST);
+    var headersCeklist = [
+      "ID Ceklist",
+      "Waktu Simpan (WITA)",
+      "Nama Desa",
+      "Kecamatan",
+      "Kabupaten",
+      "Jenis Dana",
+      "Tahap / Bulan",
+      "Tahun Anggaran",
+      "Status Verifikasi",
+      "Jumlah Berkas Lengkap",
+      "Ringkasan Berkas Lengkap",
+      "Rincian Berkas (JSON)",
+      "Judul Baris 1",
+      "Judul Baris 2",
+      "Judul Baris 3",
+      "Jabatan Verifikator",
+      "Nama Verifikator",
+      "NIP Verifikator",
+      "Tampilkan Stempel",
+      "Ukuran Kertas",
+      "Spasi"
+    ];
+    sheetCeklist.appendRow(headersCeklist);
+
+    var headerRangeCeklist = sheetCeklist.getRange(1, 1, 1, headersCeklist.length);
+    headerRangeCeklist.setBackground("#059669"); // Emerald Dark
+    headerRangeCeklist.setFontColor("#FFFFFF");
+    headerRangeCeklist.setFontWeight("bold");
+    sheetCeklist.setFrozenRows(1);
   }
   } finally {
     try {
@@ -737,6 +774,64 @@ function doGet(e) {
         success: true,
         data: resultSP,
         count: resultSP.length
+      });
+    }
+
+    // 8. Ambil Data Ceklist Kelengkapan Berkas Kecamatan Waru
+    if (action === "getCeklist") {
+      var sheetCK = ss.getSheetByName(SHEET_CEKLIST) || ss.getSheetByName("Ceklist") || ss.getSheetByName("ceklist");
+      if (!sheetCK) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
+      var dataCK = sheetCK.getDataRange().getValues();
+      if (!dataCK || dataCK.length < 2) {
+        return jsonResponse({
+          success: true,
+          data: [],
+          count: 0
+        });
+      }
+      var headersCK = dataCK[0];
+      var resultCK = [];
+
+      for (var rCK = 1; rCK < dataCK.length; rCK++) {
+        var rowCK = dataCK[rCK];
+        var hasContentCK = false;
+        for (var cCK = 0; cCK < rowCK.length; cCK++) {
+          if (rowCK[cCK] !== "" && rowCK[cCK] !== null && rowCK[cCK] !== undefined) {
+            hasContentCK = true;
+            break;
+          }
+        }
+        if (!hasContentCK) continue;
+
+        var itemCK = {};
+        for (var cCK2 = 0; cCK2 < headersCK.length; cCK2++) {
+          var hNameCK = String(headersCK[cCK2] || "").trim();
+          if (hNameCK) {
+            itemCK[hNameCK] = rowCK[cCK2];
+          }
+        }
+        resultCK.push(itemCK);
+      }
+
+      return jsonResponse({
+        success: true,
+        data: resultCK,
+        count: resultCK.length
+      });
+    }
+
+    // 9. Buat Otomatis Sheet Ceklist di Google Spreadsheet
+    if (action === "buatSheetCeklist" || action === "initCeklist") {
+      initSheets();
+      return jsonResponse({
+        success: true,
+        message: "Sheet 'Ceklist_Kelengkapan' berhasil dibuat / diverifikasi di Google Spreadsheet!"
       });
     }
 
@@ -1352,7 +1447,115 @@ function doPost(e) {
     }
 
     // -------------------------------------------------------------------------------------
-    // AKSI 9: BUKA DOKUMEN REKOMENDASI / SP LANGSUNG DI GOOGLE DOCS (CONVERT TO WORD ONLINE)
+    // AKSI 9: SIMPAN CEKLIST KELENGKAPAN BERKAS KECAMATAN KE SHEET "Ceklist_Kelengkapan"
+    // -------------------------------------------------------------------------------------
+    if (action === "simpanCeklist") {
+      var sheetCKPost = ss.getSheetByName(SHEET_CEKLIST) || ss.getSheetByName("Ceklist") || ss.getSheetByName("ceklist");
+      if (!sheetCKPost) {
+        initSheets();
+        sheetCKPost = ss.getSheetByName(SHEET_CEKLIST) || ss.getSheetByName("Ceklist");
+      }
+      var idCK = payload.id || ("CK-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
+      var timestampCK = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
+
+      var rowsData = Array.isArray(payload.rows) ? payload.rows : [];
+      var checkedRows = rowsData.filter(function(r) { return r && r.checked !== false; });
+      var ringkasanBerkas = checkedRows.map(function(r, idx) { return (idx + 1) + ". " + (r.teks || ""); }).join("\n");
+      var jsonRows = typeof payload.rows === "string" ? payload.rows : JSON.stringify(rowsData);
+
+      var statusStr = (payload.statusLengkap !== false) ? "Lengkap" : "Perlu Perbaikan";
+
+      var rowCK = [
+        idCK,
+        timestampCK,
+        payload.namaDesa || "-",
+        payload.kecamatan || "Waru",
+        payload.kabupaten || "Penajam Paser Utara",
+        payload.jenisDana || "-",
+        payload.tahap || "-",
+        payload.tahunAnggaran || "-",
+        statusStr,
+        checkedRows.length + " berkas",
+        ringkasanBerkas || "-",
+        jsonRows,
+        payload.judulBaris1 || "-",
+        payload.judulBaris2 || "-",
+        payload.judulBaris3 || "-",
+        payload.jabatanVerifikator || "Kepala Seksi Pemberdayaan Masyarakat",
+        payload.namaVerifikator || "-",
+        payload.nipVerifikator || "-",
+        payload.tampilkanStempel !== false ? "Ya" : "Tidak",
+        payload.paperSize || "a4",
+        payload.lineSpacing || "1.15"
+      ];
+
+      // Cek apakah mode edit (cocokkan berdasarkan ID Ceklist ATAU Kombinasi Desa + JenisDana + Tahap + Tahun)
+      var existingRowIndexCK = -1;
+      var dataCKPost = sheetCKPost.getDataRange().getValues();
+      for (var rCK3 = 1; rCK3 < dataCKPost.length; rCK3++) {
+        var rowIdCK = dataCKPost[rCK3][0] ? dataCKPost[rCK3][0].toString().trim() : "";
+        var rowDesaCK = dataCKPost[rCK3][2] ? dataCKPost[rCK3][2].toString().trim() : "";
+        var rowDanaCK = dataCKPost[rCK3][5] ? dataCKPost[rCK3][5].toString().trim() : "";
+        var rowTahapCK = dataCKPost[rCK3][6] ? dataCKPost[rCK3][6].toString().trim() : "";
+        var rowTahunCK = dataCKPost[rCK3][7] ? dataCKPost[rCK3][7].toString().trim() : "";
+
+        var isSameIdCK = (rowIdCK && idCK && rowIdCK.toLowerCase() === idCK.toString().trim().toLowerCase());
+        var isSameParams = (
+          payload.namaDesa && rowDesaCK.toLowerCase() === payload.namaDesa.toString().trim().toLowerCase() &&
+          payload.jenisDana && rowDanaCK.toLowerCase() === payload.jenisDana.toString().trim().toLowerCase() &&
+          payload.tahap && rowTahapCK.toLowerCase() === payload.tahap.toString().trim().toLowerCase() &&
+          payload.tahunAnggaran && rowTahunCK.toString() === payload.tahunAnggaran.toString().trim()
+        );
+
+        if (isSameIdCK || isSameParams) {
+          existingRowIndexCK = rCK3 + 1;
+          break;
+        }
+      }
+
+      if (existingRowIndexCK > 0) {
+        sheetCKPost.getRange(existingRowIndexCK, 1, 1, rowCK.length).setValues([rowCK]);
+      } else {
+        sheetCKPost.appendRow(rowCK);
+      }
+
+      return jsonResponse({
+        success: true,
+        message: existingRowIndexCK > 0 ? "Ceklist berhasil diperbarui di Google Sheets (Sheet 'Ceklist_Kelengkapan')!" : "Ceklist berhasil disimpan ke Google Sheets (Sheet 'Ceklist_Kelengkapan')!",
+        id: idCK
+      });
+    }
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 10: HAPUS CEKLIST DARI SHEET "Ceklist_Kelengkapan"
+    // -------------------------------------------------------------------------------------
+    if (action === "hapusCeklist") {
+      var sheetCKHapus = ss.getSheetByName(SHEET_CEKLIST) || ss.getSheetByName("Ceklist") || ss.getSheetByName("ceklist");
+      if (!sheetCKHapus) {
+        return jsonResponse({ success: false, message: "Sheet Ceklist_Kelengkapan tidak ditemukan." });
+      }
+      var targetIdCK = payload.id;
+      if (!targetIdCK) {
+        return jsonResponse({ success: false, message: "ID Ceklist wajib disertakan." });
+      }
+      var dataCKHapus = sheetCKHapus.getDataRange().getValues();
+      var deletedCK = false;
+      for (var rCK4 = 1; rCK4 < dataCKHapus.length; rCK4++) {
+        var rowIdCK4 = dataCKHapus[rCK4][0] ? dataCKHapus[rCK4][0].toString().trim() : "";
+        if (rowIdCK4 === targetIdCK.toString().trim()) {
+          sheetCKHapus.deleteRow(rCK4 + 1);
+          deletedCK = true;
+          break;
+        }
+      }
+      return jsonResponse({
+        success: deletedCK,
+        message: deletedCK ? "Arsip Ceklist berhasil dihapus dari Google Sheets." : "Data tidak ditemukan."
+      });
+    }
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 11: BUKA DOKUMEN REKOMENDASI / SP LANGSUNG DI GOOGLE DOCS (CONVERT TO WORD ONLINE)
     // -------------------------------------------------------------------------------------
     if (action === "bukaGoogleDocs" || action === "convertToWordDocs") {
       var docTitle = (payload.title || "Dokumen_Rekomendasi").replace(/[\/\\:*?"<>|]/g, "_").replace(/\.docx$/i, "").trim();
