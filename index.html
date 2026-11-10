@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -1137,6 +1137,7 @@
           </button>
           <button id="tabBtnGenerator" onclick="switchKecamatanSubTab('generator')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
             <span>📝 2. Generator Rekomendasi Camat</span>
+            <span id="badgeTabGeneratorCount" class="bg-blue-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px] hidden">0</span>
           </button>
           <button id="tabBtnSuratPengantar" onclick="switchKecamatanSubTab('surat_pengantar')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
             <span>✉️ 3. Surat Pengantar Kecamatan</span>
@@ -1144,6 +1145,7 @@
           </button>
           <button id="tabBtnCeklist" onclick="switchKecamatanSubTab('ceklist')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
             <span>📋 4. Ceklist Berkas Kecamatan</span>
+            <span id="badgeTabCeklistCount" class="bg-emerald-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[10px] hidden">0</span>
           </button>
           <button id="tabBtnKirimDesa" onclick="switchKecamatanSubTab('kirim_desa')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
             <span>📤 5. Kirim Rekom Ke Desa</span>
@@ -1235,6 +1237,9 @@
           </button>
         </div>
         <div class="flex items-center gap-1.5">
+          <button type="button" onclick="saveRecommendationData()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Simpan Arsip Rekomendasi">
+            <span>&#x1F4BE; Simpan</span>
+          </button>
           <button type="button" id="btnGenNomorSurat" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1 cursor-pointer" title="Generate Nomor Surat Otomatis">
             <span class="text-blue-600 font-bold">#</span>
             <span class="hidden sm:inline">Auto No. Surat</span>
@@ -1699,6 +1704,14 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-1.5 flex-shrink-0 ml-auto">
+          <!-- Tombol Simpan Arsip Rekomendasi -->
+          <button type="button" onclick="saveRecommendationData()" class="px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Simpan Dokumen Rekomendasi ke Arsip">
+            <span>&#x1F4BE; Simpan Rekom</span>
+          </button>
+          <!-- Tombol Buka Riwayat Rekomendasi -->
+          <button type="button" onclick="toggleRiwayatRekom()" class="px-2.5 sm:px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Buka Daftar Riwayat Rekomendasi Tersimpan">
+            <span>&#x1F4DC; Riwayat (<span id="countArsipRekomToolbarBadge">0</span>)</span>
+          </button>
           <!-- Tombol Edit Langsung di Kertas -->
           <button type="button" id="btnToggleEditDirect" onclick="toggleDirectEditMode()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Edit langsung teks di lembar dokumen">
             <span id="iconEditDirect">&#x270F;&#xFE0F;</span>
@@ -1764,6 +1777,9 @@
             </button>
           </div>
           <div class="flex items-center gap-1.5">
+            <button type="button" onclick="simpanArsipSuratPengantar()" class="text-xs bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded-lg font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Simpan Arsip Surat Pengantar">
+              <span>&#x1F4BE; Simpan</span>
+            </button>
             <button type="button" onclick="salinDataDariRekomAktifKeSp()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-300 font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Otomatis salin data Desa & Rekomendasi yang aktif di Generator">
               <span>&#x26A1; Salin</span>
             </button>
@@ -2046,6 +2062,14 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-1.5 flex-shrink-0 ml-auto">
+            <!-- Tombol Simpan Arsip SP -->
+            <button type="button" onclick="simpanArsipSuratPengantar()" class="px-2.5 sm:px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Simpan Surat Pengantar ke Arsip">
+              <span>&#x1F4BE; Simpan SP</span>
+            </button>
+            <!-- Tombol Buka Riwayat SP -->
+            <button type="button" onclick="toggleRiwayatSp()" class="px-2.5 sm:px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Buka Daftar Riwayat Surat Pengantar Tersimpan">
+              <span>&#x1F4DC; Riwayat (<span id="countArsipSpToolbarBadge">0</span>)</span>
+            </button>
             <!-- Tombol Edit Langsung di Kertas -->
             <button type="button" id="btnToggleEditDirectSp" onclick="toggleDirectEditModeSp()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Edit langsung teks di lembar dokumen">
               <span id="iconEditDirectSp">&#x270F;&#xFE0F;</span>
@@ -2112,6 +2136,9 @@
             </button>
           </div>
           <div class="flex items-center gap-1.5">
+            <button type="button" onclick="simpanArsipCeklist()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Simpan Arsip Dokumen Ceklist ke Riwayat">
+              <span>&#x1F4BE; Simpan</span>
+            </button>
             <button type="button" onclick="salinDataDariRekomAktifKeCeklist()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-300 font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Otomatis salin data Desa & Berkas Persyaratan dari Rekomendasi yang aktif di Generator">
               <span>&#x26A1; Salin</span>
             </button>
@@ -2370,6 +2397,14 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-1.5 flex-shrink-0 ml-auto">
+            <!-- Tombol Simpan Arsip Ceklist -->
+            <button type="button" id="btnSimpanCeklistToolbar" onclick="simpanArsipCeklist()" class="px-2.5 sm:px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Simpan Dokumen Ceklist ke Arsip">
+              <span>&#x1F4BE; Simpan Ceklist</span>
+            </button>
+            <!-- Tombol Buka Riwayat Ceklist -->
+            <button type="button" id="btnRiwayatCeklistToolbar" onclick="toggleRiwayatCeklist()" class="px-2.5 sm:px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Buka Daftar Riwayat Arsip Ceklist Tersimpan">
+              <span>&#x1F4DC; Riwayat (<span id="countArsipCeklistToolbarBadge">0</span>)</span>
+            </button>
             <!-- Tombol Edit Langsung di Kertas -->
             <button type="button" id="btnToggleEditDirectCeklist" onclick="toggleDirectEditModeCeklist()" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap flex-shrink-0" title="Edit langsung teks di lembar dokumen">
               <span id="iconEditDirectCeklist">&#x270F;&#xFE0F;</span>
@@ -4047,6 +4082,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261110_riwayat_per_tab"></script>
+  <script src="app.js?v=20261110_ceklist_simpan_riwayat"></script>
 </body>
 </html>

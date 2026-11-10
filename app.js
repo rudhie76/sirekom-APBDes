@@ -5685,7 +5685,12 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (splitControls) splitControls.classList.remove('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.remove('hidden');
     if (btnExportDocx) btnExportDocx.classList.remove('hidden');
-    if (btnSaveToDb) btnSaveToDb.classList.remove('hidden');
+    if (btnSaveToDb) {
+      btnSaveToDb.classList.remove('hidden');
+      btnSaveToDb.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer';
+      btnSaveToDb.innerHTML = '<span>&#x1F4BE; Simpan Rekom</span>';
+      btnSaveToDb.onclick = () => saveRecommendationData();
+    }
     updateLivePreview();
     if (typeof renderTabelRiwayatRekom === 'function') renderTabelRiwayatRekom();
     if (typeof updateBadgeRekomCount === 'function') updateBadgeRekomCount();
@@ -5695,7 +5700,12 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (splitControls) splitControls.classList.add('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
     if (btnExportDocx) btnExportDocx.classList.add('hidden');
-    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    if (btnSaveToDb) {
+      btnSaveToDb.classList.remove('hidden');
+      btnSaveToDb.className = 'px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer';
+      btnSaveToDb.innerHTML = '<span>&#x1F4BE; Simpan SP</span>';
+      btnSaveToDb.onclick = () => simpanArsipSuratPengantar();
+    }
     initSuratPengantarTab();
     if (typeof renderTabelRiwayatSp === 'function') renderTabelRiwayatSp();
     if (typeof updateBadgeSpCount === 'function') updateBadgeSpCount();
@@ -5705,7 +5715,12 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (splitControls) splitControls.classList.add('hidden');
     if (btnPrintDoc) btnPrintDoc.classList.add('hidden');
     if (btnExportDocx) btnExportDocx.classList.add('hidden');
-    if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
+    if (btnSaveToDb) {
+      btnSaveToDb.classList.remove('hidden');
+      btnSaveToDb.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer';
+      btnSaveToDb.innerHTML = '<span>&#x1F4BE; Simpan Ceklist</span>';
+      btnSaveToDb.onclick = () => simpanArsipCeklist();
+    }
     initCeklistTab();
     if (typeof renderTabelRiwayatCeklist === 'function') renderTabelRiwayatCeklist();
     if (typeof updateBadgeCeklistCount === 'function') updateBadgeCeklistCount();
@@ -10492,6 +10507,15 @@ window.updateBadgeSpCount = function() {
   if (badgeBtn) {
     badgeBtn.textContent = count;
   }
+
+  const badgeTb = document.getElementById('countArsipSpToolbarBadge');
+  if (badgeTb) badgeTb.textContent = count;
+};
+
+window.toggleRiwayatSp = function() {
+  const rw = document.getElementById('subViewSpRiwayat');
+  const isHidden = !rw || rw.classList.contains('hidden');
+  switchSubViewSp(isHidden ? 'riwayat' : 'form');
 };
 
 
@@ -11528,6 +11552,14 @@ window.updateBadgeRekomCount = function() {
   if (b2) b2.textContent = count;
   const b3 = document.getElementById('countArsipRekomBottomBadge');
   if (b3) b3.textContent = count;
+  const b4 = document.getElementById('countArsipRekomToolbarBadge');
+  if (b4) b4.textContent = count;
+};
+
+window.toggleRiwayatRekom = function() {
+  const rw = document.getElementById('subViewRekomRiwayat');
+  const isHidden = !rw || rw.classList.contains('hidden');
+  switchSubViewRekom(isHidden ? 'riwayat' : 'form');
 };
 
 // --- 2. SUB-TAB 3: SURAT PENGANTAR KECAMATAN ---
@@ -11964,6 +11996,14 @@ window.updateBadgeCeklistCount = function() {
   if (b3) b3.textContent = count;
   const b4 = document.getElementById('countArsipCeklistBottomBadge');
   if (b4) b4.textContent = count;
+  const b5 = document.getElementById('countArsipCeklistToolbarBadge');
+  if (b5) b5.textContent = count;
+};
+
+window.toggleRiwayatCeklist = function() {
+  const rw = document.getElementById('subViewCeklistRiwayat');
+  const isHidden = !rw || rw.classList.contains('hidden');
+  switchSubViewCeklist(isHidden ? 'riwayat' : 'form');
 };
 
 // Initial badge update on script load
