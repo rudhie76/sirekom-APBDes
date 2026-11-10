@@ -815,7 +815,7 @@ function renderBerkasChecklist() {
     } else {
       row.innerHTML = `
         <div class="flex items-start gap-2.5">
-          <input type="checkbox" id="berkas_${item.id}" ${isChecked ? 'checked' : ''}
+          <input type="checkbox" id="berkas_${item.id}" value="${item.id}" ${isChecked ? 'checked' : ''}
                  onchange="handleBerkasCheckboxChange('${item.id}', this.checked)"
                  class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer berkas-checkbox" />
           <div class="flex-1 cursor-pointer select-none" onclick="document.getElementById('berkas_${item.id}').click()">
@@ -1078,9 +1078,9 @@ function renderDasarChecklist() {
     } else {
       row.innerHTML = `
         <div class="flex items-start gap-2.5">
-          <input type="checkbox" id="dasar_check_${item.id}" ${isChecked ? 'checked' : ''}
+          <input type="checkbox" id="dasar_check_${item.id}" value="${item.id}" ${isChecked ? 'checked' : ''}
                  onchange="handleDasarCheckboxChange('${item.id}', this.checked)"
-                 class="mt-0.5 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer" />
+                 class="mt-0.5 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer dasar-checkbox" />
           <div class="flex-1 cursor-pointer select-none" onclick="document.getElementById('dasar_check_${item.id}').click()">
             <span class="font-bold text-slate-900 mr-1">${index + 1}.</span>
             <span class="leading-relaxed ${isChecked ? '' : 'line-through text-slate-400 italic'}">${escapeHtml(item.teks)}</span>
@@ -3576,14 +3576,18 @@ window.generateCeklistDocxFromItem = async function(item) {
     const tahun = item.tahunAnggaran || '2026';
     const safeName = `Ceklist_Kelengkapan_Berkas_${safeDesa}_${safeTahap}_${tahun}`;
 
-    // Tentukan daftar berkas berdasarkan tipe dana
+    // Tentukan daftar berkas berdasarkan data arsip atau template baku
     const tipe = (item.jenisDana || 'siltap').toLowerCase();
-    let rawList = [];
-    if (tipe.includes('siltap')) rawList = DEFAULT_BERKAS_TEMPLATES.siltap;
-    else if (tipe.includes('reguler') || tipe === 'add_reguler') rawList = DEFAULT_BERKAS_TEMPLATES.add_reguler;
-    else if (tipe.includes('dbh')) rawList = DEFAULT_BERKAS_TEMPLATES.dbh;
-    else if (tipe.includes('dd') || tipe === 'dana desa') rawList = DEFAULT_BERKAS_TEMPLATES.dd;
-    else rawList = DEFAULT_BERKAS_TEMPLATES.siltap;
+    let templateList = [];
+    if (tipe.includes('siltap')) templateList = DEFAULT_BERKAS_TEMPLATES.siltap;
+    else if (tipe.includes('reguler') || tipe === 'add_reguler') templateList = DEFAULT_BERKAS_TEMPLATES.add_reguler;
+    else if (tipe.includes('dbh')) templateList = DEFAULT_BERKAS_TEMPLATES.dbh;
+    else if (tipe.includes('dd') || tipe === 'dana desa') templateList = DEFAULT_BERKAS_TEMPLATES.dd;
+    else templateList = DEFAULT_BERKAS_TEMPLATES.siltap;
+
+    const rawList = (Array.isArray(item.berkasList) && item.berkasList.length > 0)
+      ? item.berkasList
+      : templateList;
 
     let judul1 = 'CEKLIST KELENGKAPAN BERKAS PENGAJUAN ADD';
     let judul2 = 'PENGHASILAN TETAP DAN TUNJANGAN JABATAN KEPALA DESA DAN PERANGKAT DESA, TUNJANGAN KEDUDUKAN BPD, INSENTIF RUKUN TETANGGA (RT) DAN HONORARIUM STAF DESA';
@@ -3599,10 +3603,11 @@ window.generateCeklistDocxFromItem = async function(item) {
     }
     const judul3 = `${(item.tahap || 'BULAN NOPEMBER').toUpperCase()} TAHUN ANGGARAN ${tahun}`;
 
-    const checkedIds = Array.isArray(item.kelengkapanBerkas) ? item.kelengkapanBerkas : [];
+    const checkedIds = Array.isArray(item.kelengkapanBerkas) ? item.kelengkapanBerkas.filter(id => id && id !== 'on') : [];
 
     const tableRowsHtml = rawList.filter((b, idx) => {
-      return checkedIds.length > 0 ? checkedIds.includes(b.id) : b.checked !== false;
+      if (checkedIds.length > 0) return checkedIds.includes(b.id);
+      return b.checked !== false;
     }).map((b, idx) => {
       return `
         <tr>
@@ -4026,8 +4031,23 @@ async function saveRecommendationData() {
   if (saveBtn) { saveBtn.innerHTML = '⏳ Menyimpan...'; saveBtn.disabled = true; }
 
   const desa = document.getElementById('selectNamaDesa')?.value || 'Api-Api';
-  const berkasChecked = [];
-  document.querySelectorAll('.berkas-checkbox:checked').forEach(cb => berkasChecked.push(cb.value));
+  const tipe = AppState.tipeRekomendasi;
+
+  // 1. Sinkronisasi status checklist berkas persyaratan dari DOM & memory
+  const rawBerkas = getRawBerkasList(tipe);
+  rawBerkas.forEach(b => {
+    const cb = document.getElementById(`berkas_${b.id}`);
+    if (cb) b.checked = cb.checked;
+  });
+  const berkasChecked = rawBerkas.filter(b => b.checked !== false).map(b => b.id);
+
+  // 2. Sinkronisasi status checklist dasar hukum dari DOM & memory
+  const rawDasar = getRawDasarList(tipe);
+  rawDasar.forEach(d => {
+    const cb = document.getElementById(`dasar_check_${d.id}`);
+    if (cb) d.checked = cb.checked;
+  });
+  const dasarChecked = rawDasar.filter(d => d.checked !== false).map(d => d.id);
 
   const nomorSurat = document.getElementById('inputNomorSurat')?.value?.trim() || '';
 
@@ -4065,6 +4085,9 @@ async function saveRecommendationData() {
     nipCamat: document.getElementById('inputNipCamat')?.value || AppState.camat.nip,
     metodeTte: document.getElementById('selectMetodeTte')?.value || 'tte',
     kelengkapanBerkas: berkasChecked,
+    berkasList: JSON.parse(JSON.stringify(rawBerkas)),
+    kelengkapanDasar: dasarChecked,
+    dasarList: JSON.parse(JSON.stringify(rawDasar)),
     status: 'Diterbitkan'
   };
 
@@ -4410,10 +4433,14 @@ function loadHistoryItem(id) {
 
   AppState.editingRekomId = item.id;
 
-  // 1. Pilih Tipe Rekomendasi (ADD Siltap, Reguler, DBH, DD)
-  if (item.jenisDana) {
-    pilihTipeRekomendasi(item.jenisDana.toLowerCase());
-  }
+  // 1. Tentukan & Pilih Tipe Rekomendasi (ADD Siltap, Reguler, DBH, DD)
+  let tipe = (item.jenisDana || 'siltap').toLowerCase();
+  if (tipe === 'add reguler' || tipe.includes('reguler')) tipe = 'add_reguler';
+  else if (tipe.includes('siltap')) tipe = 'siltap';
+  else if (tipe.includes('dbh') || tipe.includes('pbh')) tipe = 'dbh';
+  else if (tipe.includes('dd') || tipe.includes('dana desa')) tipe = 'dd';
+
+  pilihTipeRekomendasi(tipe);
 
   // 2. Pilih Desa
   if (item.namaDesa && document.getElementById('selectNamaDesa')) {
@@ -4475,12 +4502,43 @@ function loadHistoryItem(id) {
     document.getElementById('selectMetodeTte').value = item.metodeTte;
   }
 
-  // 8. Kelengkapan Berkas
-  if (Array.isArray(item.kelengkapanBerkas)) {
-    document.querySelectorAll('.berkas-checkbox').forEach(cb => {
-      cb.checked = item.kelengkapanBerkas.includes(cb.value);
-    });
+  // 8. Kelengkapan Berkas Persyaratan: Pulihkan status centang & susunan berkas
+  if (Array.isArray(item.berkasList) && item.berkasList.length > 0) {
+    const restoredBerkas = JSON.parse(JSON.stringify(item.berkasList));
+    if (tipe === 'add_reguler') AppState.berkasAddReguler = restoredBerkas;
+    else if (tipe === 'siltap') AppState.berkasSiltap = restoredBerkas;
+    else if (tipe === 'dbh') AppState.berkasDbh = restoredBerkas;
+    else if (tipe === 'dd') AppState.berkasDd = restoredBerkas;
+  } else if (Array.isArray(item.kelengkapanBerkas)) {
+    const validIds = item.kelengkapanBerkas.filter(id => id && id !== 'on');
+    const targetBerkasList = getRawBerkasList(tipe);
+    if (validIds.length > 0 && targetBerkasList) {
+      targetBerkasList.forEach(b => {
+        b.checked = validIds.includes(b.id);
+      });
+    }
   }
+
+  // 9. Kelengkapan Dasar Hukum: Pulihkan status centang & susunan dasar
+  if (Array.isArray(item.dasarList) && item.dasarList.length > 0) {
+    const restoredDasar = JSON.parse(JSON.stringify(item.dasarList));
+    if (tipe === 'add_reguler') AppState.dasarAddReguler = restoredDasar;
+    else if (tipe === 'siltap') AppState.dasarSiltap = restoredDasar;
+    else if (tipe === 'dbh') AppState.dasarDbh = restoredDasar;
+    else if (tipe === 'dd') AppState.dasarDd = restoredDasar;
+  } else if (Array.isArray(item.kelengkapanDasar)) {
+    const validDasarIds = item.kelengkapanDasar.filter(id => id && id !== 'on');
+    const targetDasarList = getRawDasarList(tipe);
+    if (validDasarIds.length > 0 && targetDasarList) {
+      targetDasarList.forEach(d => {
+        d.checked = validDasarIds.includes(d.id);
+      });
+    }
+  }
+
+  // Re-render checklist agar status centang dan efek coret (line-through) tampil akurat di form
+  renderBerkasChecklist();
+  renderDasarChecklist();
 
   autoUpdatePerihal();
   updateLivePreview();
@@ -4496,6 +4554,10 @@ function loadHistoryItem(id) {
 function batalEditRekomendasi() {
   AppState.editingRekomId = null;
   renderEditingRekomBanner();
+  resetBerkasToDefault();
+  resetDasarToDefault();
+  autoGenerateNomorSurat();
+  updateLivePreview();
   showToast('Mode edit dibatalkan. Formulir kembali ke mode pembuatan rekomendasi baru.', 'info');
 }
 window.batalEditRekomendasi = batalEditRekomendasi;
