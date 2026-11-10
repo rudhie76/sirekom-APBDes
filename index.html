@@ -1223,32 +1223,39 @@
       <!-- ============================================================================= -->
       <aside id="panelFormKiri" class="w-full md:w-[45%] lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200">
       
-      <!-- Sub-header Form -->
-      <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-        <div>
-          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Form Parameter Rekomendasi</h2>
-          <p class="text-[11px] text-slate-500">Pilih jenis dana dan sesuaikan data rekomendasi</p>
+      <!-- Sub-header Form Rekomendasi & Switcher Riwayat -->
+      <div class="px-3.5 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+        <div class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+          <button type="button" id="btnSubTabRekomForm" onclick="switchSubViewRekom('form')" class="px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+            <span>&#x270F;&#xFE0F; Formulir Rekom</span>
+          </button>
+          <button type="button" id="btnSubTabRekomRiwayat" onclick="switchSubViewRekom('riwayat')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer">
+            <span>&#x1F4DC; Riwayat Rekom</span>
+            <span id="badgeTabRiwayatRekomCount" class="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-600 text-white font-bold">0</span>
+          </button>
         </div>
-        <button id="btnGenNomorSurat" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1">
-          <span class="text-blue-600 font-bold">#</span>
-          <span>Auto No. Surat</span>
-        </button>
+        <div class="flex items-center gap-1.5">
+          <button type="button" id="btnGenNomorSurat" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1 cursor-pointer" title="Generate Nomor Surat Otomatis">
+            <span class="text-blue-600 font-bold">#</span>
+            <span class="hidden sm:inline">Auto No. Surat</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Scrollable Inputs -->
-      <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+      <!-- Container Formulir Input Rekomendasi -->
+      <div id="subViewRekomForm" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
 
         <!-- Banner Mode Edit Rekomendasi (Muncul jika sedang mengedit arsip yang sudah ada) -->
         <div id="bannerEditingRekom" class="hidden p-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl text-xs font-semibold flex items-center justify-between gap-2 shadow-sm border border-amber-400">
           <div class="flex items-center gap-2">
-            <span class="text-base">✏️</span>
+              <span class="text-base">&#x270F;&#xFE0F;</span>
             <div>
               <div class="font-bold text-[11px] uppercase tracking-wide">Mode Edit Rekomendasi</div>
               <div class="text-[10.5px] text-amber-100">Memperbarui arsip: <b id="textEditingRekomNomor" class="font-mono text-white">-</b></div>
             </div>
           </div>
           <button type="button" onclick="batalEditRekomendasi()" class="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-[10.5px] font-bold transition cursor-pointer">
-            ✕ Buat Baru
+              &times; Buat Baru
           </button>
         </div>
 
@@ -1597,7 +1604,56 @@
           </div>
         </div>
 
+        <!-- Tombol Aksi Simpan & Buka Riwayat Rekomendasi di Bawah Formulir -->
+        <div class="pt-2 flex flex-wrap items-center gap-2">
+          <button type="button" onclick="saveRecommendationData()" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+            <span>&#x1F4BE; Simpan Arsip Rekomendasi</span>
+          </button>
+          <button type="button" onclick="switchSubViewRekom('riwayat')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer" title="Buka Daftar Riwayat Rekomendasi Tersimpan">
+            <span>&#x1F4DC; Riwayat Rekom (<span id="countArsipRekomBottomBadge">0</span>)</span>
+          </button>
+        </div>
+
       </div>
+      <!-- /#subViewRekomForm -->
+
+      <!-- ========================================================================= -->
+      <!-- TABEL DAFTAR RIWAYAT REKOMENDASI YANG TELAH DIBUAT (DI DALAM TAB GENERATOR) -->
+      <!-- ========================================================================= -->
+      <div id="subViewRekomRiwayat" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
+        <!-- Search & Info Bar -->
+        <div class="p-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+          <div class="relative flex-1 min-w-[200px]">
+            <input type="text" id="inputSearchRiwayatRekom" oninput="renderTabelRiwayatRekom()" placeholder="Cari desa, no. surat, perihal..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800" />
+              <span class="absolute left-2.5 top-2 text-slate-400 text-xs">&#x1F50D;</span>
+          </div>
+          <button type="button" onclick="switchSubViewRekom('form')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-2xs cursor-pointer">
+            <span>+ Buat Rekom Baru</span>
+          </button>
+        </div>
+
+        <!-- Table Container -->
+        <div class="flex-1 overflow-auto custom-scrollbar p-3">
+          <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-[11px] uppercase font-bold border-b border-slate-200">
+                  <th class="py-2.5 px-3 text-center w-10">No</th>
+                  <th class="py-2.5 px-3">Desa</th>
+                  <th class="py-2.5 px-3">Nomor Surat & Tanggal</th>
+                  <th class="py-2.5 px-3">Jenis & Tahap</th>
+                  <th class="py-2.5 px-3 text-right">Nominal</th>
+                  <th class="py-2.5 px-3 text-center w-28">Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyRiwayatRekomTab" class="divide-y divide-slate-100">
+                <!-- Diisi otomatis oleh JavaScript renderTabelRiwayatRekom() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- /#subViewRekomRiwayat -->
 
     </aside>
 
@@ -1696,28 +1752,44 @@
       <!-- ============================================================================= -->
       <aside id="panelFormKiriSp" class="w-full md:w-[45%] lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200 no-print">
         
-        <!-- Sub-header Form -->
-        <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-teal-900 flex items-center gap-1.5">
-              <span>✉️</span>
-              <span>Form Surat Pengantar</span>
-            </h2>
-            <p class="text-[11px] text-slate-500">Sesuaikan data surat pengantar resmi Kecamatan Waru</p>
+        <!-- Sub-header Form SP & Switcher Riwayat -->
+        <div class="px-3.5 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+          <div class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+            <button type="button" id="btnSubTabSpForm" onclick="switchSubViewSp('form')" class="px-2.5 py-1 rounded-md bg-white text-teal-800 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+              <span>&#x2709;&#xFE0F; Formulir SP</span>
+            </button>
+            <button type="button" id="btnSubTabSpRiwayat" onclick="switchSubViewSp('riwayat')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer">
+              <span>&#x1F4DC; Riwayat SP</span>
+              <span id="badgeTabRiwayatSpCount" class="px-1.5 py-0.2 rounded-full text-[10px] bg-teal-600 text-white font-bold">0</span>
+            </button>
           </div>
           <div class="flex items-center gap-1.5">
             <button type="button" onclick="salinDataDariRekomAktifKeSp()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-300 font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Otomatis salin data Desa & Rekomendasi yang aktif di Generator">
-              <span>⚡ Salin dari Rekom</span>
+              <span>&#x26A1; Salin</span>
             </button>
             <button type="button" onclick="autoGenNomorSp()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1 cursor-pointer" title="Generate Nomor Surat Pengantar Otomatis">
               <span class="text-teal-600 font-bold">#</span>
-              <span>Auto No. SP</span>
+              <span class="hidden sm:inline">Auto No. SP</span>
             </button>
           </div>
         </div>
 
-        <!-- Scrollable Inputs -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+        <!-- Container Formulir Input Surat Pengantar -->
+        <div id="subViewSpForm" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+
+          <!-- Banner Mode Edit Surat Pengantar -->
+          <div id="bannerEditingSp" class="hidden p-3 bg-gradient-to-r from-teal-700 to-teal-800 text-white rounded-xl text-xs font-semibold flex items-center justify-between gap-2 shadow-sm border border-teal-500">
+            <div class="flex items-center gap-2">
+              <span class="text-base">&#x270F;&#xFE0F;</span>
+              <div>
+                <div class="font-bold text-[11px] uppercase tracking-wide">Mode Edit Surat Pengantar</div>
+                <div class="text-[10.5px] text-teal-100">Memperbarui arsip: <b id="textEditingSpNomor" class="font-mono text-white">-</b></div>
+              </div>
+            </div>
+            <button type="button" onclick="batalEditSp()" class="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-[10.5px] font-bold transition cursor-pointer">
+              &times; Buat Baru
+            </button>
+          </div>
 
           <!-- KARTU 1: DATA KEPALA SURAT (NOMOR, TANGGAL & TUJUAN) -->
           <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
@@ -1879,17 +1951,56 @@
           <!-- Action Buttons Bottom -->
           <div class="pt-2 flex flex-wrap items-center gap-2">
             <button type="button" onclick="simpanArsipSuratPengantar()" class="flex-1 py-2 px-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
-              <span>💾 Simpan Arsip SP</span>
+              <span>&#x1F4BE; Simpan Arsip SP</span>
             </button>
-            <button type="button" onclick="bukaDrawerRiwayatSp()" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer" title="Buka Riwayat Surat Pengantar Tersimpan">
-              <span>📋 Arsip SP (<span id="countArsipSpBadge">0</span>)</span>
+            <button type="button" onclick="switchSubViewSp('riwayat')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer" title="Buka Riwayat Surat Pengantar Tersimpan">
+              <span>&#x1F4DC; Riwayat SP (<span id="countArsipSpBadge">0</span>)</span>
             </button>
             <button type="button" onclick="resetFormSuratPengantar()" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer" title="Reset Formulir">
-              <span>🔄 Reset</span>
+              <span>&#x1F504; Reset</span>
             </button>
           </div>
 
         </div>
+        <!-- /#subViewSpForm -->
+
+        <!-- ========================================================================= -->
+        <!-- TABEL DAFTAR RIWAYAT SURAT PENGANTAR YANG TELAH DIBUAT (DI DALAM TAB SP) -->
+        <!-- ========================================================================= -->
+        <div id="subViewSpRiwayat" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
+          <!-- Search & Info Bar -->
+          <div class="p-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+            <div class="relative flex-1 min-w-[200px]">
+              <input type="text" id="inputSearchRiwayatSp" oninput="renderTabelRiwayatSp()" placeholder="Cari desa, no. SP, tujuan..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-slate-800" />
+              <span class="absolute left-2.5 top-2 text-slate-400 text-xs">&#x1F50D;</span>
+            </div>
+            <button type="button" onclick="switchSubViewSp('form')" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-2xs cursor-pointer">
+              <span>+ Buat SP Baru</span>
+            </button>
+          </div>
+
+          <!-- Table Container -->
+          <div class="flex-1 overflow-auto custom-scrollbar p-3">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-700 text-[11px] uppercase font-bold border-b border-slate-200">
+                    <th class="py-2.5 px-3 text-center w-10">No</th>
+                    <th class="py-2.5 px-3">Desa</th>
+                    <th class="py-2.5 px-3">Nomor SP & Tanggal</th>
+                    <th class="py-2.5 px-3">Tujuan Yth.</th>
+                    <th class="py-2.5 px-3">Rincian Berkas</th>
+                    <th class="py-2.5 px-3 text-center w-28">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyRiwayatSpTab" class="divide-y divide-slate-100">
+                  <!-- Diisi otomatis oleh JavaScript renderTabelRiwayatSp() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- /#subViewSpRiwayat -->
 
       </aside>
 
@@ -1989,27 +2100,43 @@
       <!-- ============================================================================= -->
       <aside id="panelFormKiriCeklist" class="w-full md:w-[45%] lg:w-[45%] xl:w-[42%] bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-hidden transition-all duration-200 no-print">
         
-        <!-- Sub-header Form -->
-        <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-          <div>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
-              <span>📋</span>
-              <span>Form Ceklist Berkas Kecamatan</span>
-            </h2>
-            <p class="text-[11px] text-slate-500">Verifikasi kelengkapan berkas pengajuan APBDes dari Desa</p>
+        <!-- Sub-header Form Ceklist & Switcher Riwayat -->
+        <div class="px-3.5 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+          <div class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+            <button type="button" id="btnSubTabCeklistForm" onclick="switchSubViewCeklist('form')" class="px-2.5 py-1 rounded-md bg-white text-emerald-800 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+              <span>&#x1F4CB; Formulir Ceklist</span>
+            </button>
+            <button type="button" id="btnSubTabCeklistRiwayat" onclick="switchSubViewCeklist('riwayat')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer">
+              <span>&#x1F4DC; Riwayat Ceklist</span>
+              <span id="badgeTabRiwayatCeklistCount" class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-600 text-white font-bold">0</span>
+            </button>
           </div>
           <div class="flex items-center gap-1.5">
             <button type="button" onclick="salinDataDariRekomAktifKeCeklist()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-300 font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Otomatis salin data Desa & Berkas Persyaratan dari Rekomendasi yang aktif di Generator">
-              <span>⚡ Salin dari Rekom</span>
+              <span>&#x26A1; Salin</span>
             </button>
             <button type="button" onclick="resetCeklistToDefault()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded border border-slate-300 font-medium transition flex items-center gap-1 cursor-pointer" title="Kembalikan daftar ceklist ke standar bawaan">
-              <span>🔄 Reset</span>
+              <span>&#x1F504; Reset</span>
             </button>
           </div>
         </div>
 
-        <!-- Scrollable Inputs -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+        <!-- Container Formulir Input Ceklist -->
+        <div id="subViewCeklistForm" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+
+          <!-- Banner Mode Edit Ceklist -->
+          <div id="bannerEditingCeklist" class="hidden p-3 bg-gradient-to-r from-emerald-700 to-emerald-800 text-white rounded-xl text-xs font-semibold flex items-center justify-between gap-2 shadow-sm border border-emerald-500">
+            <div class="flex items-center gap-2">
+              <span class="text-base">&#x270F;&#xFE0F;</span>
+              <div>
+                <div class="font-bold text-[11px] uppercase tracking-wide">Mode Edit Ceklist Berkas</div>
+                <div class="text-[10.5px] text-emerald-100">Memperbarui arsip: <b id="textEditingCeklistNomor" class="font-mono text-white">-</b></div>
+              </div>
+            </div>
+            <button type="button" onclick="batalEditCeklist()" class="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-[10.5px] font-bold transition cursor-pointer">
+              &times; Buat Baru
+            </button>
+          </div>
 
           <!-- KARTU 1: IDENTITAS DESA & PERIODE -->
           <div class="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200 space-y-3">
@@ -2145,7 +2272,60 @@
             </div>
           </div>
 
+          <!-- Tombol Aksi Simpan & Buka Riwayat Ceklist -->
+          <div class="pt-2 flex flex-wrap items-center gap-2">
+            <button type="button" onclick="simpanArsipCeklist()" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+              <span>&#x1F4BE; Simpan Arsip Ceklist</span>
+            </button>
+            <button type="button" onclick="switchSubViewCeklist('riwayat')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer" title="Buka Riwayat Ceklist Tersimpan">
+              <span>&#x1F4CB; Riwayat Ceklist (<span id="countArsipCeklistBottomBadge">0</span>)</span>
+            </button>
+            <button type="button" onclick="resetFormCeklist()" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer" title="Reset Formulir">
+              <span>&#x1F504; Reset</span>
+            </button>
+          </div>
+
         </div>
+        <!-- /#subViewCeklistForm -->
+
+        <!-- ========================================================================= -->
+        <!-- TABEL DAFTAR RIWAYAT CEKLIST BERKAS YANG TELAH DIBUAT (DI DALAM TAB CEKLIST) -->
+        <!-- ========================================================================= -->
+        <div id="subViewCeklistRiwayat" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
+          <!-- Search & Info Bar -->
+          <div class="p-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+            <div class="relative flex-1 min-w-[200px]">
+              <input type="text" id="inputSearchRiwayatCeklist" oninput="renderTabelRiwayatCeklist()" placeholder="Cari desa, periode, jenis dana..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-slate-800" />
+              <span class="absolute left-2.5 top-2 text-slate-400 text-xs">&#x1F50D;</span>
+            </div>
+            <button type="button" onclick="switchSubViewCeklist('form')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-2xs cursor-pointer">
+              <span>+ Buat Ceklist Baru</span>
+            </button>
+          </div>
+
+          <!-- Table Container -->
+          <div class="flex-1 overflow-auto custom-scrollbar p-3">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-700 text-[11px] uppercase font-bold border-b border-slate-200">
+                    <th class="py-2.5 px-3 text-center w-10">No</th>
+                    <th class="py-2.5 px-3">Desa</th>
+                    <th class="py-2.5 px-3">Periode & Jenis Dana</th>
+                    <th class="py-2.5 px-3">Verifikator</th>
+                    <th class="py-2.5 px-3 text-center">Status</th>
+                    <th class="py-2.5 px-3 text-center w-28">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyRiwayatCeklistTab" class="divide-y divide-slate-100">
+                  <!-- Diisi otomatis oleh JavaScript renderTabelRiwayatCeklist() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- /#subViewCeklistRiwayat -->
+
       </aside>
 
       <!-- ============================================================================= -->
@@ -2278,7 +2458,7 @@
       <!-- Banner Info Petunjuk -->
       <div class="px-4 py-2.5 bg-blue-50/80 border-b border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-blue-900 flex-shrink-0">
         <div class="flex items-center gap-2">
-          <span class="text-base">💡</span>
+              <span class="text-base">&#x270F;&#xFE0F;</span>
           <span><b>Arsip Dokumen Resmi Siap BKAD:</b> Unggah Rekom yang sudah TTD, Surat Pengantar Kecamatan, dan Ceklist Kecamatan. Berkas tersimpan di subfolder <code>kecamatan</code> Google Drive & siap diunduh Desa untuk diteruskan ke BKAD.</span>
         </div>
         <span id="badgeTotalKirimRekom" class="self-start sm:self-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-900 whitespace-nowrap">0 Rekomendasi Terkirim</span>
@@ -2428,7 +2608,7 @@
             <!-- BAGIAN KRUSIAL SESUAI PERMINTAAN USER: DATA SP DAN REKOM DESA -->
             <div class="bg-amber-50/70 border border-amber-200/90 rounded-xl p-4 space-y-4">
               <div class="flex items-center gap-2">
-                <span class="text-amber-600 text-base">⚠️</span>
+              <span class="text-base">&#x270F;&#xFE0F;</span>
                 <div>
                   <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wide">
                     Wajib Diisi Sebelum Upload Berkas: Data SP & Rekomendasi Desa
@@ -3086,7 +3266,7 @@
 
         <div class="flex items-center gap-3 pt-2">
           <button id="btnCopyGasScript" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-semibold transition flex items-center gap-1.5">
-            📋 Salin Kode Apps Script
+            &#x26A1; Salin Kode Apps Script
           </button>
         </div>
 
@@ -3867,6 +4047,6 @@
   <script src="html-docx.js"></script>
 
   <!-- Load JavaScript Utama dengan Cache Buster -->
-  <script src="app.js?v=20261110_responsive_preview_toolbar"></script>
+  <script src="app.js?v=20261110_riwayat_per_tab"></script>
 </body>
 </html>

@@ -4164,6 +4164,8 @@ async function saveRecommendationData() {
   renderEditingRekomBanner();
   localStorage.setItem('sip_riwayat_rekom', JSON.stringify(AppState.riwayat));
   renderHistoryTable();
+  if (typeof renderTabelRiwayatRekom === 'function') renderTabelRiwayatRekom();
+  if (typeof updateBadgeRekomCount === 'function') updateBadgeRekomCount();
 
   if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
     try {
@@ -4568,6 +4570,7 @@ function loadHistoryItem(id) {
   document.getElementById('drawerHistory')?.classList.add('hidden');
   navigateToMenu('verifikasi_rekom');
   switchKecamatanSubTab('generator');
+  if (typeof switchSubViewRekom === 'function') switchSubViewRekom('form');
   showToast(`✏️ Mode Edit: Arsip ${item.nomorSurat} dimuat! Perubahan akan memperbarui data arsip ini saat disimpan.`, 'info');
 }
 
@@ -4610,12 +4613,20 @@ function renderEditingRekomBanner() {
 window.renderEditingRekomBanner = renderEditingRekomBanner;
 
 function deleteHistoryItem(id) {
-  if (!confirm('Hapus arsip ini?')) return;
-  AppState.riwayat = AppState.riwayat.filter(r => r.id !== id);
+  const item = (AppState.riwayat || []).find(r => String(r.id) === String(id));
+  const noSurat = item ? ` (Nomor: ${item.nomorSurat || item.namaDesa})` : '';
+  if (!confirm(`Yakin ingin menghapus arsip Rekomendasi ini${noSurat}?`)) return;
+  AppState.riwayat = (AppState.riwayat || []).filter(r => String(r.id) !== String(id));
   localStorage.setItem('sip_riwayat_rekom', JSON.stringify(AppState.riwayat));
+  if (String(AppState.editingRekomId) === String(id)) {
+    batalEditRekomendasi();
+  }
   renderHistoryTable();
-  showToast('Arsip dihapus.', 'info');
+  if (typeof renderTabelRiwayatRekom === 'function') renderTabelRiwayatRekom();
+  if (typeof updateBadgeRekomCount === 'function') updateBadgeRekomCount();
+  showToast('Arsip Rekomendasi berhasil dihapus.', 'info');
 }
+window.deleteHistoryItem = deleteHistoryItem;
 
 function exportHistoryToCsv() {
   if (!AppState.riwayat || AppState.riwayat.length === 0) {
@@ -5676,6 +5687,8 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (btnExportDocx) btnExportDocx.classList.remove('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.remove('hidden');
     updateLivePreview();
+    if (typeof renderTabelRiwayatRekom === 'function') renderTabelRiwayatRekom();
+    if (typeof updateBadgeRekomCount === 'function') updateBadgeRekomCount();
   } else if (tabKey === 'surat_pengantar') {
     if (tabBtnSp) tabBtnSp.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
     if (tabContentSp) tabContentSp.classList.remove('hidden');
@@ -5684,6 +5697,8 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (btnExportDocx) btnExportDocx.classList.add('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     initSuratPengantarTab();
+    if (typeof renderTabelRiwayatSp === 'function') renderTabelRiwayatSp();
+    if (typeof updateBadgeSpCount === 'function') updateBadgeSpCount();
   } else if (tabKey === 'ceklist') {
     if (tabBtnCeklist) tabBtnCeklist.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
     if (tabContentCeklist) tabContentCeklist.classList.remove('hidden');
@@ -5692,6 +5707,8 @@ window.switchKecamatanSubTab = function(tabKey) {
     if (btnExportDocx) btnExportDocx.classList.add('hidden');
     if (btnSaveToDb) btnSaveToDb.classList.add('hidden');
     initCeklistTab();
+    if (typeof renderTabelRiwayatCeklist === 'function') renderTabelRiwayatCeklist();
+    if (typeof updateBadgeCeklistCount === 'function') updateBadgeCeklistCount();
   } else if (tabKey === 'kirim_desa') {
     if (tabBtnKirim) tabBtnKirim.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer';
     if (tabContentKirim) tabContentKirim.classList.remove('hidden');
@@ -10197,6 +10214,8 @@ window.simpanArsipSuratPengantar = async function() {
 
   AppState.suratPengantarData.id = id;
   updateBadgeSpCount();
+  if (typeof renderTabelRiwayatSp === 'function') renderTabelRiwayatSp();
+  if (typeof renderEditingSpBanner === 'function') renderEditingSpBanner();
 
   // Sinkronisasi ke Google Sheets jika online
   if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
@@ -10417,6 +10436,8 @@ window.muatArsipSpKeEditor = function(id) {
   renderRowsSpInputs();
   updateLivePreviewSp();
   tutupDrawerRiwayatSp();
+  if (typeof renderEditingSpBanner === 'function') renderEditingSpBanner();
+  if (typeof switchSubViewSp === 'function') switchSubViewSp('form');
   showToast(`Arsip Surat Pengantar "${item.nomorSuratPengantar}" berhasil dimuat ke editor!`, 'success');
 };
 
@@ -10444,6 +10465,8 @@ window.hapusArsipSp = function(id) {
 
   renderTabelArsipSp();
   updateBadgeSpCount();
+  if (typeof renderTabelRiwayatSp === 'function') renderTabelRiwayatSp();
+  if (typeof renderEditingSpBanner === 'function') renderEditingSpBanner();
   showToast('Arsip Surat Pengantar berhasil dihapus.', 'info');
 };
 
@@ -10461,6 +10484,9 @@ window.updateBadgeSpCount = function() {
       badgeSubtab.classList.add('hidden');
     }
   }
+
+  const badgePill = document.getElementById('badgeTabRiwayatSpCount');
+  if (badgePill) badgePill.textContent = count;
 
   const badgeBtn = document.getElementById('countArsipSpBadge');
   if (badgeBtn) {
@@ -11383,3 +11409,564 @@ window.eksporCeklistKeDocx = async function(downloadOnly = true, placeholderTab 
     showToast('Terjadi kesalahan saat mengekspor ke DOCX: ' + err.message, 'error');
   }
 };
+
+
+// =========================================================================================
+
+// FITUR RIWAYAT TERPADU DI SETIAP SUB-TAB KECAMATAN (REKOM, SP, CEKLIST)
+// =========================================================================================
+
+// --- 1. SUB-TAB 2: GENERATOR REKOMENDASI CAMAT ---
+window.switchSubViewRekom = function(view) {
+  const formView = document.getElementById('subViewRekomForm');
+  const riwayatView = document.getElementById('subViewRekomRiwayat');
+  const btnForm = document.getElementById('btnSubTabRekomForm');
+  const btnRiwayat = document.getElementById('btnSubTabRekomRiwayat');
+
+  if (view === 'riwayat') {
+    if (formView) formView.classList.add('hidden');
+    if (riwayatView) riwayatView.classList.remove('hidden');
+    if (btnForm) {
+      btnForm.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer';
+    }
+    if (btnRiwayat) {
+      btnRiwayat.className = 'px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer';
+    }
+    renderTabelRiwayatRekom();
+  } else {
+    if (formView) formView.classList.remove('hidden');
+    if (riwayatView) riwayatView.classList.add('hidden');
+    if (btnForm) {
+      btnForm.className = 'px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer';
+    }
+    if (btnRiwayat) {
+      btnRiwayat.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer';
+    }
+  }
+};
+
+window.renderTabelRiwayatRekom = function() {
+  const tbody = document.getElementById('tbodyRiwayatRekomTab');
+  if (!tbody) return;
+
+  const list = AppState.riwayat || [];
+  const keyword = (document.getElementById('inputSearchRiwayatRekom')?.value || '').toLowerCase().trim();
+
+  const filtered = list.filter(item => {
+    if (!keyword) return true;
+    const haystack = [
+      item.namaDesa,
+      item.nomorSurat,
+      item.jenisDana,
+      item.tahap,
+      String(item.nominalAngka || ''),
+      item.kepalaDesa
+    ].join(' ').toLowerCase();
+    return haystack.includes(keyword);
+  });
+
+  updateBadgeRekomCount();
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+          ${list.length === 0 ? 'Belum ada arsip Rekomendasi tersimpan. Isi formulir lalu klik "Simpan Arsip Rekomendasi".' : 'Tidak ditemukan rekomendasi yang sesuai pencarian.'}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((item, index) => {
+    return `
+      <tr class="hover:bg-blue-50/50 transition border-b border-slate-100 text-xs">
+        <td class="py-2.5 px-3 text-center font-bold text-slate-500">${index + 1}</td>
+        <td class="py-2.5 px-3">
+          <span class="inline-block px-2 py-0.5 rounded font-bold text-[10.5px] bg-blue-100 text-blue-800">
+            ${escapeHtml(item.namaDesa || 'Desa')}
+          </span>
+        </td>
+        <td class="py-2.5 px-3 font-mono">
+          <div class="font-bold text-slate-800">${escapeHtml(item.nomorSurat || '-')}</div>
+          <div class="text-[10px] text-slate-500">${escapeHtml(item.tanggalSurat || '')}</div>
+        </td>
+        <td class="py-2.5 px-3">
+          <span class="inline-block px-1.5 py-0.2 rounded font-semibold text-[10px] bg-slate-100 text-slate-700 uppercase">
+            ${escapeHtml(item.jenisDana || '-')}
+          </span>
+          <div class="text-[10.5px] text-slate-600 mt-0.5 line-clamp-1" title="${escapeHtml(item.tahap || '')}">
+            ${escapeHtml(item.tahap || '')}
+          </div>
+        </td>
+        <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
+          ${formatRupiah(item.nominalAngka)}
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          <div class="flex items-center justify-center gap-1.5">
+            <button type="button" onclick="loadHistoryItem('${item.id}'); switchSubViewRekom('form');" class="px-2.5 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg border border-amber-300 font-bold transition flex items-center gap-1 cursor-pointer" title="Edit dan perbaiki surat ini">
+              <span>&#x270F;&#xFE0F; Edit</span>
+            </button>
+            <button type="button" onclick="deleteHistoryItem('${item.id}')" class="px-2.5 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg border border-rose-300 font-bold transition flex items-center gap-1 cursor-pointer" title="Hapus arsip ini">
+              <span>&#x1F5D1;&#xFE0F; Hapus</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.updateBadgeRekomCount = function() {
+  const count = (AppState.riwayat || []).length;
+  const b1 = document.getElementById('badgeTabGeneratorCount');
+  if (b1) {
+    b1.textContent = count;
+    if (count > 0) b1.classList.remove('hidden'); else b1.classList.add('hidden');
+  }
+  const b2 = document.getElementById('badgeTabRiwayatRekomCount');
+  if (b2) b2.textContent = count;
+  const b3 = document.getElementById('countArsipRekomBottomBadge');
+  if (b3) b3.textContent = count;
+};
+
+// --- 2. SUB-TAB 3: SURAT PENGANTAR KECAMATAN ---
+window.switchSubViewSp = function(view) {
+  const formView = document.getElementById('subViewSpForm');
+  const riwayatView = document.getElementById('subViewSpRiwayat');
+  const btnForm = document.getElementById('btnSubTabSpForm');
+  const btnRiwayat = document.getElementById('btnSubTabSpRiwayat');
+
+  if (view === 'riwayat') {
+    if (formView) formView.classList.add('hidden');
+    if (riwayatView) riwayatView.classList.remove('hidden');
+    if (btnForm) {
+      btnForm.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer';
+    }
+    if (btnRiwayat) {
+      btnRiwayat.className = 'px-2.5 py-1 rounded-md bg-white text-teal-800 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer';
+    }
+    renderTabelRiwayatSp();
+  } else {
+    if (formView) formView.classList.remove('hidden');
+    if (riwayatView) riwayatView.classList.add('hidden');
+    if (btnForm) {
+      btnForm.className = 'px-2.5 py-1 rounded-md bg-white text-teal-800 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer';
+    }
+    if (btnRiwayat) {
+      btnRiwayat.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer';
+    }
+  }
+};
+
+window.renderTabelRiwayatSp = function() {
+  const tbody = document.getElementById('tbodyRiwayatSpTab');
+  if (!tbody) return;
+
+  const list = AppState.suratPengantarList || [];
+  const keyword = (document.getElementById('inputSearchRiwayatSp')?.value || '').toLowerCase().trim();
+
+  const filtered = list.filter(item => {
+    if (!keyword) return true;
+    const haystack = [
+      item.nomorSuratPengantar,
+      item.namaDesa,
+      item.tujuanYth,
+      item.jenisDana,
+      item.tahap,
+      item.rincianRingkasan
+    ].join(' ').toLowerCase();
+    return haystack.includes(keyword);
+  });
+
+  updateBadgeSpCount();
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+          ${list.length === 0 ? 'Belum ada arsip Surat Pengantar tersimpan. Isi formulir lalu klik "Simpan Arsip SP".' : 'Tidak ditemukan Surat Pengantar yang sesuai pencarian.'}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((item, index) => {
+    return `
+      <tr class="hover:bg-teal-50/50 transition border-b border-slate-100 text-xs">
+        <td class="py-2.5 px-3 text-center font-bold text-slate-500">${index + 1}</td>
+        <td class="py-2.5 px-3">
+          <span class="inline-block px-2 py-0.5 rounded font-bold text-[10.5px] bg-teal-100 text-teal-800">
+            ${escapeHtml(item.namaDesa || 'Desa')}
+          </span>
+          <div class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(item.tahap || '')}</div>
+        </td>
+        <td class="py-2.5 px-3 font-mono">
+          <div class="font-bold text-teal-900">${escapeHtml(item.nomorSuratPengantar || '-')}</div>
+          <div class="text-[10px] text-slate-500">${escapeHtml(item.tanggalSurat || '')}</div>
+        </td>
+        <td class="py-2.5 px-3 text-slate-700 max-w-[150px] truncate" title="${escapeHtml(item.tujuanYth || '')}">
+          ${escapeHtml(item.tujuanYth || '-')}
+        </td>
+        <td class="py-2.5 px-3 text-slate-600 max-w-[170px] truncate" title="${escapeHtml(item.rincianRingkasan || '')}">
+          ${escapeHtml(item.rincianRingkasan || '-')}
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          <div class="flex items-center justify-center gap-1.5">
+            <button type="button" onclick="muatArsipSpKeEditor('${item.id}'); switchSubViewSp('form');" class="px-2.5 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg border border-amber-300 font-bold transition flex items-center gap-1 cursor-pointer" title="Edit dan perbaiki SP ini">
+              <span>&#x270F;&#xFE0F; Edit</span>
+            </button>
+            <button type="button" onclick="hapusArsipSp('${item.id}')" class="px-2.5 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg border border-rose-300 font-bold transition flex items-center gap-1 cursor-pointer" title="Hapus arsip ini">
+              <span>&#x1F5D1;&#xFE0F; Hapus</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.renderEditingSpBanner = function() {
+  const banner = document.getElementById('bannerEditingSp');
+  if (!banner) return;
+  if (AppState.suratPengantarData.id) {
+    banner.classList.remove('hidden');
+    const txt = document.getElementById('textEditingSpNomor');
+    if (txt) txt.textContent = AppState.suratPengantarData.nomorSurat || AppState.suratPengantarData.id;
+  } else {
+    banner.classList.add('hidden');
+  }
+};
+
+window.batalEditSp = function() {
+  AppState.suratPengantarData.id = null;
+  renderEditingSpBanner();
+  showToast('Mode edit SP dibatalkan. Formulir kembali ke pembuatan baru.', 'info');
+};
+
+// --- 3. SUB-TAB 4: CEKLIST BERKAS KECAMATAN ---
+window.switchSubViewCeklist = function(view) {
+  const formView = document.getElementById('subViewCeklistForm');
+  const riwayatView = document.getElementById('subViewCeklistRiwayat');
+  const btnForm = document.getElementById('btnSubTabCeklistForm');
+  const btnRiwayat = document.getElementById('btnSubTabCeklistRiwayat');
+
+  if (view === 'riwayat') {
+    if (formView) formView.classList.add('hidden');
+    if (riwayatView) riwayatView.classList.remove('hidden');
+    if (btnForm) {
+      btnForm.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer';
+    }
+    if (btnRiwayat) {
+      btnRiwayat.className = 'px-2.5 py-1 rounded-md bg-white text-emerald-800 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer';
+    }
+    renderTabelRiwayatCeklist();
+  } else {
+    if (formView) formView.classList.remove('hidden');
+    if (riwayatView) riwayatView.classList.add('hidden');
+    if (btnForm) {
+      btnForm.className = 'px-2.5 py-1 rounded-md bg-white text-emerald-800 shadow-2xs font-bold transition flex items-center gap-1.5 cursor-pointer';
+    }
+    if (btnRiwayat) {
+      btnRiwayat.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium transition flex items-center gap-1.5 cursor-pointer';
+    }
+  }
+};
+
+window.renderTabelRiwayatCeklist = function() {
+  const tbody = document.getElementById('tbodyRiwayatCeklistTab');
+  if (!tbody) return;
+
+  const list = AppState.ceklistList || [];
+  const keyword = (document.getElementById('inputSearchRiwayatCeklist')?.value || '').toLowerCase().trim();
+
+  const filtered = list.filter(item => {
+    if (!keyword) return true;
+    const haystack = [
+      item.namaDesa,
+      item.tahap,
+      item.jenisDana,
+      item.namaVerifikator,
+      item.judulBaris1
+    ].join(' ').toLowerCase();
+    return haystack.includes(keyword);
+  });
+
+  updateBadgeCeklistCount();
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+          ${list.length === 0 ? 'Belum ada arsip Ceklist tersimpan. Isi formulir lalu klik "Simpan Arsip Ceklist".' : 'Tidak ditemukan Ceklist yang sesuai pencarian.'}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((item, index) => {
+    const isLengkap = item.statusLengkap !== false;
+    const badgeStatus = isLengkap
+      ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">&#x2705; Lengkap</span>`
+      : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">&#x26A0;&#xFE0F; Perlu Revisi</span>`;
+
+    return `
+      <tr class="hover:bg-emerald-50/50 transition border-b border-slate-100 text-xs">
+        <td class="py-2.5 px-3 text-center font-bold text-slate-500">${index + 1}</td>
+        <td class="py-2.5 px-3">
+          <span class="inline-block px-2 py-0.5 rounded font-bold text-[10.5px] bg-emerald-100 text-emerald-800">
+            ${escapeHtml(item.namaDesa || 'Desa')}
+          </span>
+          <div class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(item.waktuSimpan || '')}</div>
+        </td>
+        <td class="py-2.5 px-3">
+          <div class="font-bold text-slate-800">${escapeHtml(item.tahap || '-')}</div>
+          <span class="inline-block px-1.5 py-0.2 rounded font-semibold text-[9.5px] bg-slate-100 text-slate-700 uppercase">
+            ${escapeHtml(item.jenisDana || '-')}
+          </span>
+        </td>
+        <td class="py-2.5 px-3 text-slate-700">
+          <div class="font-medium">${escapeHtml(item.namaVerifikator || '-')}</div>
+          <div class="text-[10px] text-slate-400">${escapeHtml(item.jabatanVerifikator || '')}</div>
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          ${badgeStatus}
+        </td>
+        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          <div class="flex items-center justify-center gap-1.5">
+            <button type="button" onclick="muatArsipCeklistKeEditor('${item.id}'); switchSubViewCeklist('form');" class="px-2.5 py-1 text-xs bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg border border-amber-300 font-bold transition flex items-center gap-1 cursor-pointer" title="Edit dan perbaiki Ceklist ini">
+              <span>&#x270F;&#xFE0F; Edit</span>
+            </button>
+            <button type="button" onclick="hapusArsipCeklist('${item.id}')" class="px-2.5 py-1 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg border border-rose-300 font-bold transition flex items-center gap-1 cursor-pointer" title="Hapus arsip ini">
+              <span>&#x1F5D1;&#xFE0F; Hapus</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.simpanArsipCeklist = async function() {
+  const desa = document.getElementById('selectDesaCeklist')?.value || AppState.ceklistData.namaDesa || 'Bangun Mulya';
+  const jenisDana = document.getElementById('selectJenisDanaCeklist')?.value || AppState.ceklistData.jenisDana || 'siltap';
+  const tahap = document.getElementById('inputTahapCeklist')?.value?.trim() || AppState.ceklistData.tahap || 'Tahap';
+  const tahunAnggaran = document.getElementById('inputTahunCeklist')?.value?.trim() || AppState.ceklistData.tahunAnggaran || '2026';
+  const judul1 = document.getElementById('inputJudulCeklist1')?.value || AppState.ceklistData.judulBaris1 || '';
+  const judul2 = document.getElementById('inputJudulCeklist2')?.value || AppState.ceklistData.judulBaris2 || '';
+  const judul3 = document.getElementById('inputJudulCeklist3')?.value || AppState.ceklistData.judulBaris3 || '';
+  const statusLengkap = document.getElementById('radioStatusLengkap')?.checked !== false;
+  const jabatanVerifikator = document.getElementById('inputJabatanVerifikatorCeklist')?.value || AppState.ceklistData.jabatanVerifikator || 'Kepala Seksi Pemberdayaan Masyarakat';
+  const namaVerifikator = document.getElementById('inputNamaVerifikatorCeklist')?.value || AppState.ceklistData.namaVerifikator || 'Rudiansyah, SE';
+  const nipVerifikator = document.getElementById('inputNipVerifikatorCeklist')?.value || AppState.ceklistData.nipVerifikator || '197608312007011009';
+  const tampilkanStempel = document.getElementById('checkStempelCeklist')?.checked !== false;
+  const rows = JSON.parse(JSON.stringify(AppState.ceklistData.rows || []));
+
+  const id = AppState.ceklistData.id || `CK-${Date.now()}`;
+  const nowWita = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Makassar' });
+
+  const record = {
+    id: id,
+    waktuSimpan: nowWita,
+    namaDesa: desa,
+    kecamatan: 'Waru',
+    kabupaten: 'Penajam Paser Utara',
+    jenisDana: jenisDana,
+    tahap: tahap,
+    tahunAnggaran: tahunAnggaran,
+    judulBaris1: judul1,
+    judulBaris2: judul2,
+    judulBaris3: judul3,
+    statusLengkap: statusLengkap,
+    namaVerifikator: namaVerifikator,
+    nipVerifikator: nipVerifikator,
+    jabatanVerifikator: jabatanVerifikator,
+    tampilkanStempel: tampilkanStempel,
+    paperSize: document.getElementById('selectPaperSizeCeklist')?.value || 'a4',
+    lineSpacing: document.getElementById('selectLineSpacingCeklist')?.value || '1.15',
+    rows: rows
+  };
+
+  let list = AppState.ceklistList || [];
+  const existingIdx = list.findIndex(x => x.id === id);
+  if (existingIdx !== -1) {
+    list[existingIdx] = record;
+  } else {
+    list.unshift(record);
+  }
+  AppState.ceklistList = list;
+  localStorage.setItem('sip_arsip_ceklist', JSON.stringify(list));
+
+  AppState.ceklistData.id = id;
+  renderEditingCeklistBanner();
+  renderTabelRiwayatCeklist();
+  updateBadgeCeklistCount();
+
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    try {
+      showToast('Menyimpan Ceklist ke Google Sheets...', 'info');
+      const res = await fetch(AppState.gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'simpanCeklist',
+          ...record
+        })
+      });
+      const resJson = await res.json();
+      if (resJson.success) {
+        showToast('\u2705 Ceklist berhasil disimpan ke Google Sheets (Sheet "Ceklist")!', 'success');
+      } else {
+        showToast('Tersimpan di lokal. ' + (resJson.message || ''), 'warning');
+      }
+    } catch (e) {
+      console.warn('Gagal simpan Ceklist ke Google Sheets:', e);
+      showToast('Ceklist berhasil disimpan di arsip lokal!', 'success');
+    }
+  } else {
+    showToast('Ceklist berhasil disimpan di arsip lokal!', 'success');
+  }
+};
+
+window.muatArsipCeklistKeEditor = function(id) {
+  const item = (AppState.ceklistList || []).find(x => x.id === id);
+  if (!item) {
+    showToast('Data arsip Ceklist tidak ditemukan.', 'error');
+    return;
+  }
+
+  AppState.ceklistData.id = item.id;
+  AppState.ceklistData.namaDesa = item.namaDesa;
+  AppState.ceklistData.jenisDana = item.jenisDana;
+  AppState.ceklistData.tahap = item.tahap;
+  AppState.ceklistData.tahunAnggaran = item.tahunAnggaran;
+  AppState.ceklistData.judulBaris1 = item.judulBaris1;
+  AppState.ceklistData.judulBaris2 = item.judulBaris2;
+  AppState.ceklistData.judulBaris3 = item.judulBaris3;
+  AppState.ceklistData.statusLengkap = item.statusLengkap;
+  AppState.ceklistData.namaVerifikator = item.namaVerifikator;
+  AppState.ceklistData.nipVerifikator = item.nipVerifikator;
+  AppState.ceklistData.jabatanVerifikator = item.jabatanVerifikator;
+  AppState.ceklistData.tampilkanStempel = item.tampilkanStempel;
+  AppState.ceklistData.paperSize = item.paperSize || 'a4';
+  AppState.ceklistData.lineSpacing = item.lineSpacing || '1.15';
+  AppState.ceklistData.rows = Array.isArray(item.rows) ? JSON.parse(JSON.stringify(item.rows)) : [];
+
+  const selDesa = document.getElementById('selectDesaCeklist');
+  if (selDesa && item.namaDesa) selDesa.value = item.namaDesa;
+
+  const selJenis = document.getElementById('selectJenisDanaCeklist');
+  if (selJenis && item.jenisDana) selJenis.value = item.jenisDana;
+
+  const inpTahap = document.getElementById('inputTahapCeklist');
+  if (inpTahap && item.tahap) inpTahap.value = item.tahap;
+
+  const inpTahun = document.getElementById('inputTahunCeklist');
+  if (inpTahun && item.tahunAnggaran) inpTahun.value = item.tahunAnggaran;
+
+  const inpJ1 = document.getElementById('inputJudulCeklist1');
+  if (inpJ1 && item.judulBaris1) inpJ1.value = item.judulBaris1;
+
+  const inpJ2 = document.getElementById('inputJudulCeklist2');
+  if (inpJ2 && item.judulBaris2) inpJ2.value = item.judulBaris2;
+
+  const inpJ3 = document.getElementById('inputJudulCeklist3');
+  if (inpJ3 && item.judulBaris3) inpJ3.value = item.judulBaris3;
+
+  const radLengkap = document.getElementById('radioStatusLengkap');
+  const radRevisi = document.getElementById('radioStatusRevisi');
+  if (radLengkap && radRevisi) {
+    radLengkap.checked = item.statusLengkap !== false;
+    radRevisi.checked = !radLengkap.checked;
+  }
+
+  const inpJab = document.getElementById('inputJabatanVerifikatorCeklist');
+  if (inpJab && item.jabatanVerifikator) inpJab.value = item.jabatanVerifikator;
+
+  const inpNama = document.getElementById('inputNamaVerifikatorCeklist');
+  if (inpNama && item.namaVerifikator) inpNama.value = item.namaVerifikator;
+
+  const inpNip = document.getElementById('inputNipVerifikatorCeklist');
+  if (inpNip && item.nipVerifikator) inpNip.value = item.nipVerifikator;
+
+  const chkStempel = document.getElementById('checkStempelCeklist');
+  if (chkStempel) chkStempel.checked = item.tampilkanStempel !== false;
+
+  renderRowsCeklistInputs();
+  updateLivePreviewCeklist();
+  renderEditingCeklistBanner();
+  switchSubViewCeklist('form');
+  showToast(`\u270F\uFE0F Mode Edit: Arsip Ceklist Desa ${item.namaDesa} (${item.tahap}) dimuat ke editor!`, 'success');
+};
+
+window.hapusArsipCeklist = function(id) {
+  const item = (AppState.ceklistList || []).find(x => x.id === id);
+  const nama = item ? `Desa ${item.namaDesa} - ${item.tahap}` : 'ini';
+  if (!confirm(`Yakin ingin menghapus arsip Ceklist ${nama}?`)) return;
+
+  AppState.ceklistList = (AppState.ceklistList || []).filter(x => x.id !== id);
+  localStorage.setItem('sip_arsip_ceklist', JSON.stringify(AppState.ceklistList));
+
+  if (AppState.ceklistData.id === id) {
+    batalEditCeklist();
+  }
+
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    fetch(AppState.gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'hapusCeklist', id: id })
+    }).catch(e => console.warn(e));
+  }
+
+  renderTabelRiwayatCeklist();
+  updateBadgeCeklistCount();
+  showToast('Arsip Ceklist berhasil dihapus.', 'info');
+};
+
+window.batalEditCeklist = function() {
+  AppState.ceklistData.id = null;
+  renderEditingCeklistBanner();
+  showToast('Mode edit Ceklist dibatalkan. Kembali ke formulir pembuatan baru.', 'info');
+};
+
+window.resetFormCeklist = function() {
+  AppState.ceklistData.id = null;
+  salinDataDariRekomAktifKeCeklist(false);
+  renderEditingCeklistBanner();
+  showToast('Formulir Ceklist telah direset.', 'info');
+};
+
+window.renderEditingCeklistBanner = function() {
+  const banner = document.getElementById('bannerEditingCeklist');
+  if (!banner) return;
+  if (AppState.ceklistData.id) {
+    banner.classList.remove('hidden');
+    const txt = document.getElementById('textEditingCeklistNomor');
+    if (txt) txt.textContent = `${AppState.ceklistData.namaDesa || 'Desa'} (${AppState.ceklistData.tahap || 'Tahap'})`;
+  } else {
+    banner.classList.add('hidden');
+  }
+};
+
+window.updateBadgeCeklistCount = function() {
+  const count = (AppState.ceklistList || []).length;
+  const b1 = document.getElementById('badgeTabCeklistCount');
+  if (b1) {
+    b1.textContent = count;
+    if (count > 0) b1.classList.remove('hidden'); else b1.classList.add('hidden');
+  }
+  const b2 = document.getElementById('badgeTabRiwayatCeklistCount');
+  if (b2) b2.textContent = count;
+  const b3 = document.getElementById('countArsipCeklistBadge');
+  if (b3) b3.textContent = count;
+  const b4 = document.getElementById('countArsipCeklistBottomBadge');
+  if (b4) b4.textContent = count;
+};
+
+// Initial badge update on script load
+if (typeof updateBadgeRekomCount === 'function') updateBadgeRekomCount();
+if (typeof updateBadgeSpCount === 'function') updateBadgeSpCount();
+if (typeof updateBadgeCeklistCount === 'function') updateBadgeCeklistCount();
