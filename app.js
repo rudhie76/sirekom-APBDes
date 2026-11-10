@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =========================================================================================
  * SIP-REKOM APBDES - KECAMATAN WARU, KABUPATEN PENAJAM PASER UTARA
  * Generator Surat Rekomendasi Resmi:
@@ -343,7 +343,7 @@ const AppState = {
 
   currentZoom: 100,
   paperSize: 'a4',
-  pageBreakMode: 'separated',
+  pageBreakMode: 'flow',
   viewMode: 'split',
   lineSpacing: '1.15',
   isDirectEditMode: false,
@@ -1445,7 +1445,7 @@ function renderLivePreviewSiltap() {
 
   const docHtml = `
     <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratUtama">
       ${getKopSuratHtml(true)}
       ${getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte)}
 
@@ -1477,10 +1477,7 @@ function renderLivePreviewSiltap() {
           </table>
         </div>
       </div>
-    </div>
 
-    <!-- HALAMAN 2 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-normal">
         <p class="indent-10">
           Untuk menerima (mengambil) Dana ADD untuk Pembayaran Penghasilan Tetap dan Tunjangan Jabatan Kepala Desa dan Perangkat Desa, Tunjangan Kedudukan BPD, Insentif Rukun Tetangga dan Honorarium Staf Desa untuk Bulan ${escapeHtml(bulanGaji)} Desa ${escapeHtml(namaDesa)} Tahun ${escapeHtml(tahunAnggaran)} Sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
@@ -1543,18 +1540,10 @@ function renderLivePreviewAddReguler() {
   const perihalText = `Rekomendasi Pencairan Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`.replace(/\s+/g, ' ').trim();
 
   const activeDasarAdd = getActiveDasarList('add_reguler');
-  const splitDasarIdx = Math.min(11, activeDasarAdd.length);
-  const dasarAddHal1 = activeDasarAdd.slice(0, splitDasarIdx);
-  const dasarAddHal2 = activeDasarAdd.slice(splitDasarIdx);
-
   const activeBerkasAdd = getActiveBerkasList('add_reguler');
-  const splitAddIdx = Math.min(10, activeBerkasAdd.length);
-  const berkasAddHal2 = activeBerkasAdd.slice(0, splitAddIdx);
-  const berkasAddHal3 = activeBerkasAdd.slice(splitAddIdx);
 
   const docHtml = `
-    <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratUtama">
       ${getKopSuratHtml(true)}
       ${getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte)}
 
@@ -1563,9 +1552,9 @@ function renderLivePreviewAddReguler() {
           <div class="w-20 flex-shrink-0">Dasar</div><div class="w-3 flex-shrink-0">:</div>
           <div class="flex-1">
             <ol class="list-decimal pl-5 space-y-1">
-              ${dasarAddHal1.map((item, idx) => {
+              ${activeDasarAdd.map((item, idx) => {
                 let teks = item.teks;
-                if (activeDasarAdd.length <= splitDasarIdx && idx === dasarAddHal1.length - 1) {
+                if (idx === activeDasarAdd.length - 1) {
                   teks = teks.trim().replace(/;$/, '.');
                 } else {
                   teks = teks.trim().replace(/\.$/, ';');
@@ -1576,30 +1565,8 @@ function renderLivePreviewAddReguler() {
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- HALAMAN 2 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-snug">
-        ${dasarAddHal2.length > 0 ? `
-        <div class="flex items-start">
-          <div class="w-20 flex-shrink-0"></div><div class="w-3 flex-shrink-0"></div>
-          <div class="flex-1">
-            <ol start="${splitDasarIdx + 1}" class="list-decimal pl-5 space-y-1">
-              ${dasarAddHal2.map((item, idx) => {
-                let teks = item.teks;
-                if (idx === dasarAddHal2.length - 1) {
-                  teks = teks.trim().replace(/;$/, '.');
-                } else {
-                  teks = teks.trim().replace(/\.$/, ';');
-                }
-                return `<li class="pl-1">${escapeHtml(teks)}</li>`;
-              }).join('')}
-            </ol>
-          </div>
-        </div>
-        ` : ''}
-
         <p class="indent-10 mt-3 leading-normal">
           Memperhatikan dasar diatas dan setelah dilakukan verifikasi tentang Dokumen Persyaratan Rekomendasi Penyaluran Alokasi Dana Desa (ADD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
         </p>
@@ -1622,22 +1589,9 @@ function renderLivePreviewAddReguler() {
 
         <div class="my-2 pl-4">
           <ol class="list-decimal pl-5 space-y-0.5">
-            ${berkasAddHal2.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
+            ${activeBerkasAdd.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
-      </div>
-    </div>
-
-    <!-- HALAMAN 3 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman3">
-      <div class="text-[11pt] text-justify leading-snug">
-        ${berkasAddHal3.length > 0 ? `
-        <div class="my-2 pl-4">
-          <ol start="${splitAddIdx + 1}" class="list-decimal pl-5 space-y-0.5">
-            ${berkasAddHal3.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
-          </ol>
-        </div>
-        ` : ''}
 
         <p class="indent-10 mt-4 leading-normal">
           Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
@@ -1686,7 +1640,7 @@ function renderLivePreviewDbh() {
 
   const docHtml = `
     <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratUtama">
       ${getKopSuratHtml(true)}
       ${getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte)}
 
@@ -1718,10 +1672,7 @@ function renderLivePreviewDbh() {
           </table>
         </div>
       </div>
-    </div>
 
-    <!-- HALAMAN 2 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-normal">
         <p class="indent-10">
           Untuk menerima (mengambil) Dana Bagi Hasil Pajak dan Retribusi Daerah (PBH) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sebesar <strong>${nominalFormatted} (${terbilangText})</strong>.
@@ -1781,15 +1732,10 @@ function renderLivePreviewDd() {
   const perihalText = document.getElementById('inputPerihalSurat')?.value || `Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)}`.replace(/\s+/g, ' ').trim();
 
   const activeDasarDd = getActiveDasarList('dd');
-  const splitDasarDdIdx = Math.min(10, activeDasarDd.length);
-  const dasarDdHal1 = activeDasarDd.slice(0, splitDasarDdIdx);
-  const dasarDdHal2 = activeDasarDd.slice(splitDasarDdIdx);
-
   const berkasFiltered = getActiveBerkasList('dd');
 
   const docHtml = `
-    <!-- HALAMAN 1 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman1">
+    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratUtama">
       ${getKopSuratHtml(true)}
       ${getHeaderSuratHtml(nomorSurat, tanggalSuratIndo, perihalText, metodeTte)}
 
@@ -1798,9 +1744,9 @@ function renderLivePreviewDd() {
           <div class="w-20 flex-shrink-0">Dasar</div><div class="w-3 flex-shrink-0">:</div>
           <div class="flex-1">
             <ol class="list-decimal pl-5 space-y-1">
-              ${dasarDdHal1.map((item, idx) => {
+              ${activeDasarDd.map((item, idx) => {
                 let teks = item.teks;
-                if (activeDasarDd.length <= splitDasarDdIdx && idx === dasarDdHal1.length - 1) {
+                if (idx === activeDasarDd.length - 1) {
                   teks = teks.trim().replace(/;$/, '.');
                 } else {
                   teks = teks.trim().replace(/\.$/, ';');
@@ -1811,30 +1757,8 @@ function renderLivePreviewDd() {
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- HALAMAN 2 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans mb-8 print:mb-0" id="suratHalaman2">
       <div class="text-[11pt] text-justify leading-snug">
-        ${dasarDdHal2.length > 0 ? `
-        <div class="flex items-start">
-          <div class="w-20 flex-shrink-0"></div><div class="w-3 flex-shrink-0"></div>
-          <div class="flex-1">
-            <ol start="${splitDasarDdIdx + 1}" class="list-decimal pl-5 space-y-1">
-              ${dasarDdHal2.map((item, idx) => {
-                let teks = item.teks;
-                if (idx === dasarDdHal2.length - 1) {
-                  teks = teks.trim().replace(/;$/, '.');
-                } else {
-                  teks = teks.trim().replace(/\.$/, ';');
-                }
-                return `<li class="pl-1">${escapeHtml(teks)}</li>`;
-              }).join('')}
-            </ol>
-          </div>
-        </div>
-        ` : ''}
-
         <p class="indent-10 mt-3 leading-normal">
           Memperhatikan dasar diatas dan setelah dilakukan chek list tentang Dokumen Persyaratan Rekomendasi Pencairan Dana Desa (DD) ${escapeHtml(tahap)} ${persenStr} Tahun Anggaran ${escapeHtml(tahunAnggaran)} Desa ${escapeHtml(namaDesa)} sesuai dengan ketentuan yang berlaku, maka bersama ini kami berikan Rekomendasi Kepada :
         </p>
@@ -1860,12 +1784,7 @@ function renderLivePreviewDd() {
             ${berkasFiltered.map(item => `<li class="pl-1">${escapeHtml(item.teks)}</li>`).join('')}
           </ol>
         </div>
-      </div>
-    </div>
 
-    <!-- HALAMAN 3 -->
-    <div class="surat-sheet bg-white text-black shadow-xl mx-auto relative font-sans" id="suratHalaman3">
-      <div class="text-[11pt] text-justify leading-snug">
         <p class="indent-10 mt-4 leading-normal">
           Bahwa Camat hanya bertanggung jawab pada Verifikasi kelengkapan dokumen dan kebenaran substansi yang terdapat pada dokumen persyaratan tersebut merupakan tanggung jawab Kepala Desa ${escapeHtml(namaDesa)}.
         </p>
@@ -2046,7 +1965,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
 
   if (metode === 'manual') {
     return `
-      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black">
+      <div class="ttd-camat-container mt-8 flex justify-end text-[11pt] font-sans text-black">
         <div class="w-72 text-left">
           <div class="leading-normal">Camat Waru,</div>
           <div class="my-4 pl-2">
@@ -2058,7 +1977,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
           <div class="leading-normal font-medium">NIP. ${escapeHtml(nip)}</div>
         </div>
       </div>
-      <div class="mt-8 text-[11pt] text-black leading-normal font-sans">
+      <div class="ttd-camat-container mt-8 text-[11pt] text-black leading-normal font-sans">
         <div class="font-bold mb-1">TEMBUSAN:</div>
         <div>1. Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. Penajam Paser Utara;</div>
         <div>2. Arsip.</div>
@@ -2068,7 +1987,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
 
   if (metode === 'tte_lokal') {
     return `
-      <div class="mt-8 flex justify-end text-[11pt] font-sans text-black">
+      <div class="ttd-camat-container mt-8 flex justify-end text-[11pt] font-sans text-black">
         <div class="w-72 text-left">
           <div class="leading-normal">Camat Waru,</div>
           <div class="my-3 pl-2">
@@ -2085,7 +2004,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
           <div class="leading-normal font-medium">NIP. ${escapeHtml(nip)}</div>
         </div>
       </div>
-      <div class="mt-8 text-[11pt] text-black leading-normal font-sans">
+      <div class="ttd-camat-container mt-8 text-[11pt] text-black leading-normal font-sans">
         <div class="font-bold mb-1">TEMBUSAN:</div>
         <div>1. Kepala Dinas Pemberdayaan Masyarakat dan Desa Kab. Penajam Paser Utara;</div>
         <div>2. Arsip.</div>
@@ -2099,7 +2018,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
   // dan TEMBUSAN: (apabila ada) 1. ${tembusan_jabatan}.
   // =========================================================================
   return `
-    <div class="mt-8 flex justify-end text-[11pt] font-sans text-black">
+    <div class="ttd-camat-container mt-8 flex justify-end text-[11pt] font-sans text-black">
       <div class="w-72 text-left">
         <div class="leading-normal">Camat Waru,</div>
         <div class="my-6 py-2 text-left text-slate-800 font-sans tracking-wide">
@@ -2109,7 +2028,7 @@ function getTtdCamatHtml(namaCamat, nipCamat, metodeTte) {
         <div class="leading-normal font-sans">NIP. \${nip_pengirim}</div>
       </div>
     </div>
-    <div class="mt-8 text-[11pt] text-black leading-normal font-sans">
+    <div class="ttd-camat-container mt-8 text-[11pt] text-black leading-normal font-sans">
       <div class="mb-1 font-bold">TEMBUSAN :</div>
       <div class="flex items-start">
         <span class="w-6 flex-shrink-0">1.</span>
@@ -2175,7 +2094,7 @@ function applyPaperSize() {
 }
 
 function applyPageBreakMode() {
-  const mode = AppState.pageBreakMode || 'separated';
+  const mode = AppState.pageBreakMode || 'flow';
   const container = document.getElementById('previewDocumentContainer');
   const sheets = document.querySelectorAll('.surat-sheet');
   const selectMode = document.getElementById('selectPageBreakMode');
@@ -3340,7 +3259,7 @@ window.eksporSuratKeDocx = async function(downloadOnly = true, placeholderTab = 
       pageHtmls.push(cleanHtml);
     });
 
-    const isFlowMode = document.getElementById('selectPageBreakMode')?.value === 'flow';
+    const isFlowMode = document.getElementById('selectPageBreakMode')?.value !== 'separated';
     const pageSeparator = isFlowMode 
       ? '\n<p style="margin: 16pt 0; font-size: 1pt; line-height: 1pt;">&nbsp;</p>\n'
       : '\n<br clear="all" style="page-break-before: always; mso-break-type: section-break;" />\n';

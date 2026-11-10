@@ -272,10 +272,10 @@
         font-family: Arial, Helvetica, sans-serif !important;
         font-size: 11pt !important;
         line-height: var(--surat-line-height, 1.15) !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        page-break-after: page !important;
-        break-after: page !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
       }
 
       #previewDocumentContainer .surat-sheet *,
@@ -288,6 +288,20 @@
       .surat-sheet:last-child {
         page-break-after: auto !important;
         break-after: auto !important;
+      }
+
+      /* Lindungi elemen krusial agar tidak terpotong di tengah halaman */
+      .kop-surat,
+      .header-surat-table,
+      .ttd-camat-container,
+      .surat-sheet table {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      .surat-sheet li {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
       }
 
       /* Kunci Absolut Lebar Kolom Header Saat Dicetak ke PDF */
@@ -1687,8 +1701,8 @@
           <div class="flex items-center gap-1 text-xs text-slate-600 whitespace-nowrap flex-shrink-0">
             <span>Pemisah:</span>
             <select id="selectPageBreakMode" class="bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-blue-500" title="Pilih mode halaman untuk hasil cetak">
-              <option value="separated" selected title="Per Halaman (Baku Resmi)">&#x1F4C4; Per Hal</option>
-              <option value="flow" title="Tanpa Page Break (Mengalir)">&#x1F4DC; Mengalir</option>
+              <option value="flow" selected title="Tanpa Page Break (Mengalir Rapi Bebas Ruang Kosong)">&#x1F4DC; Mengalir (Bebas Ruang Kosong)</option>
+              <option value="separated" title="Per Halaman Manual">&#x1F4C4; Per Halaman</option>
             </select>
           </div>
           <span class="text-slate-300 hidden sm:inline">|</span>
