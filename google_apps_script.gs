@@ -126,28 +126,32 @@ function initSheets() {
 
   // 2. Sheet Riwayat Rekomendasi Camat yang Diterbitkan
   var sheetRekom = ss.getSheetByName(SHEET_REKOMENDASI);
+  var headersRekom = [
+    "ID Rekomendasi",
+    "Waktu Terbit",
+    "Nomor Surat Rekomendasi",
+    "Tanggal Surat",
+    "Nama Desa",
+    "Jenis Dana",
+    "Tahap",
+    "Tahun Anggaran",
+    "Nominal (Rp)",
+    "Terbilang",
+    "Bank Penyalur",
+    "Nomor Rekening RKD",
+    "Kepala Desa",
+    "Kaur Keuangan",
+    "Nama Camat",
+    "NIP Camat",
+    "Metode TTE / Format",
+    "Status Penyaluran",
+    "Dasar Rekomendasi",
+    "Lampiran Berkas Persyaratan",
+    "Dasar Rekomendasi (JSON)",
+    "Lampiran Berkas (JSON)"
+  ];
   if (!sheetRekom) {
     sheetRekom = ss.insertSheet(SHEET_REKOMENDASI);
-    var headersRekom = [
-      "ID Rekomendasi",
-      "Waktu Terbit",
-      "Nomor Surat Rekomendasi",
-      "Tanggal Surat",
-      "Nama Desa",
-      "Jenis Dana",
-      "Tahap",
-      "Tahun Anggaran",
-      "Nominal (Rp)",
-      "Terbilang",
-      "Bank Penyalur",
-      "Nomor Rekening RKD",
-      "Kepala Desa",
-      "Kaur Keuangan",
-      "Nama Camat",
-      "NIP Camat",
-      "Metode TTE / Format",
-      "Status Penyaluran"
-    ];
     sheetRekom.appendRow(headersRekom);
 
     var headerRangeR = sheetRekom.getRange(1, 1, 1, headersRekom.length);
@@ -155,6 +159,39 @@ function initSheets() {
     headerRangeR.setFontColor("#FFFFFF");
     headerRangeR.setFontWeight("bold");
     sheetRekom.setFrozenRows(1);
+  } else {
+    // Pastikan jika sheet sudah ada sebelumnya, tambahkan kolom baru yang belum ada (auto migration)
+    var lastColR = Math.max(sheetRekom.getLastColumn(), 1);
+    var existingHeadersR = sheetRekom.getRange(1, 1, 1, lastColR).getValues()[0];
+    var missingColsR = [];
+    var expectedColsR = [
+      "Dasar Rekomendasi",
+      "Lampiran Berkas Persyaratan",
+      "Dasar Rekomendasi (JSON)",
+      "Lampiran Berkas (JSON)"
+    ];
+    for (var k = 0; k < expectedColsR.length; k++) {
+      var colName = expectedColsR[k];
+      var found = false;
+      for (var eh = 0; eh < existingHeadersR.length; eh++) {
+        if (String(existingHeadersR[eh] || "").trim().toLowerCase() === colName.toLowerCase()) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        missingColsR.push(colName);
+      }
+    }
+    if (missingColsR.length > 0) {
+      for (var mc = 0; mc < missingColsR.length; mc++) {
+        sheetRekom.getRange(1, lastColR + 1 + mc).setValue(missingColsR[mc]);
+      }
+      var newHeaderRangeR = sheetRekom.getRange(1, 1, 1, lastColR + missingColsR.length);
+      newHeaderRangeR.setBackground("#1E3A8A");
+      newHeaderRangeR.setFontColor("#FFFFFF");
+      newHeaderRangeR.setFontWeight("bold");
+    }
   }
 
   // 3. Sheet Master Data Desa di Kecamatan Waru
@@ -835,6 +872,15 @@ function doGet(e) {
       });
     }
 
+    // 10. Inisialisasi Seluruh Sheet atau Perbarui Struktur Database (Termasuk Kolom Dasar & Berkas Rekomendasi)
+    if (action === "initSheets" || action === "updateHeaders" || action === "buatSheetRekomendasi" || action === "updateStruktur") {
+      initSheets();
+      return jsonResponse({
+        success: true,
+        message: "Struktur database seluruh Sheet (termasuk kolom 'Dasar Rekomendasi' & 'Lampiran Berkas Persyaratan' di Riwayat_Rekomendasi) berhasil diperbarui di Google Spreadsheet!"
+      });
+    }
+
     return jsonResponse({
       success: false,
       message: "Action GET tidak dikenali: " + action
@@ -997,6 +1043,11 @@ function doPost(e) {
       var idRekom = payload.id || ("REK-" + Utilities.formatDate(new Date(), "GMT+8", "yyyyMMdd-HHmmss"));
       var timestampRekom = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
 
+      var dasarText = payload.dasarRekomendasi || payload.dasar || "-";
+      var berkasText = payload.lampiranBerkas || payload.lampiranBerkasPersyaratan || payload.berkas || "-";
+      var dasarJson = typeof payload.dasarList === "string" ? payload.dasarList : JSON.stringify(payload.dasarList || []);
+      var berkasJson = typeof payload.berkasList === "string" ? payload.berkasList : JSON.stringify(payload.berkasList || []);
+
       var rowRekom = [
         idRekom,
         timestampRekom,
@@ -1015,7 +1066,11 @@ function doPost(e) {
         payload.namaCamat || "-",
         payload.nipCamat || "-",
         payload.metodeTte || "TTE Elektronik BSrE",
-        payload.status || "Diterbitkan"
+        payload.status || "Diterbitkan",
+        dasarText,
+        berkasText,
+        dasarJson,
+        berkasJson
       ];
 
       // Cek apakah mode edit (cocokkan berdasarkan ID Rekomendasi ATAU Nomor Surat)
@@ -1551,6 +1606,38 @@ function doPost(e) {
       return jsonResponse({
         success: deletedCK,
         message: deletedCK ? "Arsip Ceklist berhasil dihapus dari Google Sheets." : "Data tidak ditemukan."
+      });
+    }
+
+    // -------------------------------------------------------------------------------------
+    // AKSI 11: HAPUS REKOMENDASI DARI SHEET "Riwayat_Rekomendasi"
+    // -------------------------------------------------------------------------------------
+    if (action === "hapusRekomendasi") {
+      var sheetRHapus = ss.getSheetByName(SHEET_REKOMENDASI) || ss.getSheetByName("Rekomendasi Pencairan") || ss.getSheetByName("riwayat");
+      if (!sheetRHapus) {
+        return jsonResponse({ success: false, message: "Sheet Riwayat_Rekomendasi tidak ditemukan." });
+      }
+      var targetIdR = payload.id;
+      var targetNoSuratR = payload.nomorSurat;
+      if (!targetIdR && !targetNoSuratR) {
+        return jsonResponse({ success: false, message: "ID atau Nomor Surat Rekomendasi wajib disertakan." });
+      }
+      var dataRHapus = sheetRHapus.getDataRange().getValues();
+      var deletedR = false;
+      for (var rR4 = 1; rR4 < dataRHapus.length; rR4++) {
+        var rowIdR4 = dataRHapus[rR4][0] ? dataRHapus[rR4][0].toString().trim() : "";
+        var rowNoSuratR4 = dataRHapus[rR4][2] ? dataRHapus[rR4][2].toString().trim() : "";
+        var isMatch = (targetIdR && rowIdR4.toLowerCase() === targetIdR.toString().trim().toLowerCase()) ||
+                      (targetNoSuratR && rowNoSuratR4.toLowerCase() === targetNoSuratR.toString().trim().toLowerCase());
+        if (isMatch) {
+          sheetRHapus.deleteRow(rR4 + 1);
+          deletedR = true;
+          break;
+        }
+      }
+      return jsonResponse({
+        success: deletedR,
+        message: deletedR ? "Arsip Rekomendasi berhasil dihapus dari Google Sheets." : "Data tidak ditemukan."
       });
     }
 

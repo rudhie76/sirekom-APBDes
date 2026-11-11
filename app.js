@@ -4045,6 +4045,13 @@ async function saveRecommendationData() {
     if (cb) b.checked = cb.checked;
   });
   const berkasChecked = rawBerkas.filter(b => b.checked !== false).map(b => b.id);
+  const activeBerkas = rawBerkas.filter(b => b.checked !== false);
+  const lampiranBerkasRingkasan = activeBerkas.map((b, idx) => {
+    let teks = (b.teks || '').trim();
+    if (idx === activeBerkas.length - 1) teks = teks.replace(/;$/, '.');
+    else teks = teks.replace(/\.$/, ';');
+    return `${idx + 1}. ${teks}`;
+  }).join('\n');
 
   // 2. Sinkronisasi status checklist dasar hukum dari DOM & memory
   const rawDasar = getRawDasarList(tipe);
@@ -4053,6 +4060,13 @@ async function saveRecommendationData() {
     if (cb) d.checked = cb.checked;
   });
   const dasarChecked = rawDasar.filter(d => d.checked !== false).map(d => d.id);
+  const activeDasar = rawDasar.filter(d => d.checked !== false);
+  const dasarRekomendasiRingkasan = activeDasar.map((d, idx) => {
+    let teks = (d.teks || '').trim();
+    if (idx === activeDasar.length - 1) teks = teks.replace(/;$/, '.');
+    else teks = teks.replace(/\.$/, ';');
+    return `${idx + 1}. ${teks}`;
+  }).join('\n');
 
   const nomorSurat = document.getElementById('inputNomorSurat')?.value?.trim() || '';
 
@@ -4089,6 +4103,9 @@ async function saveRecommendationData() {
     namaCamat: document.getElementById('inputNamaCamat')?.value || AppState.camat.nama,
     nipCamat: document.getElementById('inputNipCamat')?.value || AppState.camat.nip,
     metodeTte: document.getElementById('selectMetodeTte')?.value || 'tte',
+    dasarRekomendasi: dasarRekomendasiRingkasan,
+    lampiranBerkas: lampiranBerkasRingkasan,
+    lampiranBerkasPersyaratan: lampiranBerkasRingkasan,
     kelengkapanBerkas: berkasChecked,
     berkasList: JSON.parse(JSON.stringify(rawBerkas)),
     kelengkapanDasar: dasarChecked,
@@ -4610,6 +4627,16 @@ function deleteHistoryItem(id) {
   renderHistoryTable();
   if (typeof renderTabelRiwayatRekom === 'function') renderTabelRiwayatRekom();
   if (typeof updateBadgeRekomCount === 'function') updateBadgeRekomCount();
+
+  // Hapus dari Google Sheets jika online
+  if (AppState.gasUrl && AppState.gasUrl.startsWith('http')) {
+    fetch(AppState.gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'hapusRekomendasi', id: id, nomorSurat: item?.nomorSurat || '' })
+    }).catch(e => console.warn('Gagal hapus arsip rekomendasi di cloud:', e));
+  }
+
   showToast('Arsip Rekomendasi berhasil dihapus.', 'info');
 }
 window.deleteHistoryItem = deleteHistoryItem;
@@ -4619,11 +4646,23 @@ function exportHistoryToCsv() {
     showToast('Tidak ada data riwayat.', 'warning');
     return;
   }
-  const headers = ['ID', 'Waktu Simpan', 'Nomor Surat', 'Tanggal Surat', 'Desa', 'Jenis Dana', 'Nominal', 'Terbilang', 'Rekening', 'Kaur Keuangan', 'Status'];
+  const headers = ['ID', 'Waktu Simpan', 'Nomor Surat', 'Tanggal Surat', 'Desa', 'Jenis Dana', 'Tahap', 'Tahun Anggaran', 'Nominal', 'Terbilang', 'Rekening', 'Kaur Keuangan', 'Dasar Rekomendasi', 'Lampiran Berkas Persyaratan', 'Status'];
   const rows = AppState.riwayat.map(item => [
-    `"${item.id || ''}"`, `"${item.waktuSimpan || ''}"`, `"${item.nomorSurat || ''}"`, `"${item.tanggalSurat || ''}"`,
-    `"${item.namaDesa || ''}"`, `"${item.jenisDana || ''}"`, `"${item.nominalAngka || 0}"`, `"${(item.terbilang || '').replace(/"/g, '""')}"`,
-    `"'${item.nomorRekening || ''}"`, `"${item.kaurKeuangan || ''}"`, `"${item.status || 'Diterbitkan'}"`
+    `"${item.id || ''}"`,
+    `"${item.waktuSimpan || item.waktuTerbit || ''}"`,
+    `"${item.nomorSurat || ''}"`,
+    `"${item.tanggalSurat || ''}"`,
+    `"${item.namaDesa || ''}"`,
+    `"${item.jenisDana || ''}"`,
+    `"${item.tahap || ''}"`,
+    `"${item.tahunAnggaran || '2026'}"`,
+    `"${item.nominalAngka || 0}"`,
+    `"${(item.terbilang || '').replace(/"/g, '""')}"`,
+    `"'${item.nomorRekening || ''}"`,
+    `"${item.kaurKeuangan || ''}"`,
+    `"${(item.dasarRekomendasi || '').replace(/"/g, '""')}"`,
+    `"${(item.lampiranBerkas || '').replace(/"/g, '""')}"`,
+    `"${item.status || 'Diterbitkan'}"`
   ]);
   const csv = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -7917,6 +7956,25 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
           if (!isNaN(d.getTime())) waktuIso = d.toISOString();
         }
 
+        const dasarText = getSheetVal(row, ['Dasar Rekomendasi', 'Dasar', 'Dasar Hukum', 'Ringkasan Dasar'], '');
+        const berkasText = getSheetVal(row, ['Lampiran Berkas Persyaratan', 'Lampiran Berkas', 'Berkas Persyaratan', 'Ringkasan Berkas'], '');
+
+        let dasarListParsed = null;
+        const rawDasarJson = getSheetVal(row, ['Dasar Rekomendasi (JSON)', 'Dasar (JSON)', 'dasarList', 'Rincian Dasar (JSON)'], '');
+        if (rawDasarJson) {
+          try {
+            dasarListParsed = typeof rawDasarJson === 'string' ? JSON.parse(rawDasarJson) : rawDasarJson;
+          } catch (_) {}
+        }
+
+        let berkasListParsed = null;
+        const rawBerkasJson = getSheetVal(row, ['Lampiran Berkas (JSON)', 'Berkas (JSON)', 'berkasList', 'Rincian Berkas (JSON)'], '');
+        if (rawBerkasJson) {
+          try {
+            berkasListParsed = typeof rawBerkasJson === 'string' ? JSON.parse(rawBerkasJson) : rawBerkasJson;
+          } catch (_) {}
+        }
+
         const item = {
           id: id || `REK-${Date.now()}`,
           waktuTerbit: waktuIso,
@@ -7935,8 +7993,27 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
           namaCamat: getSheetVal(row, ['Nama Camat', 'Camat'], ''),
           nipCamat: getSheetVal(row, ['NIP Camat', 'NIP'], ''),
           metodeTte: getSheetVal(row, ['Metode TTE / Format', 'Metode TTE', 'Format'], 'tte'),
+          dasarRekomendasi: dasarText,
+          lampiranBerkas: berkasText,
+          dasarList: Array.isArray(dasarListParsed) ? dasarListParsed : undefined,
+          berkasList: Array.isArray(berkasListParsed) ? berkasListParsed : undefined,
           status: getSheetVal(row, ['Status Penyaluran', 'Status'], 'Diterbitkan')
         };
+
+        // Pertahankan status centang detail & teks edit lokal jika data cloud hanya memiliki ringkasan
+        const localExisting = (AppState.riwayat || []).find(r =>
+          (noSurat && String(r.nomorSurat || '').trim().toLowerCase() === noSurat.toLowerCase()) ||
+          (id && String(r.id) === String(id))
+        );
+        if (localExisting) {
+          if (!item.dasarList && localExisting.dasarList) item.dasarList = localExisting.dasarList;
+          if (!item.berkasList && localExisting.berkasList) item.berkasList = localExisting.berkasList;
+          if (!item.kelengkapanDasar && localExisting.kelengkapanDasar) item.kelengkapanDasar = localExisting.kelengkapanDasar;
+          if (!item.kelengkapanBerkas && localExisting.kelengkapanBerkas) item.kelengkapanBerkas = localExisting.kelengkapanBerkas;
+          if (!item.dasarRekomendasi && localExisting.dasarRekomendasi) item.dasarRekomendasi = localExisting.dasarRekomendasi;
+          if (!item.lampiranBerkas && localExisting.lampiranBerkas) item.lampiranBerkas = localExisting.lampiranBerkas;
+        }
+
         seenR.set(key, item);
       });
 
@@ -11975,6 +12052,37 @@ window.renderEditingCeklistBanner = function() {
 };
 
 /**
+ * Perbarui Seluruh Struktur Database di Google Spreadsheet
+ * Memastikan sheet Riwayat_Rekomendasi memiliki kolom "Dasar Rekomendasi" & "Lampiran Berkas Persyaratan"
+ * serta memastikan sheet Ceklist_Kelengkapan dan Surat_Pengantar tersedia.
+ */
+window.perbaruiStrukturDatabaseSheets = async function() {
+  if (!AppState.gasUrl || !AppState.gasUrl.startsWith('http')) {
+    showToast('Atur URL Web App Google Apps Script terlebih dahulu di Pengaturan.', 'warning');
+    return;
+  }
+  showToast('Memperbarui kolom & struktur tabel di Google Spreadsheet...', 'info');
+  try {
+    const res = await fetch(`${AppState.gasUrl}?action=initSheets&_t=${Date.now()}`);
+    const json = await res.json();
+    if (json.success) {
+      showToast('✅ Berhasil! Kolom Dasar Rekomendasi, Lampiran Berkas, dan seluruh sheet database telah diperbarui di Google Sheets.', 'success');
+      if (typeof sinkronRiwayatDariGoogleSheets === 'function') {
+        sinkronRiwayatDariGoogleSheets(true);
+      }
+      if (typeof tarikCeklistDariGoogleSheets === 'function') {
+        tarikCeklistDariGoogleSheets(true);
+      }
+    } else {
+      showToast(json.message || 'Gagal memperbarui struktur spreadsheet.', 'warning');
+    }
+  } catch (err) {
+    console.warn('Gagal perbarui struktur database sheets:', err);
+    showToast('Kendala jaringan atau Web App saat memperbarui spreadsheet.', 'error');
+  }
+};
+
+/**
  * Sinkronisasi Riwayat Ceklist dari Google Sheets (Sheet "Ceklist_Kelengkapan")
  */
 window.buatSheetCeklistDiDatabase = async function() {
@@ -11987,7 +12095,7 @@ window.buatSheetCeklistDiDatabase = async function() {
     const res = await fetch(`${AppState.gasUrl}?action=buatSheetCeklist&_t=${Date.now()}`);
     const json = await res.json();
     if (json.success) {
-      showToast('âœ… Berhasil! Sheet "Ceklist_Kelengkapan" telah siap di Google Spreadsheet.', 'success');
+      showToast('✅ Berhasil! Sheet "Ceklist_Kelengkapan" telah siap di Google Spreadsheet.', 'success');
       if (typeof tarikCeklistDariGoogleSheets === 'function') {
         tarikCeklistDariGoogleSheets(true);
       }
