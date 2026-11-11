@@ -76,6 +76,225 @@ function AKTIFKAN_IZIN_DAN_TEST() {
 }
 
 /**
+ * Fungsi untuk Menyesuaikan, Merapikan dan Menyelaraskan Kolom Sheet Riwayat_Rekomendasi
+ * Dapat dijalankan langsung dari editor Apps Script (pilih fungsi ini lalu klik Run ▶️)
+ * atau otomatis dipanggil dari aplikasi web.
+ */
+function SESUAIKAN_KOLOM_RIWAYAT_REKOM() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var res = sesuaikanKolomRiwayatRekom(ss, true);
+  Logger.log(res.message);
+  return res.message;
+}
+
+/**
+ * Menyelaraskan seluruh kolom dan baris data pada Sheet Riwayat_Rekomendasi
+ */
+function sesuaikanKolomRiwayatRekom(ss, force) {
+  if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheetRekom = ss.getSheetByName(SHEET_REKOMENDASI) || ss.getSheetByName("Rekomendasi Pencairan") || ss.getSheetByName("riwayat");
+  if (!sheetRekom) return { success: false, message: "Sheet Riwayat_Rekomendasi tidak ditemukan." };
+
+  var headersStandard = [
+    "ID Rekomendasi",
+    "Waktu Terbit",
+    "Nomor Surat Rekomendasi",
+    "Tanggal Surat",
+    "Nama Desa",
+    "Jenis Dana",
+    "Tahap",
+    "Tahun Anggaran",
+    "Nominal (Rp)",
+    "Terbilang",
+    "Bank Penyalur",
+    "Nomor Rekening RKD",
+    "Kepala Desa",
+    "Kaur Keuangan",
+    "Nomor Surat Pengantar",
+    "Tanggal Pengantar Desa",
+    "Nama Camat",
+    "NIP Camat",
+    "Metode TTE / Tanda Tangan",
+    "Status Penyaluran",
+    "Dasar Rekomendasi",
+    "Lampiran Berkas Persyaratan",
+    "Dasar Rekomendasi (JSON)",
+    "Lampiran Berkas (JSON)"
+  ];
+
+  var lastRow = sheetRekom.getLastRow();
+  var lastCol = sheetRekom.getLastColumn();
+
+  if (lastRow < 1 || lastCol < 1) {
+    sheetRekom.clear();
+    sheetRekom.appendRow(headersStandard);
+    var hRange = sheetRekom.getRange(1, 1, 1, headersStandard.length);
+    hRange.setBackground("#1E3A8A").setFontColor("#FFFFFF").setFontWeight("bold");
+    sheetRekom.setFrozenRows(1);
+    return { success: true, message: "Sheet diinisialisasi dengan kolom standar." };
+  }
+
+  var existingData = sheetRekom.getDataRange().getValues();
+  var existingHeaders = existingData[0] || [];
+
+  // Periksa apakah penyesuaian diperlukan
+  var needsAdjustment = Boolean(force);
+  if (existingHeaders.length !== headersStandard.length) {
+    needsAdjustment = true;
+  } else {
+    for (var hIdx = 0; hIdx < headersStandard.length; hIdx++) {
+      if (String(existingHeaders[hIdx] || "").trim().toLowerCase() !== headersStandard[hIdx].toLowerCase()) {
+        needsAdjustment = true;
+        break;
+      }
+    }
+  }
+
+  // Cek apakah ada baris data yang tergeser
+  if (!needsAdjustment && existingData.length > 1) {
+    for (var rCheck = 1; rCheck < existingData.length; rCheck++) {
+      var rData = existingData[rCheck];
+      var checkP = String(rData[15] || "").trim(); // Col P
+      var checkR = String(rData[17] || "").trim(); // Col R
+      if (checkR.toLowerCase() === "diterbitkan" || checkR.toLowerCase() === "menunggu" || /^\d{10,21}$/.test(checkP.replace(/\s+/g, ""))) {
+        needsAdjustment = true;
+        break;
+      }
+    }
+  }
+
+  if (!needsAdjustment) {
+    return { success: true, message: "Struktur kolom sudah rapi dan sesuai standar.", rowCount: existingData.length - 1 };
+  }
+
+  // Lakukan penyelarasan data baris yang tergeser
+  var newRows = [];
+  for (var r = 1; r < existingData.length; r++) {
+    var row = existingData[r];
+    var hasContent = false;
+    for (var c = 0; c < row.length; c++) {
+      if (row[c] !== "" && row[c] !== null && row[c] !== undefined) {
+        hasContent = true;
+        break;
+      }
+    }
+    if (!hasContent) continue;
+
+    var valO = String(row[14] || "").trim(); // Col O
+    var valP = String(row[15] || "").trim(); // Col P
+    var valQ = String(row[16] || "").trim(); // Col Q
+    var valR = String(row[17] || "").trim(); // Col R
+    var valS = String(row[18] || "").trim(); // Col S
+    var valT = String(row[19] || "").trim(); // Col T
+    var valU = String(row[20] || "").trim(); // Col U
+    var valV = String(row[21] || "").trim(); // Col V
+
+    // Deteksi apakah baris ini tergeser (Ciri: Col R berisi "Diterbitkan", Col Q berisi "tte"/"srikandi", Col P berisi NIP Camat)
+    var isShifted = false;
+    if (valR.toLowerCase() === "diterbitkan" || valR.toLowerCase() === "menunggu" || valQ.toLowerCase() === "tte" || valQ.toLowerCase() === "srikandi" || /^\d{10,21}$/.test(valP.replace(/\s+/g, ""))) {
+      isShifted = true;
+    }
+
+    var id = row[0] || "";
+    var waktu = row[1] || "";
+    var noSurat = row[2] || "";
+    var tglSurat = row[3] || "";
+    var desa = row[4] || "";
+    var dana = row[5] || "";
+    var tahap = row[6] || "";
+    var tahun = row[7] || "";
+    var nominal = row[8] || 0;
+    var terbilang = row[9] || "";
+    var bank = row[10] || "";
+    var rekening = row[11] || "";
+    var kades = row[12] || "";
+    var kaur = row[13] || "";
+    var noSp = "-";
+    var tglSp = "-";
+    var namaCamat = "-";
+    var nipCamat = "-";
+    var metodeTte = "tte";
+    var status = "Diterbitkan";
+    var dasarText = "-";
+    var berkasText = "-";
+    var dasarJson = "[]";
+    var berkasJson = "[]";
+
+    if (isShifted) {
+      namaCamat = valO || "-";
+      nipCamat = valP || "-";
+      metodeTte = valQ || "tte";
+      status = valR || "Diterbitkan";
+      dasarText = valS || "-";
+      berkasText = valT || "-";
+      dasarJson = valU || "[]";
+      berkasJson = valV || "[]";
+    } else {
+      namaCamat = row[16] || row[14] || "-";
+      nipCamat = row[17] || row[15] || "-";
+      metodeTte = row[18] || row[16] || "tte";
+      status = row[19] || row[17] || "Diterbitkan";
+      dasarText = row[20] || row[18] || "-";
+      berkasText = row[21] || row[19] || "-";
+      dasarJson = row[22] || row[20] || "[]";
+      berkasJson = row[23] || row[21] || "[]";
+      noSp = row[14] || "-";
+      tglSp = row[15] || "-";
+    }
+
+    var alignedRow = [
+      id,
+      waktu,
+      noSurat,
+      tglSurat,
+      desa,
+      dana,
+      tahap,
+      tahun,
+      nominal,
+      terbilang,
+      bank,
+      rekening,
+      kades,
+      kaur,
+      noSp,
+      tglSp,
+      namaCamat,
+      nipCamat,
+      metodeTte,
+      status,
+      dasarText,
+      berkasText,
+      dasarJson,
+      berkasJson
+    ];
+    newRows.push(alignedRow);
+  }
+
+  // Bersihkan seluruh sheet lalu tuliskan kembali kolom & data yang sudah 100% selaras
+  sheetRekom.clear();
+  sheetRekom.appendRow(headersStandard);
+
+  var hRange2 = sheetRekom.getRange(1, 1, 1, headersStandard.length);
+  hRange2.setBackground("#1E3A8A").setFontColor("#FFFFFF").setFontWeight("bold");
+  sheetRekom.setFrozenRows(1);
+
+  if (newRows.length > 0) {
+    sheetRekom.getRange(2, 1, newRows.length, headersStandard.length).setValues(newRows);
+  }
+
+  try {
+    sheetRekom.autoResizeColumns(1, headersStandard.length);
+  } catch (_) {}
+
+  return {
+    success: true,
+    message: "Berhasil! Kolom sheet Riwayat_Rekomendasi (" + headersStandard.length + " kolom) telah disesuaikan dan dirapikan, data baris otomatis disejajarkan.",
+    rowCount: newRows.length
+  };
+}
+
+/**
  * Inisialisasi Sheet dan Struktur Kolom
  */
 function initSheets() {
@@ -124,7 +343,7 @@ function initSheets() {
     sheetPengajuan.setFrozenRows(1);
   }
 
-  // 2. Sheet Riwayat Rekomendasi Camat yang Diterbitkan
+  // 2. Sheet Riwayat Rekomendasi Camat yang Diterbitkan (24 Kolom Standar Lengkap)
   var sheetRekom = ss.getSheetByName(SHEET_REKOMENDASI);
   var headersRekom = [
     "ID Rekomendasi",
@@ -141,9 +360,11 @@ function initSheets() {
     "Nomor Rekening RKD",
     "Kepala Desa",
     "Kaur Keuangan",
+    "Nomor Surat Pengantar",
+    "Tanggal Pengantar Desa",
     "Nama Camat",
     "NIP Camat",
-    "Metode TTE / Format",
+    "Metode TTE / Tanda Tangan",
     "Status Penyaluran",
     "Dasar Rekomendasi",
     "Lampiran Berkas Persyaratan",
@@ -160,38 +381,8 @@ function initSheets() {
     headerRangeR.setFontWeight("bold");
     sheetRekom.setFrozenRows(1);
   } else {
-    // Pastikan jika sheet sudah ada sebelumnya, tambahkan kolom baru yang belum ada (auto migration)
-    var lastColR = Math.max(sheetRekom.getLastColumn(), 1);
-    var existingHeadersR = sheetRekom.getRange(1, 1, 1, lastColR).getValues()[0];
-    var missingColsR = [];
-    var expectedColsR = [
-      "Dasar Rekomendasi",
-      "Lampiran Berkas Persyaratan",
-      "Dasar Rekomendasi (JSON)",
-      "Lampiran Berkas (JSON)"
-    ];
-    for (var k = 0; k < expectedColsR.length; k++) {
-      var colName = expectedColsR[k];
-      var found = false;
-      for (var eh = 0; eh < existingHeadersR.length; eh++) {
-        if (String(existingHeadersR[eh] || "").trim().toLowerCase() === colName.toLowerCase()) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        missingColsR.push(colName);
-      }
-    }
-    if (missingColsR.length > 0) {
-      for (var mc = 0; mc < missingColsR.length; mc++) {
-        sheetRekom.getRange(1, lastColR + 1 + mc).setValue(missingColsR[mc]);
-      }
-      var newHeaderRangeR = sheetRekom.getRange(1, 1, 1, lastColR + missingColsR.length);
-      newHeaderRangeR.setBackground("#1E3A8A");
-      newHeaderRangeR.setFontColor("#FFFFFF");
-      newHeaderRangeR.setFontWeight("bold");
-    }
+    // Jalankan penyelarasan kolom otomatis jika struktur belum standar atau ada baris tergeser
+    sesuaikanKolomRiwayatRekom(ss, false);
   }
 
   // 3. Sheet Master Data Desa di Kecamatan Waru
@@ -592,6 +783,9 @@ function doGet(e) {
           count: 0
         });
       }
+      try {
+        sesuaikanKolomRiwayatRekom(ss, false);
+      } catch (_) {}
       var dataR = sheetR.getDataRange().getValues();
       if (!dataR || dataR.length < 2) {
         return jsonResponse({
@@ -873,11 +1067,12 @@ function doGet(e) {
     }
 
     // 10. Inisialisasi Seluruh Sheet atau Perbarui Struktur Database (Termasuk Kolom Dasar & Berkas Rekomendasi)
-    if (action === "initSheets" || action === "updateHeaders" || action === "buatSheetRekomendasi" || action === "updateStruktur") {
+    if (action === "initSheets" || action === "updateHeaders" || action === "buatSheetRekomendasi" || action === "updateStruktur" || action === "sesuaikanKolomRekom" || action === "perbaikiKolomRekom") {
+      var adjustRes = sesuaikanKolomRiwayatRekom(ss, true);
       initSheets();
       return jsonResponse({
         success: true,
-        message: "Struktur database seluruh Sheet (termasuk kolom 'Dasar Rekomendasi' & 'Lampiran Berkas Persyaratan' di Riwayat_Rekomendasi) berhasil diperbarui di Google Spreadsheet!"
+        message: adjustRes.message || "Struktur database seluruh Sheet (termasuk kolom 'Dasar Rekomendasi' & 'Lampiran Berkas Persyaratan' di Riwayat_Rekomendasi) berhasil diperbarui dan disesuaikan di Google Spreadsheet!"
       });
     }
 
@@ -1047,31 +1242,75 @@ function doPost(e) {
       var berkasText = payload.lampiranBerkas || payload.lampiranBerkasPersyaratan || payload.berkas || "-";
       var dasarJson = typeof payload.dasarList === "string" ? payload.dasarList : JSON.stringify(payload.dasarList || []);
       var berkasJson = typeof payload.berkasList === "string" ? payload.berkasList : JSON.stringify(payload.berkasList || []);
+      var noSp = payload.nomorSuratPengantar || payload.nomorSp || "-";
+      var tglSp = payload.tanggalSuratPengantar || payload.tanggalSp || "-";
 
+      // 24 Kolom Standar Lengkap
       var rowRekom = [
-        idRekom,
-        timestampRekom,
-        payload.nomorSurat || "-",
-        payload.tanggalSurat || "-",
-        payload.namaDesa || "-",
-        payload.jenisDana || "-",
-        payload.tahap || "-",
-        payload.tahunAnggaran || "-",
-        payload.nominalAngka || 0,
-        payload.terbilang || "-",
-        payload.bankPenyalur || "-",
-        payload.nomorRekening || "-",
-        payload.kepalaDesa || "-",
-        payload.kaurKeuangan || "-",
-        payload.namaCamat || "-",
-        payload.nipCamat || "-",
-        payload.metodeTte || "TTE Elektronik BSrE",
-        payload.status || "Diterbitkan",
-        dasarText,
-        berkasText,
-        dasarJson,
-        berkasJson
+        idRekom,                                     // 1 (A): ID Rekomendasi
+        timestampRekom,                              // 2 (B): Waktu Terbit
+        payload.nomorSurat || "-",                   // 3 (C): Nomor Surat Rekomendasi
+        payload.tanggalSurat || "-",                 // 4 (D): Tanggal Surat
+        payload.namaDesa || "-",                     // 5 (E): Nama Desa
+        payload.jenisDana || "-",                    // 6 (F): Jenis Dana
+        payload.tahap || "-",                        // 7 (G): Tahap
+        payload.tahunAnggaran || "-",                // 8 (H): Tahun Anggaran
+        payload.nominalAngka || 0,                   // 9 (I): Nominal (Rp)
+        payload.terbilang || "-",                    // 10 (J): Terbilang
+        payload.bankPenyalur || "-",                 // 11 (K): Bank Penyalur
+        payload.nomorRekening || "-",                // 12 (L): Nomor Rekening RKD
+        payload.kepalaDesa || "-",                   // 13 (M): Kepala Desa
+        payload.kaurKeuangan || "-",                 // 14 (N): Kaur Keuangan
+        noSp,                                        // 15 (O): Nomor Surat Pengantar
+        tglSp,                                       // 16 (P): Tanggal Pengantar Desa
+        payload.namaCamat || "-",                    // 17 (Q): Nama Camat
+        payload.nipCamat || "-",                     // 18 (R): NIP Camat
+        payload.metodeTte || "TTE Elektronik BSrE",  // 19 (S): Metode TTE / Tanda Tangan
+        payload.status || "Diterbitkan",             // 20 (T): Status Penyaluran
+        dasarText,                                   // 21 (U): Dasar Rekomendasi
+        berkasText,                                  // 22 (V): Lampiran Berkas Persyaratan
+        dasarJson,                                   // 23 (W): Dasar Rekomendasi (JSON)
+        berkasJson                                   // 24 (X): Lampiran Berkas (JSON)
       ];
+
+      // Petakan secara cerdas berdasarkan nama header kolom aktual di spreadsheet
+      var curHeaders = sheetRekom.getRange(1, 1, 1, Math.max(sheetRekom.getLastColumn(), 1)).getValues()[0];
+      var finalRow = [];
+      if (curHeaders && curHeaders.length >= 20) {
+        finalRow = new Array(curHeaders.length).fill("");
+        for (var c = 0; c < curHeaders.length; c++) {
+          var h = String(curHeaders[c] || "").trim().toLowerCase();
+          if (h === "id" || h.indexOf("id") !== -1) finalRow[c] = idRekom;
+          else if (h.indexOf("waktu") !== -1 || h === "timestamp") finalRow[c] = timestampRekom;
+          else if (h.indexOf("nomor") !== -1 && h.indexOf("surat") !== -1 && h.indexOf("pengantar") === -1 && h.indexOf("rekening") === -1) finalRow[c] = payload.nomorSurat || "-";
+          else if (h.indexOf("tanggal") !== -1 && h.indexOf("pengantar") === -1) finalRow[c] = payload.tanggalSurat || "-";
+          else if (h.indexOf("desa") !== -1 && h.indexOf("kepala") === -1 && h.indexOf("pengantar") === -1) finalRow[c] = payload.namaDesa || "-";
+          else if (h.indexOf("dana") !== -1) finalRow[c] = payload.jenisDana || "-";
+          else if (h.indexOf("tahap") !== -1 || h.indexOf("bulan") !== -1) finalRow[c] = payload.tahap || "-";
+          else if (h.indexOf("tahun") !== -1) finalRow[c] = payload.tahunAnggaran || "-";
+          else if (h.indexOf("nominal") !== -1 || h.indexOf("jumlah") !== -1) finalRow[c] = payload.nominalAngka || 0;
+          else if (h.indexOf("terbilang") !== -1) finalRow[c] = payload.terbilang || "-";
+          else if (h.indexOf("bank") !== -1) finalRow[c] = payload.bankPenyalur || "-";
+          else if (h.indexOf("rekening") !== -1) finalRow[c] = payload.nomorRekening || "-";
+          else if (h.indexOf("kepala") !== -1 || h === "kades") finalRow[c] = payload.kepalaDesa || "-";
+          else if (h.indexOf("kaur") !== -1 || h.indexOf("bendahara") !== -1) finalRow[c] = payload.kaurKeuangan || "-";
+          else if (h.indexOf("pengantar") !== -1 && h.indexOf("nomor") !== -1) finalRow[c] = noSp;
+          else if (h.indexOf("pengantar") !== -1 && h.indexOf("tanggal") !== -1) finalRow[c] = tglSp;
+          else if (h.indexOf("camat") !== -1 && h.indexOf("nip") === -1) finalRow[c] = payload.namaCamat || "-";
+          else if (h.indexOf("nip") !== -1) finalRow[c] = payload.nipCamat || "-";
+          else if (h.indexOf("tte") !== -1 || h.indexOf("tanda tangan") !== -1 || h.indexOf("format") !== -1) finalRow[c] = payload.metodeTte || "TTE Elektronik BSrE";
+          else if (h.indexOf("status") !== -1) finalRow[c] = payload.status || "Diterbitkan";
+          else if (h.indexOf("dasar") !== -1 && h.indexOf("json") !== -1) finalRow[c] = dasarJson;
+          else if (h.indexOf("dasar") !== -1) finalRow[c] = dasarText;
+          else if (h.indexOf("berkas") !== -1 && h.indexOf("json") !== -1) finalRow[c] = berkasJson;
+          else if (h.indexOf("lampiran berkas") !== -1 || h.indexOf("berkas persyaratan") !== -1 || h.indexOf("kelengkapan berkas") !== -1) finalRow[c] = berkasText;
+          else {
+            if (c < rowRekom.length) finalRow[c] = rowRekom[c];
+          }
+        }
+      } else {
+        finalRow = rowRekom;
+      }
 
       // Cek apakah mode edit (cocokkan berdasarkan ID Rekomendasi ATAU Nomor Surat)
       var existingRowIndex = -1;
@@ -1088,9 +1327,9 @@ function doPost(e) {
       }
 
       if (existingRowIndex > 0) {
-        sheetRekom.getRange(existingRowIndex, 1, 1, rowRekom.length).setValues([rowRekom]);
+        sheetRekom.getRange(existingRowIndex, 1, 1, finalRow.length).setValues([finalRow]);
       } else {
-        sheetRekom.appendRow(rowRekom);
+        sheetRekom.appendRow(finalRow);
       }
 
       return jsonResponse({

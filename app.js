@@ -4100,6 +4100,8 @@ async function saveRecommendationData() {
     nomorRekening: document.getElementById('inputNomorRekening')?.value || '',
     kepalaDesa: document.getElementById('inputKepalaDesa')?.value || '',
     kaurKeuangan: document.getElementById('inputKaurKeuangan')?.value || '',
+    nomorSuratPengantar: document.getElementById('inputNomorSp')?.value || document.getElementById('desaInputNomorSp')?.value || '-',
+    tanggalSuratPengantar: document.getElementById('inputTanggalSp')?.value || document.getElementById('desaInputTanggalSp')?.value || '-',
     namaCamat: document.getElementById('inputNamaCamat')?.value || AppState.camat.nama,
     nipCamat: document.getElementById('inputNipCamat')?.value || AppState.camat.nip,
     metodeTte: document.getElementById('selectMetodeTte')?.value || 'tte',
@@ -4646,7 +4648,13 @@ function exportHistoryToCsv() {
     showToast('Tidak ada data riwayat.', 'warning');
     return;
   }
-  const headers = ['ID', 'Waktu Simpan', 'Nomor Surat', 'Tanggal Surat', 'Desa', 'Jenis Dana', 'Tahap', 'Tahun Anggaran', 'Nominal', 'Terbilang', 'Rekening', 'Kaur Keuangan', 'Dasar Rekomendasi', 'Lampiran Berkas Persyaratan', 'Status'];
+  const headers = [
+    'ID Rekomendasi', 'Waktu Terbit', 'Nomor Surat Rekomendasi', 'Tanggal Surat', 'Nama Desa', 'Jenis Dana',
+    'Tahap', 'Tahun Anggaran', 'Nominal (Rp)', 'Terbilang', 'Bank Penyalur', 'Nomor Rekening RKD',
+    'Kepala Desa', 'Kaur Keuangan', 'Nomor Surat Pengantar', 'Tanggal Pengantar Desa',
+    'Nama Camat', 'NIP Camat', 'Metode TTE / Tanda Tangan', 'Status Penyaluran',
+    'Dasar Rekomendasi', 'Lampiran Berkas Persyaratan'
+  ];
   const rows = AppState.riwayat.map(item => [
     `"${item.id || ''}"`,
     `"${item.waktuSimpan || item.waktuTerbit || ''}"`,
@@ -4658,11 +4666,18 @@ function exportHistoryToCsv() {
     `"${item.tahunAnggaran || '2026'}"`,
     `"${item.nominalAngka || 0}"`,
     `"${(item.terbilang || '').replace(/"/g, '""')}"`,
+    `"${item.bankPenyalur || 'PT BPD Kaltim Kaltara (Bankaltimtara) Capem Waru'}"`,
     `"'${item.nomorRekening || ''}"`,
+    `"${item.kepalaDesa || ''}"`,
     `"${item.kaurKeuangan || ''}"`,
+    `"${item.nomorSuratPengantar || '-'}"`,
+    `"${item.tanggalSuratPengantar || '-'}"`,
+    `"${item.namaCamat || ''}"`,
+    `"'${item.nipCamat || ''}"`,
+    `"${item.metodeTte || 'tte'}"`,
+    `"${item.status || 'Diterbitkan'}"`,
     `"${(item.dasarRekomendasi || '').replace(/"/g, '""')}"`,
-    `"${(item.lampiranBerkas || '').replace(/"/g, '""')}"`,
-    `"${item.status || 'Diterbitkan'}"`
+    `"${(item.lampiranBerkas || '').replace(/"/g, '""')}"`
   ]);
   const csv = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -7990,9 +8005,11 @@ window.sinkronRiwayatDariGoogleSheets = async function(isSilent = true) {
           nomorRekening: getSheetVal(row, ['Nomor Rekening RKD', 'Nomor Rekening', 'No Rekening'], ''),
           kepalaDesa: getSheetVal(row, ['Kepala Desa', 'Kades'], ''),
           kaurKeuangan: getSheetVal(row, ['Kaur Keuangan', 'Bendahara'], ''),
+          nomorSuratPengantar: getSheetVal(row, ['Nomor Surat Pengantar', 'Nomor Surat Pengantar Desa', 'Nomor SP', 'No SP'], '-'),
+          tanggalSuratPengantar: getSheetVal(row, ['Tanggal Pengantar Desa', 'Tanggal Surat Pengantar Desa', 'Tanggal SP', 'Tgl SP'], '-'),
           namaCamat: getSheetVal(row, ['Nama Camat', 'Camat'], ''),
           nipCamat: getSheetVal(row, ['NIP Camat', 'NIP'], ''),
-          metodeTte: getSheetVal(row, ['Metode TTE / Format', 'Metode TTE', 'Format'], 'tte'),
+          metodeTte: getSheetVal(row, ['Metode TTE / Tanda Tangan', 'Metode TTE / Format', 'Metode TTE', 'Format'], 'tte'),
           dasarRekomendasi: dasarText,
           lampiranBerkas: berkasText,
           dasarList: Array.isArray(dasarListParsed) ? dasarListParsed : undefined,
@@ -12061,12 +12078,12 @@ window.perbaruiStrukturDatabaseSheets = async function() {
     showToast('Atur URL Web App Google Apps Script terlebih dahulu di Pengaturan.', 'warning');
     return;
   }
-  showToast('Memperbarui kolom & struktur tabel di Google Spreadsheet...', 'info');
+  showToast('Menyesuaikan dan merapikan susunan kolom di Google Spreadsheet...', 'info');
   try {
-    const res = await fetch(`${AppState.gasUrl}?action=initSheets&_t=${Date.now()}`);
+    const res = await fetch(`${AppState.gasUrl}?action=sesuaikanKolomRekom&_t=${Date.now()}`);
     const json = await res.json();
     if (json.success) {
-      showToast('✅ Berhasil! Kolom Dasar Rekomendasi, Lampiran Berkas, dan seluruh sheet database telah diperbarui di Google Sheets.', 'success');
+      showToast('✅ Berhasil! Kolom sheet Riwayat_Rekomendasi telah disesuaikan dan baris data telah disejajarkan rapi.', 'success');
       if (typeof sinkronRiwayatDariGoogleSheets === 'function') {
         sinkronRiwayatDariGoogleSheets(true);
       }
